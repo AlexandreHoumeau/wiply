@@ -11,12 +11,13 @@ import { toast } from "sonner";
 import {
     Loader2, AlignLeft, Bug, LayoutTemplate, PenTool, Settings,
     ArrowUp, ArrowDown, Equal, AlertOctagon, CheckCircle2, Clock,
-    Inbox, PlayCircle, Send, Trash2, X,
+    Inbox, PlayCircle, Send, Trash2, X, UserRound,
 } from "lucide-react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { cn, getInitials } from "@/lib/utils";
 import { createTask, updateTaskDetails } from "@/actions/project.server";
 import { deleteTask, getTaskComments, addTaskComment, deleteTaskComment, type TaskComment } from "@/actions/task.server";
+import { getAgencyMembers, type AgencyMember } from "@/actions/agency.server";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/fr";
@@ -64,6 +65,8 @@ export function TaskSlideOver({
     const [status, setStatus] = useState(initialStatus || "todo");
     const [priority, setPriority] = useState("medium");
     const [type, setType] = useState("feature");
+    const [assigneeId, setAssigneeId] = useState<string | null>(null);
+    const [members, setMembers] = useState<AgencyMember[]>([]);
 
     const [comments, setComments] = useState<TaskComment[]>([]);
     const [commentText, setCommentText] = useState("");
@@ -78,11 +81,16 @@ export function TaskSlideOver({
             setStatus(task.status || "todo");
             setPriority(task.priority || "medium");
             setType(task.type || "feature");
+            setAssigneeId(task.assignee_id ?? null);
         } else {
             setTitle(""); setDescription(""); setStatus(initialStatus || "todo");
-            setPriority("medium"); setType("feature");
+            setPriority("medium"); setType("feature"); setAssigneeId(null);
         }
     }, [task, open]);
+
+    useEffect(() => {
+        getAgencyMembers().then(setMembers);
+    }, []);
 
     useEffect(() => {
         if (!task?.id || !open) { setComments([]); return; }
@@ -99,7 +107,7 @@ export function TaskSlideOver({
         if (!title.trim()) return toast.error("Le titre est obligatoire.");
         if (!profile?.agency_id) return;
         setIsLoading(true);
-        const data = { title, description, status, priority, type };
+        const data = { title, description, status, priority, type, assignee_id: assigneeId };
         const result = task
             ? await updateTaskDetails(task.id, data)
             : await createTask(data, profile.agency_id, projectId);
@@ -421,6 +429,44 @@ export function TaskSlideOver({
                                         {Object.entries(TYPE_CONFIG).map(([v, c]) => (
                                             <SelectItem key={v} value={v} className="text-xs">{c.label}</SelectItem>
                                         ))}
+                                    </SelectContent>
+                                </Select>
+                            </InlineProp>
+
+                            {/* Assignee */}
+                            <InlineProp
+                                icon={<UserRound className="w-3.5 h-3.5 text-slate-400" />}
+                                label="Assigné à"
+                            >
+                                <Select
+                                    value={assigneeId ?? "unassigned"}
+                                    onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}
+                                >
+                                    <SelectTrigger className="h-auto w-auto border-none bg-transparent p-0 shadow-none focus:ring-0 text-xs font-medium text-slate-700 hover:text-slate-900 [&>svg]:w-3 [&>svg]:h-3 [&>svg]:text-slate-400 [&>svg]:ml-0.5 gap-0 max-w-[100px]">
+                                        <SelectValue placeholder="—" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl min-w-[180px]">
+                                        <SelectItem value="unassigned" className="text-xs text-slate-400">
+                                            Non assigné
+                                        </SelectItem>
+                                        {members.map((m) => {
+                                            const name = m.first_name
+                                                ? `${m.first_name} ${m.last_name ?? ""}`.trim()
+                                                : (m.email ?? m.id)
+                                            return (
+                                                <SelectItem key={m.id} value={m.id} className="text-xs">
+                                                    <span className="flex items-center gap-2">
+                                                        <span
+                                                            className="h-4 w-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                                                            style={{ backgroundColor: "var(--brand-secondary, #6366F1)" }}
+                                                        >
+                                                            {getInitials(m.first_name ?? "", m.last_name ?? "", m.email ?? "")}
+                                                        </span>
+                                                        {name}
+                                                    </span>
+                                                </SelectItem>
+                                            )
+                                        })}
                                     </SelectContent>
                                 </Select>
                             </InlineProp>

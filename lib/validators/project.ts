@@ -48,6 +48,7 @@ export interface TaskData {
   status?: string;
   type?: string;
   priority?: string;
+  assignee_id?: string | null;
 }
 
 export interface ProjectSettingsData {
@@ -57,6 +58,8 @@ export interface ProjectSettingsData {
   figma_url?: string | null;
   github_url?: string | null;
   deployment_url?: string | null;
+  portal_message?: string | null;
+  portal_show_progress?: boolean;
 }
 
 export interface ChecklistItemData {

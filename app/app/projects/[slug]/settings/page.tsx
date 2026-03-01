@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, LinkIcon, Copy, Save, Sparkles, PlayCircle, PauseCircle } from "lucide-react";
+import { Loader2, LinkIcon, Copy, Save, Sparkles, PlayCircle, PauseCircle, LayoutTemplate } from "lucide-react";
 
 export default function ProjectSettingsPage() {
     const project = useProject();
@@ -23,7 +24,9 @@ export default function ProjectSettingsPage() {
         start_date: project?.start_date || "",
         figma_url: project?.figma_url || "",
         github_url: project?.github_url || "",
-        deployment_url: project?.deployment_url || ""
+        deployment_url: project?.deployment_url || "",
+        portal_message: project?.portal_message || "",
+        portal_show_progress: project?.portal_show_progress ?? true,
     });
 
     if (!project) return null;
@@ -193,6 +196,40 @@ export default function ProjectSettingsPage() {
                                 onChange={(e) => setFormData({ ...formData, deployment_url: e.target.value })}
                                 className={inputClasses}
                             />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Portal personalization */}
+                <div className="pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-2 mb-4">
+                        <LayoutTemplate className="w-4 h-4 text-slate-400" />
+                        <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Personnalisation du Portail</h3>
+                    </div>
+
+                    <div className="space-y-5">
+                        {/* Show progress toggle */}
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div>
+                                <p className="font-semibold text-slate-800 text-sm">Afficher la barre de progression</p>
+                                <p className="text-xs text-slate-500 mt-0.5">Montrer au client l'avancement de la checklist</p>
+                            </div>
+                            <Switch
+                                checked={formData.portal_show_progress}
+                                onCheckedChange={(v) => setFormData({ ...formData, portal_show_progress: v })}
+                            />
+                        </div>
+
+                        {/* Custom message */}
+                        <div className="space-y-2">
+                            <Label className="text-sm font-semibold text-slate-700">Message pour le client</Label>
+                            <Textarea
+                                placeholder="Ex: Bonjour ! Voici votre espace de suivi. N'hésitez pas à nous contacter si vous avez des questions…"
+                                value={formData.portal_message}
+                                onChange={(e) => setFormData({ ...formData, portal_message: e.target.value })}
+                                className="min-h-[100px] rounded-xl bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none resize-none"
+                            />
+                            <p className="text-xs text-slate-400">Affiché en haut du portail client, sous le titre de bienvenue.</p>
                         </div>
                     </div>
                 </div>
