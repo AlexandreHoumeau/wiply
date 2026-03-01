@@ -1,5 +1,6 @@
 "use client";
-import { deleteOpportunities, updateOpportunityFavorite, updateOpportunityStatus } from "@/actions/opportunity.client";
+import { deleteOpportunities, updateOpportunityFavorite } from "@/actions/opportunity.client";
+import { updateOpportunityStatus } from "@/actions/opportunity.server";
 import { OpportunityDialog } from "@/components/opportunities/OpportunityDialog";
 import { Button } from "@/components/ui/button";
 import { useLoadingBar } from "@/hooks/useLoadingBar";
