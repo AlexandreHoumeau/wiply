@@ -3,43 +3,25 @@
 import { useState, useEffect, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    Briefcase,
-    Building2,
-    ChevronsUpDown,
-    Kanban,
-    LayoutDashboard,
-    LogOut,
-    Settings,
-    ShieldCheck,
-    Users,
-    PanelLeftClose,
-    PanelLeftOpen,
+    Briefcase, Building2, ChevronsUpDown, Kanban, LayoutDashboard,
+    LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen
 } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { NotificationCenter } from "@/components/NotificationCenter"
 import { Button } from "@/components/ui/button"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+    DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
+    DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-    Sheet,
-    SheetContent,
-    SheetTitle,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useAgency } from "@/providers/agency-provider"
 import { signOut } from "@/actions/auth.actions"
-import { useRouter } from "next/navigation"
 
 const mainNav = [
     { label: "Tableau de bord", href: "/app", icon: LayoutDashboard },
@@ -61,20 +43,13 @@ interface AppSidebarProps {
 
 export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }: AppSidebarProps) {
     const pathname = usePathname()
+    const router = useRouter()
     const { agency, first_name, last_name, email, role } = useAgency()
     const [mounted, setMounted] = useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    // Close mobile menu on navigation
-    useEffect(() => {
-        setIsMobileOpen(false)
-    }, [pathname, setIsMobileOpen])
-
-    const router = useRouter()
     const [isPending, startTransition] = useTransition()
+
+    useEffect(() => setMounted(true), [])
+    useEffect(() => setIsMobileOpen(false), [pathname, setIsMobileOpen])
 
     function handleSignOut() {
         startTransition(async () => {
@@ -85,7 +60,6 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
 
     const fullName = `${first_name} ${last_name}`
     const initials = `${first_name?.charAt(0) || ""}${last_name?.charAt(0) || ""}`
-
     const primaryColor = agency?.primary_color || "#2563EB"
     const secondaryColor = agency?.secondary_color || "#6366F1"
 
@@ -98,170 +72,95 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
 
     const sidebarContent = (isMobile: boolean) => (
         <>
-            {/* --- AGENCY SWITCHER --- */}
+            {/* --- AGENCY DISPLAY (Static) --- */}
             <div className="flex h-16 items-center px-4 overflow-hidden">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className={cn(
-                            "w-full justify-start transition-colors hover:bg-slate-50",
-                            !isMobile && isCollapsed ? "px-0 justify-center h-10 w-10 mx-auto" : "gap-3 px-2"
-                        )}>
-                            <div
-                                className="flex shrink-0 aspect-square size-8 items-center justify-center rounded-xl text-white overflow-hidden"
-                                style={{
-                                    backgroundColor: primaryColor,
-                                    boxShadow: `0 4px 14px ${primaryColor}55`,
-                                }}
-                            >
-                                {agency?.logo_url ? (
-                                    <img
-                                        src={agency.logo_url}
-                                        alt={agency.name}
-                                        className="w-full h-full object-contain p-0.5"
-                                    />
-                                ) : (
-                                    <span className="text-xs font-bold">
-                                        {agency?.name?.charAt(0)?.toUpperCase() || "A"}
-                                    </span>
-                                )}
-                            </div>
-
-                            {(isMobile || !isCollapsed) && (
-                                <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
-                                    <span className="truncate font-bold text-slate-900">{agency?.name || "Mon Agence"}</span>
-                                    <span
-                                        className="truncate text-[10px] font-bold uppercase tracking-wider"
-                                        style={{ color: secondaryColor }}
-                                    >
-                                        {role?.replace("agency_", "")}
-                                    </span>
-                                </div>
-                            )}
-
-                            {(isMobile || !isCollapsed) && <ChevronsUpDown className="ml-auto size-4 text-slate-400 shrink-0" />}
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-64 ml-2 mt-1 shadow-xl border-slate-100 rounded-xl" align="start">
-                        <DropdownMenuLabel className="text-[10px] uppercase text-slate-400 tracking-widest p-3">Agences liées</DropdownMenuLabel>
-                        <DropdownMenuItem className="gap-3 p-3 cursor-pointer rounded-lg">
-                            <div
-                                className="flex size-8 items-center justify-center rounded-lg overflow-hidden shrink-0"
-                                style={{ backgroundColor: primaryColor }}
-                            >
-                                {agency?.logo_url ? (
-                                    <img src={agency.logo_url} alt={agency.name} className="w-full h-full object-contain p-0.5" />
-                                ) : (
-                                    <span className="text-xs font-bold text-white">
-                                        {agency?.name?.charAt(0)?.toUpperCase() || "A"}
-                                    </span>
-                                )}
-                            </div>
-                            <span className="font-medium text-slate-700">{agency?.name}</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className={cn(
+                    "flex w-full items-center",
+                    !isMobile && isCollapsed ? "justify-center" : "gap-3 px-2"
+                )}>
+                    <div className="flex shrink-0 aspect-square size-8 items-center justify-center rounded-xl text-white overflow-hidden" style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}55` }}>
+                        {agency?.logo_url ? (
+                            <img src={agency.logo_url} alt={agency.name} className="w-full h-full object-contain p-0.5" />
+                        ) : (
+                            <span className="text-xs font-bold">{agency?.name?.charAt(0)?.toUpperCase() || "A"}</span>
+                        )}
+                    </div>
+                    {(isMobile || !isCollapsed) && (
+                        <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
+                            <span className="truncate font-bold text-slate-900">{agency?.name || "Mon Agence"}</span>
+                            <span className="truncate text-[10px] font-bold uppercase tracking-wider" style={{ color: secondaryColor }}>
+                                {role?.replace("agency_", "")}
+                            </span>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* --- NAVIGATION --- */}
+            {/* --- NAVIGATION & INBOX --- */}
             <ScrollArea className="flex-1 px-3 py-4">
                 <nav className="space-y-6">
+                    
+                    {/* Inbox / Notifications at the very top */}
+                    <div className="space-y-1">
+                        <NotificationCenter isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} />
+                    </div>
+
                     <div className="space-y-1">
                         {(!isMobile && !isCollapsed) || isMobile ? (
-                            <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Plateforme</p>
-                        ) : (
-                            <div className="h-4" />
-                        )}
+                            <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 mt-2">Plateforme</p>
+                        ) : <div className="h-4" />}
                         {mainNav.map((item) => (
-                            <NavItem
-                                key={item.href}
-                                item={item}
-                                active={isLinkActive(item.href)}
-                                isCollapsed={!isMobile && isCollapsed}
-                                primaryColor={primaryColor}
-                            />
+                            <NavItem key={item.href} item={item} active={isLinkActive(item.href)} isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} />
                         ))}
                     </div>
 
                     <div className="space-y-1">
                         {(!isMobile && !isCollapsed) || isMobile ? (
                             <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Management</p>
-                        ) : (
-                            <div className="w-8 mx-auto h-px bg-slate-100 my-4" />
-                        )}
+                        ) : <div className="w-8 mx-auto h-px bg-slate-100 my-4" />}
                         {secondaryNav.map((item) => (
-                            <NavItem
-                                key={item.href}
-                                item={item}
-                                active={isLinkActive(item.href)}
-                                isCollapsed={!isMobile && isCollapsed}
-                                primaryColor={primaryColor}
-                            />
+                            <NavItem key={item.href} item={item} active={isLinkActive(item.href)} isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} />
                         ))}
                     </div>
                 </nav>
             </ScrollArea>
 
-            {/* --- FOOTER / USER --- */}
+            {/* --- USER FOOTER --- */}
             <div className="p-3 mt-auto border-t border-slate-100 bg-slate-50/50">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className={cn(
-                            "h-auto w-full transition-all group hover:bg-white hover:shadow-sm",
-                            !isMobile && isCollapsed ? "justify-center p-2" : "justify-start gap-3 p-2"
-                        )}>
+                        <Button variant="ghost" className={cn("h-auto w-full transition-all group hover:bg-white hover:shadow-sm", !isMobile && isCollapsed ? "justify-center p-2" : "justify-start gap-3 p-2")}>
                             <div className="relative shrink-0">
                                 <Avatar className="h-9 w-9 rounded-xl border-2 border-white shadow-sm transition-transform group-hover:scale-105">
-                                    <AvatarFallback
-                                        className="rounded-xl text-white text-xs font-bold"
-                                        style={{ backgroundColor: primaryColor }}
-                                    >
-                                        {initials}
-                                    </AvatarFallback>
+                                    <AvatarFallback className="rounded-xl text-white text-xs font-bold" style={{ backgroundColor: primaryColor }}>{initials}</AvatarFallback>
                                 </Avatar>
                                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
                             </div>
-
                             {(isMobile || !isCollapsed) && (
                                 <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
                                     <span className="truncate font-bold text-slate-900">{fullName}</span>
                                     <span className="truncate text-[10px] text-slate-500">{email}</span>
                                 </div>
                             )}
-
                             {(isMobile || !isCollapsed) && <ChevronsUpDown className="ml-auto size-4 text-slate-400 shrink-0" />}
                         </Button>
                     </DropdownMenuTrigger>
-
                     <DropdownMenuContent className="w-64 rounded-2xl p-2 shadow-2xl border-slate-100 mb-2 ml-2" side={(!isMobile && isCollapsed) ? "right" : "top"} align="end" sideOffset={12}>
                         <div className="px-3 py-3 mb-2 bg-slate-50 rounded-xl">
                             <p className="text-xs font-bold text-slate-900">{fullName}</p>
                             <p className="text-[10px] text-slate-500 truncate">{email}</p>
                         </div>
-
                         <DropdownMenuGroup className="space-y-1">
                             <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2.5">
-                                <Link href="/app/settings/profile">
-                                    <Settings className="mr-3 h-4 w-4" />
-                                    <span className="font-medium">Mon Profil</span>
-                                </Link>
+                                <Link href="/app/settings/profile"><Settings className="mr-3 h-4 w-4" /><span className="font-medium">Mon Profil</span></Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2.5">
-                                <Link href="/app/settings/billing">
-                                    <ShieldCheck className="mr-3 h-4 w-4" />
-                                    <span className="font-medium">Abonnement</span>
-                                </Link>
+                                <Link href="/app/settings/billing"><ShieldCheck className="mr-3 h-4 w-4" /><span className="font-medium">Abonnement</span></Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
-
                         <DropdownMenuSeparator className="my-2 bg-slate-100" />
-
-                        <DropdownMenuItem
-                            className="rounded-lg text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer py-2.5"
-                            disabled={isPending}
-                            onClick={handleSignOut}
-                        >
-                            <LogOut className="mr-3 h-4 w-4" />
-                            <span className="font-medium">{isPending ? "Déconnexion..." : "Déconnexion"}</span>
+                        <DropdownMenuItem className="rounded-lg text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer py-2.5" disabled={isPending} onClick={handleSignOut}>
+                            <LogOut className="mr-3 h-4 w-4" /><span className="font-medium">{isPending ? "Déconnexion..." : "Déconnexion"}</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -272,20 +171,10 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
     return (
         <TooltipProvider delayDuration={0}>
             {/* ── DESKTOP SIDEBAR ── */}
-            <motion.aside
-                initial={false}
-                animate={{ width: isCollapsed ? 80 : 256 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-slate-200 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:flex"
-            >
-                {/* Toggle button */}
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="absolute -right-3 top-6 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-slate-900 hover:bg-slate-50 transition-all focus:outline-none"
-                >
+            <motion.aside initial={false} animate={{ width: isCollapsed ? 80 : 256 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-slate-200 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:flex">
+                <button onClick={() => setIsCollapsed(!isCollapsed)} className="absolute -right-3 top-6 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-slate-900 hover:bg-slate-50 transition-all focus:outline-none">
                     {isCollapsed ? <PanelLeftOpen className="h-3 w-3" /> : <PanelLeftClose className="h-3 w-3" />}
                 </button>
-
                 {sidebarContent(false)}
             </motion.aside>
 
@@ -300,51 +189,14 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
     )
 }
 
-function NavItem({
-    item,
-    active,
-    isCollapsed,
-    primaryColor,
-}: {
-    item: any
-    active: boolean
-    isCollapsed: boolean
-    primaryColor: string
-}) {
+function NavItem({ item, active, isCollapsed, primaryColor }: any) {
     const navContent = (
-        <Button
-            variant="ghost"
-            className={cn(
-                "w-full transition-all duration-200 group relative overflow-hidden h-10",
-                isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3",
-                active ? "bg-slate-50" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-            )}
-            style={active ? { color: primaryColor } : undefined}
-        >
-            {active && (
-                <motion.div
-                    layoutId="sidebarActive"
-                    className="absolute left-0 w-1 h-5 rounded-r-full"
-                    style={{ backgroundColor: primaryColor }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-            )}
-
-            <item.icon className={cn(
-                "h-[18px] w-[18px] shrink-0 transition-colors",
-                !active && "text-slate-400 group-hover:text-slate-600"
-            )}
-                style={active ? { color: primaryColor } : undefined}
-            />
-
+        <Button variant="ghost" className={cn("w-full transition-all duration-200 group relative overflow-hidden h-10", isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3", active ? "bg-slate-50" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50")} style={active ? { color: primaryColor } : undefined}>
+            {active && <motion.div layoutId="sidebarActive" className="absolute left-0 w-1 h-5 rounded-r-full" style={{ backgroundColor: primaryColor }} transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
+            <item.icon className={cn("h-[18px] w-[18px] shrink-0 transition-colors", !active && "text-slate-400 group-hover:text-slate-600")} style={active ? { color: primaryColor } : undefined} />
             <AnimatePresence mode="wait">
                 {!isCollapsed && (
-                    <motion.span
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: "auto" }}
-                        exit={{ opacity: 0, width: 0 }}
-                        className={cn("text-sm whitespace-nowrap overflow-hidden", active ? "font-bold" : "font-medium")}
-                    >
+                    <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} exit={{ opacity: 0, width: 0 }} className={cn("text-sm whitespace-nowrap overflow-hidden", active ? "font-bold" : "font-medium")}>
                         {item.label}
                     </motion.span>
                 )}
@@ -356,16 +208,10 @@ function NavItem({
         <Link href={item.href} className="block relative">
             {isCollapsed ? (
                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        {navContent}
-                    </TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-slate-900 text-white">
-                        {item.label}
-                    </TooltipContent>
+                    <TooltipTrigger asChild>{navContent}</TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-slate-900 text-white">{item.label}</TooltipContent>
                 </Tooltip>
-            ) : (
-                navContent
-            )}
+            ) : navContent}
         </Link>
     )
 }
