@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/lib/notifications";
 
 export async function getProjectTasks(projectId: string) {
     const supabase = await createClient();
@@ -112,6 +113,32 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
             .single();
 
         if (error) throw error;
+
+        // Notify task creator and assignee (excluding the commenter)
+        const { data: task } = await supabase
+            .from("tasks")
+            .select("created_by, assignee_id, title, agency_id")
+            .eq("id", taskId)
+            .single();
+
+        if (task) {
+            const recipients = [task.created_by, task.assignee_id]
+                .filter(Boolean)
+                .filter((id, i, arr) => arr.indexOf(id) === i)
+                .filter((id) => id !== user.id);
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    agencyId: task.agency_id,
+                    userId: recipientId,
+                    type: "task_comment",
+                    title: "Nouveau commentaire",
+                    body: `Commentaire sur la tâche "${task.title}"`,
+                    metadata: { task_id: taskId },
+                });
+            }
+        }
+
         return { success: true, data: data as TaskComment };
     } catch (error: any) {
         console.error("Erreur ajout commentaire:", error);

@@ -103,6 +103,7 @@ export async function generateOpportunityMessage(
 		if (!apiKey) return { subject: null, body: "", error: "Clé API Mistral manquante", id: null };
 
 		const supabase = await createClient();
+		const { data: { user } } = await supabase.auth.getUser();
 
 		// 1. RÉCUPÉRATION DES RÉGLAGES IA DE L'AGENCE
 		let aiConfig = null;
@@ -223,17 +224,13 @@ export async function generateOpportunityMessage(
 			.single();
 
 		// Log timeline event (fire-and-forget)
-		if (savedMessage) {
-			supabase.auth.getUser().then(({ data: { user } }) => {
-				if (user) {
-					supabase.from("opportunity_events").insert({
-						opportunity_id: opportunity.id,
-						user_id: user.id,
-						event_type: "ai_message_generated",
-						metadata: { channel, tone },
-					}).then(() => {});
-				}
-			});
+		if (savedMessage && user) {
+			supabase.from("opportunity_events").insert({
+				opportunity_id: opportunity.id,
+				user_id: user.id,
+				event_type: "ai_message_generated",
+				metadata: { channel, tone },
+			}).then(() => {});
 		}
 
 		return { subject, body, id: savedMessage?.id || null };

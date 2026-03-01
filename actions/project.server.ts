@@ -235,6 +235,8 @@ export async function updateProjectSettings(
         figma_url: data.figma_url,
         github_url: data.github_url,
         deployment_url: data.deployment_url,
+        portal_message: data.portal_message,
+        portal_show_progress: data.portal_show_progress,
         updated_at: new Date().toISOString(),
       })
       .eq("id", projectId);
@@ -313,6 +315,7 @@ export async function createTask(
         status: data.status ?? "todo",
         type: data.type ?? "feature",
         priority: data.priority ?? "medium",
+        assignee_id: data.assignee_id ?? null,
       })
       .select()
       .single();
@@ -340,6 +343,7 @@ export async function updateTaskDetails(
         status: data.status,
         type: data.type,
         priority: data.priority,
+        assignee_id: data.assignee_id ?? null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", taskId);

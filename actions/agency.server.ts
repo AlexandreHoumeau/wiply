@@ -2,6 +2,7 @@
 
 import { InviteEmail } from '@/emails/agency-invite'; // Ajustez le chemin
 import { createClient } from "@/lib/supabase/server"
+import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"
 import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState } from "@/lib/validators/agency"
 import crypto from "crypto"
@@ -284,8 +285,8 @@ export async function removeTeamMember(memberId: string): Promise<{ success: boo
             return { success: false, message: "Vous n'avez pas les permissions pour supprimer un membre" }
         }
 
-        // Remove member from agency
-        const { error: updateError } = await supabase
+        // Remove member from agency (admin client bypasses RLS — auth checks done above)
+        const { error: updateError } = await supabaseAdmin
             .from("profiles")
             .update({ agency_id: null, role: 'client' })
             .eq("id", memberId)
@@ -303,6 +304,36 @@ export async function removeTeamMember(memberId: string): Promise<{ success: boo
         console.error("Unexpected error:", error)
         return { success: false, message: "Une erreur inattendue s'est produite" }
     }
+}
+
+export type AgencyMember = {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    email: string | null
+    role: string | null
+}
+
+export async function getAgencyMembers(): Promise<AgencyMember[]> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('agency_id')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.agency_id) return []
+
+    const { data } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, role')
+        .eq('agency_id', profile.agency_id)
+        .order('first_name')
+
+    return (data ?? []) as AgencyMember[]
 }
 
 // Add this new validator

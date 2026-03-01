@@ -14,8 +14,9 @@ export async function getPortalData(magicToken: string) {
             .from("projects")
             .select(`
                 id, name, description, figma_url, deployment_url, is_portal_active,
+                portal_message, portal_show_progress,
                 company:companies(name),
-                agency:agencies(name)
+                agency:agencies(name, logo_url, primary_color, secondary_color)
             `)
             .eq("magic_token", magicToken)
             .single();

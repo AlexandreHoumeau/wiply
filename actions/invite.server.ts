@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { createNotification } from "@/lib/notifications"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
@@ -54,6 +55,24 @@ export async function acceptInvitation(token: string) {
         .from('agency_invites')
         .update({ accepted: true })
         .eq('id', invite.id)
+
+    // Notify all agency admins
+    const { data: admins } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('agency_id', invite.agency_id)
+        .eq('role', 'agency_admin')
+
+    for (const admin of admins ?? []) {
+        await createNotification({
+            agencyId: invite.agency_id,
+            userId: admin.id,
+            type: 'member_joined',
+            title: 'Nouveau membre',
+            body: `${user.email} a rejoint ${(invite as any).agencies?.name ?? 'l\'agence'}`,
+            metadata: { user_id: user.id },
+        })
+    }
 
     revalidatePath('/app', 'layout')
     return { success: true }

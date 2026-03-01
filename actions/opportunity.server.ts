@@ -1,5 +1,7 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications";
 import { OpportunityWithCompany } from "@/lib/validators/oppotunities";
 import { OpportunityStatus, ContactVia } from "@/lib/validators/oppotunities";
 
@@ -157,4 +159,53 @@ export async function fetchOpportunityStatusCounts(agencyId: string) {
     );
 
     return counts;
+}
+
+export async function updateOpportunityStatus(
+    opportunityId: string,
+    status: OpportunityStatus
+): Promise<void> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch current status and agency_id in one query
+    const { data: opp } = await supabase
+        .from("opportunities")
+        .select("status, agency_id, name")
+        .eq("id", opportunityId)
+        .single();
+
+    if (!opp) return;
+
+    await supabase
+        .from("opportunities")
+        .update({ status })
+        .eq("id", opportunityId);
+
+    // Log timeline event
+    await supabase.from("opportunity_events").insert({
+        opportunity_id: opportunityId,
+        user_id: user.id,
+        event_type: "status_changed",
+        metadata: { from: opp.status, to: status },
+    });
+
+    // Notify all agency members except the person who made the change
+    const { data: members } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("agency_id", opp.agency_id)
+        .neq("id", user.id);
+
+    for (const member of members ?? []) {
+        await createNotification({
+            agencyId: opp.agency_id,
+            userId: member.id,
+            type: "opportunity_status_changed",
+            title: "Opportunité mise à jour",
+            body: `"${opp.name}" est passé à ${status.replace(/_/g, " ")}`,
+            metadata: { opportunity_id: opportunityId, from: opp.status, to: status },
+        });
+    }
 }

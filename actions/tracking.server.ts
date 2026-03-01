@@ -13,6 +13,7 @@ export type CreateTrackingLinkInput = {
 
 export async function createTrackingLink(input: CreateTrackingLinkInput) {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     try {
         // Générer un short code unique
@@ -40,16 +41,14 @@ export async function createTrackingLink(input: CreateTrackingLinkInput) {
         revalidatePath(`/opportunities/${input.opportunityId}`);
 
         // Log timeline event (fire-and-forget)
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            if (user) {
-                supabase.from("opportunity_events").insert({
-                    opportunity_id: input.opportunityId,
-                    user_id: user.id,
-                    event_type: "tracking_link_created",
-                    metadata: { campaign_name: input.campaignName ?? null },
-                }).then(() => {});
-            }
-        });
+        if (user) {
+            supabase.from("opportunity_events").insert({
+                opportunity_id: input.opportunityId,
+                user_id: user.id,
+                event_type: "tracking_link_created",
+                metadata: { campaign_name: input.campaignName ?? null },
+            }).then(() => {});
+        }
 
         return {
             success: true,
