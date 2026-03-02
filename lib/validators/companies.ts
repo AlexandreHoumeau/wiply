@@ -10,8 +10,8 @@ export type Company = {
 };
 
 export type CompanyWithRelations = Company & {
-  opportunities: { id: string; status: string; name: string }[];
-  projects: { id: string; status: string; name: string }[];
+  opportunities: { id: string; status: string; name: string; slug: string }[];
+  projects: { id: string; status: string; name: string; slug: string }[];
 };
 
 export type CompanyTab = "all" | "clients" | "prospects";

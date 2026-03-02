@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { CompanyWithRelations } from "@/lib/validators/companies";
 import { cn } from "@/lib/utils";
@@ -139,12 +140,13 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
             </p>
             <div className="flex flex-wrap gap-1.5">
               {company.projects.map((p) => (
-                <span
+                <Link
                   key={p.id}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100"
+                  href={`/app/projects/${p.slug}`}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
                 >
                   {p.name}
-                </span>
+                </Link>
               ))}
             </div>
           </>
@@ -156,12 +158,13 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
             {company.opportunities.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {company.opportunities.slice(0, 2).map((o) => (
-                  <span
+                  <Link
                     key={o.id}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200"
+                    href={`/app/opportunities/${o.slug}`}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors"
                   >
                     {o.name}
-                  </span>
+                  </Link>
                 ))}
                 {company.opportunities.length > 2 && (
                   <span className="text-xs text-slate-400 font-semibold self-center">
