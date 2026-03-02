@@ -85,7 +85,7 @@ export function LoginForm() {
                         </div>
                         <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Bon retour</h1>
                         <p className="text-sm font-medium text-slate-400">
-                            Connectez-vous à votre espace Partie Commune
+                            Connectez-vous à votre espace Wiply
                         </p>
                     </div>
                 </div>

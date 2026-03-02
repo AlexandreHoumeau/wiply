@@ -29,7 +29,7 @@ export default function Home() {
           <div className="bg-gradient-to-tr from-blue-600 to-indigo-500 p-2 rounded-xl shadow-lg shadow-blue-500/20">
             <Building2 className="w-5 h-5 text-white" />
           </div>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">Partie Commune</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">Wiply</span>
         </Link>
         <nav className="ml-auto flex gap-6 items-center">
           <Link className="text-sm font-medium text-slate-400 hover:text-white transition-colors hidden md:block" href="#features">
@@ -63,7 +63,7 @@ export default function Home() {
             </h1>
             <p className="max-w-[700px] mx-auto text-slate-400 md:text-xl leading-relaxed">
               Entre la signature du devis et la mise en ligne, c'est le trou noir. 
-              Partie Commune est l'outil "zéro friction" qui centralise vos clients, 
+              Wiply est l'outil "zéro friction" qui centralise vos clients,
               vos contenus et vos validations.
             </p>
             
@@ -87,7 +87,7 @@ export default function Home() {
                       <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
                       <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
                     </div>
-                    <div className="flex-1 text-center text-xs text-slate-500 font-mono">dashboard.partiecommune.app</div>
+                    <div className="flex-1 text-center text-xs text-slate-500 font-mono">dashboard.wiply.fr</div>
                  </div>
                  {/* Fake UI Body */}
                  <div className="grid grid-cols-3 gap-4 opacity-80">
@@ -292,7 +292,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-slate-500">
           <div className="flex items-center gap-2">
              <Building2 className="w-5 h-5 text-slate-400" />
-             <p>© 2026 Partie Commune CMS.</p>
+             <p>© 2026 Wiply.</p>
           </div>
           <div className="flex gap-6">
             <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>

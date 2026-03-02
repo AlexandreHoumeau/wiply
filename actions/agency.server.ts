@@ -229,7 +229,7 @@ export async function inviteTeamMember(
 
         // 2. Envoi de l'email
         const { error } = await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL ?? 'Partie Commune <noreply@partiecommune.fr>',
+            from: process.env.RESEND_FROM_EMAIL ?? 'Wiply <noreply@wiply.fr>',
             to: [validatedFields.data.email!],
             subject: `Invitation à rejoindre ${agency.name}`,
             react: InviteEmail({

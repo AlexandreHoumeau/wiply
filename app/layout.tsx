@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://partiecommune.fr'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wiply.fr'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Partie Commune — Gestion de projet pour agences",
-    template: "%s | Partie Commune",
+    default: "Wiply — Gestion de projet pour agences",
+    template: "%s | Wiply",
   },
   description:
     "La plateforme de gestion de projet pensée pour les agences. Portail client, collecte de contenus, validation par jalons et marque blanche.",
@@ -30,14 +30,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_FR",
     url: siteUrl,
-    siteName: "Partie Commune",
-    title: "Partie Commune — Gestion de projet pour agences",
+    siteName: "Wiply",
+    title: "Wiply — Gestion de projet pour agences",
     description:
       "La plateforme de gestion de projet pensée pour les agences. Portail client, collecte de contenus, validation par jalons et marque blanche.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Partie Commune — Gestion de projet pour agences",
+    title: "Wiply — Gestion de projet pour agences",
     description:
       "La plateforme de gestion de projet pensée pour les agences. Portail client, collecte de contenus, validation par jalons et marque blanche.",
   },

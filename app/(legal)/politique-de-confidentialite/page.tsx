@@ -12,7 +12,7 @@ export default function PolitiqueDeConfidentialite() {
       <p className="text-slate-500 text-sm">Dernière mise à jour : février 2026</p>
 
       <p>
-        La présente politique de confidentialité décrit la manière dont Partie Commune collecte,
+        La présente politique de confidentialité décrit la manière dont Wiply collecte,
         utilise et protège vos données personnelles conformément au Règlement général sur la
         protection des données (RGPD — Règlement UE 2016/679).
       </p>
@@ -21,7 +21,7 @@ export default function PolitiqueDeConfidentialite() {
       <p>
         [Nom de la société]<br />
         [Adresse]<br />
-        Email : <a href="mailto:contact@partiecommune.fr">contact@partiecommune.fr</a>
+        Email : <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
 
       <h2>2. Données collectées</h2>
@@ -64,7 +64,7 @@ export default function PolitiqueDeConfidentialite() {
       <p>
         Conformément au RGPD, vous disposez des droits suivants : accès, rectification,
         effacement, limitation, portabilité et opposition. Pour exercer ces droits, contactez-nous à{' '}
-        <a href="mailto:contact@partiecommune.fr">contact@partiecommune.fr</a>.
+        <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>.
       </p>
       <p>
         Vous disposez également du droit d&apos;introduire une réclamation auprès de la CNIL
@@ -81,7 +81,7 @@ export default function PolitiqueDeConfidentialite() {
       <h2>8. Contact</h2>
       <p>
         Pour toute question relative à vos données :{' '}
-        <a href="mailto:contact@partiecommune.fr">contact@partiecommune.fr</a>
+        <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
     </article>
   )

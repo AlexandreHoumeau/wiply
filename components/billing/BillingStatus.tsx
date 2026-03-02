@@ -134,7 +134,7 @@ export function BillingStatus({ billing, agencyId }: { billing: BillingData; age
                                 <p className="text-slate-500 mt-2 max-w-md">
                                     {isFree
                                         ? "Vous utilisez actuellement la version gratuite. Idéal pour tester nos outils de base."
-                                        : "Vous profitez de la puissance totale de Partie Commune pour votre agence."}
+                                        : "Vous profitez de la puissance totale de Wiply pour votre agence."}
                                 </p>
                             </div>
                         </div>

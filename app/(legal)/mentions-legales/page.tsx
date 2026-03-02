@@ -13,12 +13,12 @@ export default function MentionsLegales() {
 
       <h2>Éditeur du site</h2>
       <p>
-        Le site <strong>Partie Commune</strong> est édité par :<br />
+        Le site <strong>Wiply</strong> est édité par :<br />
         [Nom de la société / nom du porteur du projet]<br />
         [Forme juridique — ex. SAS, auto-entrepreneur…]<br />
         [Adresse du siège social]<br />
         [Numéro SIRET]<br />
-        Email : <a href="mailto:contact@partiecommune.fr">contact@partiecommune.fr</a>
+        Email : <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
 
       <h2>Directeur de la publication</h2>
@@ -40,7 +40,7 @@ export default function MentionsLegales() {
 
       <h2>Contact</h2>
       <p>
-        Pour toute question : <a href="mailto:contact@partiecommune.fr">contact@partiecommune.fr</a>
+        Pour toute question : <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
     </article>
   )

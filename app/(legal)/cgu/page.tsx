@@ -13,14 +13,14 @@ export default function CGU() {
 
       <h2>1. Objet</h2>
       <p>
-        Les présentes CGU régissent l&apos;accès et l&apos;utilisation de la plateforme Partie Commune,
-        disponible à l&apos;adresse <strong>partiecommune.fr</strong>, éditée par [Nom de la société].
+        Les présentes CGU régissent l&apos;accès et l&apos;utilisation de la plateforme Wiply,
+        disponible à l&apos;adresse <strong>wiply.fr</strong>, éditée par [Nom de la société].
         Toute utilisation du service implique l&apos;acceptation pleine et entière des présentes CGU.
       </p>
 
       <h2>2. Accès au service</h2>
       <p>
-        Partie Commune est accessible après création d&apos;un compte. L&apos;accès est réservé aux
+        Wiply est accessible après création d&apos;un compte. L&apos;accès est réservé aux
         professionnels (agences, freelances et leurs clients). L&apos;utilisateur s&apos;engage à fournir
         des informations exactes lors de l&apos;inscription.
       </p>
@@ -67,7 +67,7 @@ export default function CGU() {
 
       <h2>7. Limitation de responsabilité</h2>
       <p>
-        Partie Commune est fourni « en l&apos;état ». L&apos;éditeur ne saurait être tenu responsable
+        Wiply est fourni « en l&apos;état ». L&apos;éditeur ne saurait être tenu responsable
         des pertes de données, pertes d&apos;exploitation ou tout dommage indirect découlant de
         l&apos;utilisation du service.
       </p>
@@ -87,7 +87,7 @@ export default function CGU() {
 
       <h2>10. Contact</h2>
       <p>
-        <a href="mailto:contact@partiecommune.fr">contact@partiecommune.fr</a>
+        <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
     </article>
   )
