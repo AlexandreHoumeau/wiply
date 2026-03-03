@@ -11,7 +11,9 @@ import { BrevoClient } from '@getbrevo/brevo'
 import { render } from '@react-email/components'
 import { z } from "zod"
 
-const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! })
+function getBrevoClient() {
+    return new BrevoClient({ apiKey: process.env.BREVO_API_KEY! })
+}
 // Validation schema for agency information
 const updateAgencySchema = z.object({
     name: z.string().min(1, "Le nom de l'agence est requis").max(200),
@@ -236,7 +238,7 @@ export async function inviteTeamMember(
         }))
 
         try {
-            await brevo.transactionalEmails.sendTransacEmail({
+            await getBrevoClient().transactionalEmails.sendTransacEmail({
                 sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
                 to: [{ email: validatedFields.data.email! }],
                 subject: `Invitation à rejoindre ${agency.name}`,

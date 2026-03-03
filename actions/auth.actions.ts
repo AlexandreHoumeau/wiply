@@ -6,7 +6,9 @@ import { BrevoClient } from "@getbrevo/brevo";
 import { render } from "@react-email/components";
 import { SignupConfirmEmail } from "@/emails/signup-confirm";
 
-const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
+function getBrevoClient() {
+    return new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
+}
 
 type SignupInput = {
     email: string;
@@ -47,7 +49,7 @@ export async function signup(data: SignupInput) {
     }));
 
     try {
-        await brevo.transactionalEmails.sendTransacEmail({
+        await getBrevoClient().transactionalEmails.sendTransacEmail({
             sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
             to: [{ email: data.email }],
             subject: 'Confirmez votre adresse email — Wiply',
