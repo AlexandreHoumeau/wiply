@@ -1,5 +1,6 @@
 "use client";
 import { generateOpportunityMessage, getAIGeneratedMessages, saveAIGeneratedMessage, updateAIGeneratedMessage } from "@/actions/ai-messages";
+import { getTrackingLinks } from "@/actions/tracking.server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -7,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { OpportunityAIContext } from "@/lib/email_generator/utils";
 import { ContactVia } from "@/lib/validators/oppotunities";
-import { AlertCircle, CheckCircle2, Copy, Instagram, LinkedinIcon, Loader2, Mail, Save, Wand2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Copy, Instagram, Link2, LinkedinIcon, Loader2, Mail, Save, Wand2 } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -33,10 +34,16 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 	const [messageId, setMessageId] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+	const [hasTrackingLink, setHasTrackingLink] = useState(false);
 
-	// Load existing message on mount
+	// Load existing message and tracking link status on mount
 	useEffect(() => {
 		loadExistingMessage();
+		getTrackingLinks(opportunity.id).then(result => {
+			if (result.success && result.data) {
+				setHasTrackingLink(result.data.some((l: any) => l.is_active));
+			}
+		});
 	}, [opportunity.id]);
 
 	const loadExistingMessage = async () => {
@@ -298,7 +305,15 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 								/>
 							</div>
 
-							{/* Generate Button */}
+							{/* Tracking link indicator */}
+						{hasTrackingLink && (
+							<div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+								<Link2 className="h-3.5 w-3.5 flex-shrink-0" />
+								Lien de tracking inclus automatiquement
+							</div>
+						)}
+
+						{/* Generate Button */}
 							<Button
 								type="submit"
 								disabled={isPending}
@@ -430,7 +445,7 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 										className="flex items-center gap-2"
 									>
 										<Wand2 className="h-4 w-4" />
-										Regenerate
+										Régénérer
 									</Button>
 									<Button
 										type="button"
@@ -440,7 +455,7 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 										className="flex items-center gap-2"
 									>
 										<Copy className="h-4 w-4" />
-										Copy
+										Copier
 									</Button>
 
 									{/* Update/Save button */}
@@ -453,7 +468,7 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 											className="flex items-center gap-2 text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100"
 										>
 											<Save className="h-4 w-4" />
-											Update
+											Mettre à jour
 										</Button>
 									) : (
 										<Button
@@ -465,7 +480,7 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 												}`}
 										>
 											<CheckCircle2 className="h-4 w-4" />
-											{isSaved ? 'Saved' : 'Not saved'}
+											{isSaved ? 'Sauvegardé' : 'Non sauvegardé'}
 										</Button>
 									)}
 								</div>

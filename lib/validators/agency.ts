@@ -165,4 +165,5 @@ export type Agency = {
     primary_color: string | null;
     secondary_color: string | null;
     logo_url: string | null;
+    demo_ends_at: string | null;
 }

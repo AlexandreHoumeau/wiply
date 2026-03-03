@@ -5,10 +5,17 @@ async function getAgencyPlan(agencyId: string): Promise<PlanId> {
     const supabase = await createClient()
     const { data } = await supabase
         .from('agencies')
-        .select('plan')
+        .select('plan, demo_ends_at')
         .eq('id', agencyId)
         .single()
-    return (data?.plan as PlanId) || 'FREE'
+
+    if (!data) return 'FREE'
+
+    if (data.demo_ends_at && new Date(data.demo_ends_at) > new Date()) {
+        return 'PRO'
+    }
+
+    return (data.plan as PlanId) || 'FREE'
 }
 
 export async function checkProjectLimit(

@@ -53,7 +53,7 @@ export async function createTrackingLink(input: CreateTrackingLinkInput) {
         return {
             success: true,
             data,
-            trackingUrl: `${process.env.NEXT_PUBLIC_APP_URL}/t/${shortCode}`
+            trackingUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/t/${shortCode}`
         };
     } catch (error) {
         console.error("Error creating tracking link:", error);

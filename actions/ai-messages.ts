@@ -129,62 +129,99 @@ export async function generateOpportunityMessage(
 			customContext,
 		});
 
+		// 3. RÉCUPÉRATION DU LIEN DE TRACKING ACTIF + SITE WEB AGENCE
+		let trackingLinkUrl: string | null = null;
+		let agencyWebsite: string | null = null;
+
+		const [trackingResult, agencyResult] = await Promise.all([
+			supabase
+				.from("tracking_links")
+				.select("short_code")
+				.eq("opportunity_id", opportunity.id)
+				.eq("is_active", true)
+				.order("created_at", { ascending: false })
+				.limit(1),
+			agencyId
+				? supabase.from("agencies").select("website").eq("id", agencyId).single()
+				: Promise.resolve({ data: null }),
+		]);
+
+		const appUrl = process.env.NEXT_PUBLIC_SITE_URL;
+		if (trackingResult.data && trackingResult.data.length > 0 && appUrl) {
+			trackingLinkUrl = `${appUrl}/t/${trackingResult.data[0].short_code}`;
+		}
+		agencyWebsite = (agencyResult as any).data?.website || null;
+
 		// Contextes métiers
 		const statusContext = {
-			"to_do": "premier contact, introduction",
-			"first_contact": "suivi après premier échange",
-			"proposal_sent": "relance suite à proposition envoyée",
-			"negotiation": "négociation des termes",
-			"won": "bienvenue et kickoff",
-			"lost": "clôture professionnelle",
+			"to_do": "première approche — aucun contact précédent",
+			"first_contact": "suivi après un premier échange",
+			"second_contact": "deuxième relance, toujours sans réponse concrète",
+			"proposal_sent": "relance après envoi d'une proposition commerciale",
+			"negotiation": "en cours de négociation des termes",
+			"won": "client gagné — message de bienvenue ou de lancement",
+			"lost": "prospect perdu — clôture professionnelle ou tentative de reconquête",
 		}[opportunity.status as string] || "contact professionnel";
 
 		const channelGuidelines = {
-			email: "Email professionnel avec objet et corps structuré",
-			instagram: "DM Instagram, très court et direct",
-			linkedin: "Message LinkedIn (InMail), pro mais pas rigide",
-			phone: "Script d'appel synthétique",
-			IRL: "Guide de conversation pour rencontre physique",
-		}[channel] || "Message professionnel";
+			email: "email professionnel avec sujet et corps structuré (2-4 paragraphes max)",
+			instagram: "DM Instagram : très court, direct, ton humain (3-5 lignes max)",
+			linkedin: "InMail LinkedIn : professionnel mais accessible (5-7 lignes max)",
+			phone: "script d'appel synthétique : introduction → accroche → CTA (format points)",
+			IRL: "guide de conversation pour une rencontre physique (points clés à aborder)",
+		}[channel] || "message professionnel";
 
-		// 3. CONSTRUCTION DU PROMPT DYNAMIQUE
-		const prompt = `
-            <s>[INST]
-            IDENTITÉ DE L'EXPÉDITEUR (TON AGENCE) :
-            ${aiConfig?.ai_context ? aiConfig.ai_context : "Tu es un agent commercial professionnel."}
-            
-            TES POINTS FORTS & ARGUMENTS DE VENTE :
-            ${aiConfig?.key_points ? aiConfig.key_points : "- Expertise métier et réactivité."}
+		// 4. CONSTRUCTION DU PROMPT — FORMAT SYSTEM / USER
+		const systemMessage = [
+			aiConfig?.ai_context
+				? aiConfig.ai_context
+				: "Tu es un expert en prospection commerciale. Tu rédiges des messages efficaces, personnalisés et orientés résultats.",
+			"",
+			"TES ARGUMENTS DIFFÉRENCIANTS :",
+			aiConfig?.key_points || "- Expertise métier\n- Réactivité\n- Approche personnalisée",
+			agencyWebsite ? `\nSite web de l'agence : ${agencyWebsite}` : "",
+			aiConfig?.custom_instructions ? `\nINSTRUCTIONS SPÉCIFIQUES :\n${aiConfig.custom_instructions}` : "",
+			"",
+			"RÈGLES ABSOLUES :",
+			"- Ne jamais inventer de faits non fournis dans le contexte",
+			"- Répondre UNIQUEMENT avec le message final — aucun commentaire ni explication avant ou après",
+			"- Toujours inclure un CTA (Call-To-Action) clair et engageant",
+			"- Personnaliser l'accroche en fonction de l'entreprise et de son secteur",
+		].filter(Boolean).join("\n");
 
-            CONTEXTE DU PROSPECT :
-            - Entreprise : ${opportunity.company.name}
-            - Phase actuelle : ${statusContext}
-            - Secteur : ${opportunity.company.business_sector || "non spécifié"}
-            - Description de l'opportunité : ${opportunity.description || "Pas de description"}
-            ${customContext ? `- Note additionnelle : ${customContext}` : ""}
+		const companyWebsite = opportunity.company?.website;
 
-            CONSIGNES DE RÉDACTION :
-            - Canal : ${channelGuidelines}
-            - Ton : ${tone === "formal" ? "très formel" : tone === "friendly" ? "chaleureux/amical" : "décontracté"}
-            - Longueur : ${length === "short" ? "très concis (2-3 phrases)" : "détaillé et argumenté"}
-            ${aiConfig?.custom_instructions ? `- INSTRUCTIONS SPÉCIFIQUES À RESPECTER : ${aiConfig.custom_instructions}` : ""}
+		const userMessage = [
+			`Canal : ${channelGuidelines}`,
+			`Ton : ${tone === "formal" ? "très formel et professionnel" : tone === "friendly" ? "chaleureux et aimable" : "décontracté et authentique"}`,
+			`Longueur : ${length === "short" ? "très concis — 2 à 3 phrases maximum" : "développé et argumenté — 3 à 5 phrases"}`,
+			"",
+			"DESTINATAIRE :",
+			`- Entreprise : ${opportunity.company.name}`,
+			`- Secteur : ${opportunity.company?.business_sector || "non spécifié"}`,
+			companyWebsite ? `- Site web du prospect : ${companyWebsite}` : "",
+			`- Situation actuelle : ${statusContext}`,
+			"",
+			opportunity.description ? `DESCRIPTION DE L'OPPORTUNITÉ :\n${opportunity.description}` : "",
+			customContext ? `\nCONTEXTE ADDITIONNEL :\n${customContext}` : "",
+			trackingLinkUrl
+				? `\nLIEN DE SUIVI À INCLURE OBLIGATOIREMENT :\n${trackingLinkUrl}\n(Intègre ce lien de façon naturelle — présente-le comme un accès à une démo, un portfolio, une étude de cas ou toute ressource pertinente selon le contexte.)`
+				: "",
+			channel === "email"
+				? "\nFORMAT EMAIL : La première ligne doit être uniquement l'objet (ex: \"Objet : ...\"), suivi d'une ligne vide, puis le corps du message."
+				: "",
+			"\nRédige le message maintenant.",
+		].filter(Boolean).join("\n");
 
-            RÈGLES D'OR :
-            1. Ne JAMAIS inventer de faits non mentionnés.
-            2. Personnalise l'accroche par rapport à l'entreprise.
-            3. Inclus un Call-To-Action (CTA) clair.
-            4. Ne donne QUE le message final, sans aucun commentaire avant ou après.
-            ${channel === "email" ? "5. La première ligne DOIT être le SUJET de l'email." : ""}
-
-            Rédige le message maintenant.
-            [/INST]</s>`;
-
-		// 4. APPEL MISTRAL AI
+		// 5. APPEL MISTRAL AI
 		const mistral = new Mistral({ apiKey });
 		const response = await mistral.chat.complete({
 			model: "mistral-small-latest",
-			messages: [{ role: "user", content: prompt }],
-			temperature: 0.7,
+			messages: [
+				{ role: "system", content: systemMessage },
+				{ role: "user", content: userMessage },
+			],
+			temperature: 0.65,
 		});
 
 		let messageText = "";
@@ -195,19 +232,23 @@ export async function generateOpportunityMessage(
 			messageText = content || "";
 		}
 
-		// 5. EXTRACTION SUJET / CORPS
+		// 6. EXTRACTION SUJET / CORPS
 		let subject: string | null = null;
 		let body = messageText;
 
 		if (channel === "email") {
-			const parts = messageText.split("\n").filter(p => p.trim() !== "");
-			if (parts.length > 1) {
-				subject = parts[0].replace(/^(Sujet|Subject|Objet)\s*:\s*/i, "").trim();
-				body = parts.slice(1).join("\n").trim();
+			const lines = messageText.split("\n");
+			const subjectLineIndex = lines.findIndex(l => /^(objet|sujet|subject)\s*:/i.test(l.trim()));
+			if (subjectLineIndex !== -1) {
+				subject = lines[subjectLineIndex].replace(/^(objet|sujet|subject)\s*:\s*/i, "").trim();
+				body = lines.slice(subjectLineIndex + 1).join("\n").trim();
+			} else if (lines.length > 1) {
+				subject = lines[0].trim();
+				body = lines.slice(1).join("\n").trim();
 			}
 		}
 
-		// 6. SAUVEGARDE EN BASE
+		// 7. SAUVEGARDE EN BASE
 		const { data: savedMessage } = await supabase
 			.from("ai_generated_messages")
 			.insert({
@@ -229,7 +270,7 @@ export async function generateOpportunityMessage(
 				opportunity_id: opportunity.id,
 				user_id: user.id,
 				event_type: "ai_message_generated",
-				metadata: { channel, tone },
+				metadata: { channel, tone, has_tracking_link: !!trackingLinkUrl },
 			}).then(() => {});
 		}
 
