@@ -28,8 +28,7 @@ export async function acceptInvitation(token: string) {
     // 3. Vérifier l'utilisateur connecté
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-        // Redirection vers login avec retour ici après auth
-        redirect(`/login?next=/invite?token=${token}`)
+        redirect(`/auth/login?next=${encodeURIComponent(`/invite?token=${token}`)}`)
     }
 
     if (user.email !== invite.email) {

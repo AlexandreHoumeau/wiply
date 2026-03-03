@@ -1,12 +1,11 @@
 "use server"
+import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { supabaseAdmin } from "@/lib/supabase/admin" // Importe ton client admin
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, CheckCircle2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import InviteAcceptanceButton from "./_components/invite-acceptance-button"
-import { redirect } from "next/navigation"
 
 export default async function InvitePage({
     searchParams,
@@ -14,17 +13,12 @@ export default async function InvitePage({
     searchParams: Promise<{ token: string }>
 }) {
     const { token } = await searchParams;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    // 1. Redirection si non connecté
-    if (!user) {
-        const nextPath = encodeURIComponent(`/invite?token=${token}`);
-        redirect(`/auth/login?next=${nextPath}`);
-    }
+    // Page publique — pas besoin d'être connecté pour voir l'invitation.
+    // L'authentification est vérifiée uniquement au moment d'accepter.
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // 2. Utilisation de supabaseAdmin pour bypasser la RLS
-    // On sélectionne aussi le nom de l'agence via une jointure
     const { data: invite, error } = await supabaseAdmin
         .from('agency_invites')
         .select('*, agencies(name)')
@@ -87,7 +81,12 @@ export default async function InvitePage({
                 </CardContent>
 
                 <CardFooter className="p-8 pt-4">
-                    <InviteAcceptanceButton token={token} />
+                    <InviteAcceptanceButton
+                        token={token}
+                        isLoggedIn={!!user}
+                        userEmail={user?.email ?? null}
+                        inviteEmail={invite.email}
+                    />
                 </CardFooter>
             </Card>
         </div>
