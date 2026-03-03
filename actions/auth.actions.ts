@@ -1,33 +1,37 @@
 'use server';
 
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { BrevoClient } from "@getbrevo/brevo";
+import { render } from "@react-email/components";
+import { SignupConfirmEmail } from "@/emails/signup-confirm";
+
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
 
 type SignupInput = {
     email: string;
     password: string;
-    agencyName?: string; // Optionnel maintenant
+    agencyName?: string;
     firstName: string;
     lastName: string;
-    redirectTo?: string; // Pour garder le lien d'invitation
+    redirectTo?: string;
 };
 
 export async function signup(data: SignupInput) {
-    const supabase = await createClient();
-
-    // On prépare l'URL de redirection après confirmation d'email
-    // Si data.redirectTo existe (le lien /invite), on l'utilise
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const redirectUrl = data.redirectTo
         ? `${baseUrl}/auth/callback?next=${encodeURIComponent(data.redirectTo)}`
         : `${baseUrl}/auth/callback`;
 
-    const { error } = await supabase.auth.signUp({
+    // generateLink creates the user and returns the confirmation link
+    // without Supabase auto-sending any email — we send it via Brevo instead
+    const { data: linkData, error } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'signup',
         email: data.email,
         password: data.password,
         options: {
-            emailRedirectTo: redirectUrl,
+            redirectTo: redirectUrl,
             data: {
-                // On ne passe agency_name que s'il existe
                 ...(data.agencyName && { agency_name: data.agencyName }),
                 first_name: data.firstName,
                 last_name: data.lastName,
@@ -36,6 +40,24 @@ export async function signup(data: SignupInput) {
     });
 
     if (error) return { error: error.message };
+
+    const htmlContent = await render(SignupConfirmEmail({
+        confirmLink: linkData.properties.action_link,
+        firstName: data.firstName,
+    }));
+
+    try {
+        await brevo.transactionalEmails.sendTransacEmail({
+            sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
+            to: [{ email: data.email }],
+            subject: 'Confirmez votre adresse email — Wiply',
+            htmlContent,
+        });
+    } catch (emailError) {
+        console.error("Brevo signup email error:", emailError);
+        // User was created — don't block signup, they can request a new confirmation link
+    }
+
     return { success: true };
 }
 

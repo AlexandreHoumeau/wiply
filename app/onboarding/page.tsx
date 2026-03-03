@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
+import { bootstrapUser } from "@/services/onboarding.service";
 
 export default async function OnboardingPage() {
     const supabase = await createClient();
@@ -17,8 +18,16 @@ export default async function OnboardingPage() {
 
     if (profile) redirect("/app");
 
-    // Extract name from Google metadata
     const meta = user.user_metadata;
+
+    // Email/password users already provided their info at signup — auto-bootstrap
+    // and skip the form (agency_name is only set for email/password signups)
+    if (meta?.agency_name) {
+        await bootstrapUser();
+        redirect("/app");
+    }
+
+    // Extract name from Google metadata
     const fullName: string = meta?.full_name || meta?.name || "";
     const parts = fullName.trim().split(" ");
     const defaultFirstName = meta?.given_name || parts[0] || "";

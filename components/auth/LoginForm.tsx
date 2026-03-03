@@ -34,6 +34,7 @@ function GoogleIcon() {
 export function LoginForm() {
     const searchParams = useSearchParams();
     const next = searchParams.get("next");
+    const urlError = searchParams.get("error");
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -116,6 +117,12 @@ export function LoginForm() {
 
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            {urlError === "link_expired" && (
+                                <Alert className="py-2.5 px-3 border-amber-200 bg-amber-50 text-amber-700 rounded-xl">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription className="text-xs font-medium ml-1">Ce lien a expiré. Connectez-vous puis demandez un nouveau lien si nécessaire.</AlertDescription>
+                                </Alert>
+                            )}
                             {submitError && (
                                 <Alert className="py-2.5 px-3 border-red-200 bg-red-50 text-red-600 rounded-xl">
                                     <AlertCircle className="h-4 w-4" />

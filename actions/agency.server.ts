@@ -7,10 +7,11 @@ import { checkMemberLimit } from "@/lib/billing/checkLimit"
 import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState } from "@/lib/validators/agency"
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
-import { Resend } from 'resend'
+import { BrevoClient } from '@getbrevo/brevo'
+import { render } from '@react-email/components'
 import { z } from "zod"
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! })
 // Validation schema for agency information
 const updateAgencySchema = z.object({
     name: z.string().min(1, "Le nom de l'agence est requis").max(200),
@@ -228,21 +229,22 @@ export async function inviteTeamMember(
         const inviterName = `${senderProfile.first_name} ${senderProfile.last_name}`;
 
         // 2. Envoi de l'email
-        const { error } = await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL ?? 'Wiply <noreply@wiply.fr>',
-            to: [validatedFields.data.email!],
-            subject: `Invitation à rejoindre ${agency.name}`,
-            react: InviteEmail({
-                agencyName: agency.name,
-                inviterName: inviterName,
-                inviteLink: inviteLink,
-            }),
-        });
+        const htmlContent = await render(InviteEmail({
+            agencyName: agency.name,
+            inviterName: inviterName,
+            inviteLink: inviteLink,
+        }))
 
-        if (error) {
-            console.error("Resend Error:", error);
-            // Optionnel : supprimer l'invitation en DB si l'email échoue
-            return { success: false, message: "L'invitation a été créée mais l'email n'a pu être envoyé." };
+        try {
+            await brevo.transactionalEmails.sendTransacEmail({
+                sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
+                to: [{ email: validatedFields.data.email! }],
+                subject: `Invitation à rejoindre ${agency.name}`,
+                htmlContent,
+            })
+        } catch (emailError) {
+            console.error("Brevo Error:", emailError)
+            return { success: false, message: "L'invitation a été créée mais l'email n'a pu être envoyé." }
         }
 
         revalidatePath("/settings/agency");

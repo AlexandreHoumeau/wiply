@@ -12,40 +12,37 @@ import {
 } from "@react-email/components";
 import * as React from "react";
 
-interface InviteEmailProps {
-    agencyName: string;
-    inviterName: string;
-    inviteLink: string;
+interface SignupConfirmEmailProps {
+    confirmLink: string;
+    firstName: string;
 }
 
-export const InviteEmail = ({
-    agencyName,
-    inviterName,
-    inviteLink,
-}: InviteEmailProps) => (
+export const SignupConfirmEmail = ({
+    confirmLink,
+    firstName,
+}: SignupConfirmEmailProps) => (
     <Html>
         <Head />
-        <Preview>Rejoignez {agencyName} sur Wiply</Preview>
+        <Preview>Confirmez votre adresse email pour accéder à Wiply</Preview>
         <Body style={main}>
             <Container style={container}>
                 <Section style={logoContainer}>
-                    {/* Vous pourrez ajouter votre logo ici plus tard */}
                     <Text style={logoText}>Wiply</Text>
                 </Section>
-                <Heading style={h1}>Prêt à collaborer ?</Heading>
+                <Heading style={h1}>Confirmez votre email</Heading>
                 <Text style={text}>
-                    Bonjour,
+                    Bonjour {firstName},
                 </Text>
                 <Text style={text}>
-                    <strong>{inviterName}</strong> vous a invité à rejoindre l'espace de l'agence <strong>{agencyName}</strong> sur Wiply, votre nouvel outil de gestion de la relation client.
+                    Merci de vous être inscrit sur Wiply. Cliquez sur le bouton ci-dessous pour activer votre compte et accéder à votre espace de travail.
                 </Text>
                 <Section style={buttonContainer}>
-                    <Button style={button} href={inviteLink}>
-                        Rejoindre l'équipe
+                    <Button style={button} href={confirmLink}>
+                        Confirmer mon adresse email
                     </Button>
                 </Section>
                 <Text style={smallText}>
-                    Ce lien d'invitation est valable pendant 7 jours. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email en toute sécurité.
+                    Ce lien est valable pendant 24 heures. Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email en toute sécurité.
                 </Text>
                 <Hr style={hr} />
                 <Text style={footer}>
@@ -78,7 +75,7 @@ const logoContainer = {
 const logoText = {
     fontSize: "24px",
     fontWeight: "800",
-    color: "#6366f1", // Un violet/indigo moderne pour Wiply
+    color: "#6366f1",
     margin: "0",
     letterSpacing: "-0.5px"
 };

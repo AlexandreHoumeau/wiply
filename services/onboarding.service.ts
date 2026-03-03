@@ -2,6 +2,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+function generateAgencySlug(name: string): string {
+    return name
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .substring(0, 50)
+        + "-" + Math.random().toString(36).substring(2, 7);
+}
+
 export async function bootstrapUser(invitationToken?: string | null) { // <-- On ajoute le token ici
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -39,7 +50,7 @@ export async function bootstrapUser(invitationToken?: string | null) { // <-- On
     // Insert agency without owner_id first: owner_id FK references profiles.id which doesn't exist yet
     const { data: agency, error: agencyError } = await supabaseAdmin
       .from("agencies")
-      .insert({ name: meta.agency_name })
+      .insert({ name: meta.agency_name, slug: generateAgencySlug(meta.agency_name) })
       .select()
       .single();
 
@@ -68,7 +79,13 @@ export async function bootstrapUser(invitationToken?: string | null) { // <-- On
     .select()
     .single();
 
-  if (profileError) throw profileError;
+  if (profileError) {
+    // Rollback: delete the agency we just created to avoid orphaned records on retry
+    if (userRole === "agency_admin") {
+      await supabaseAdmin.from("agencies").delete().eq("id", targetAgencyId);
+    }
+    throw profileError;
+  }
 
   // 4. If this user owns the agency, set owner_id now that the profile exists
   if (userRole === "agency_admin") {
