@@ -1,24 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { AlertCircle, ArrowLeft, Loader2, Mail, MailOpen } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { resetPasswordForEmail } from "@/actions/auth.actions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
     Form,
+    FormControl,
     FormField,
     FormItem,
     FormLabel,
-    FormControl,
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const schema = z.object({
     email: z.string().email("Email invalide"),
@@ -37,12 +37,10 @@ export function ForgotPasswordForm() {
     async function onSubmit(values: { email: string }) {
         setError(null);
         setIsPending(true);
-        const supabase = createSupabaseBrowserClient();
-        const { error: authError } = await supabase.auth.resetPasswordForEmail(values.email, {
-            redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
-        });
-        if (authError) {
-            setError(authError.message);
+
+        const { error } = await resetPasswordForEmail(values.email)
+        if (error) {
+            setError(error);
         } else {
             setSuccess(true);
         }

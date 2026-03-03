@@ -1,6 +1,6 @@
 'use server'
 
-import { InviteEmail } from '@/emails/agency-invite'; // Ajustez le chemin
+import { InviteEmail } from '@/emails/agency-invite';
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"

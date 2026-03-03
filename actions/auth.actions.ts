@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { BrevoClient } from "@getbrevo/brevo";
 import { render } from "@react-email/components";
 import { SignupConfirmEmail } from "@/emails/signup-confirm";
+import { ResetPasswordEmail } from "@/emails/reset-password";
 
 function getBrevoClient() {
     return new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
@@ -69,12 +70,33 @@ export async function signOut() {
 }
 
 export async function resetPasswordForEmail(email: string) {
-    const supabase = await createClient();
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${baseUrl}/auth/callback?next=/auth/reset-password`,
+
+    const { data: linkData, error } = await supabaseAdmin.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+        options: {
+            redirectTo: `${baseUrl}/auth/callback?next=/auth/reset-password`,
+        },
     });
+
     if (error) return { error: error.message };
+
+    const htmlContent = await render(ResetPasswordEmail({
+        resetLink: linkData.properties.action_link,
+    }));
+
+    try {
+        await getBrevoClient().transactionalEmails.sendTransacEmail({
+            sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
+            to: [{ email }],
+            subject: 'Réinitialisez votre mot de passe — Wiply',
+            htmlContent,
+        });
+    } catch (emailError) {
+        console.error("Brevo reset password email error:", emailError);
+    }
+
     return { success: true };
 }
 

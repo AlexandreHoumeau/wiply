@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,12 +34,37 @@ export function ResetPasswordForm() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [isPending, setIsPending] = useState(false);
+    const [sessionReady, setSessionReady] = useState(false);
     const router = useRouter();
 
     const form = useForm({
         resolver: zodResolver(schema),
         defaultValues: { password: "", confirmPassword: "" },
     });
+
+    useEffect(() => {
+        const supabase = createSupabaseBrowserClient();
+
+        // Implicit flow: tokens arrive in the URL hash (#access_token=...&refresh_token=...)
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (accessToken && refreshToken) {
+            supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+                .then(({ error }) => {
+                    if (error) setError('Lien invalide ou expiré.');
+                    else setSessionReady(true);
+                });
+        } else {
+            // PKCE flow: session already established by /auth/callback route
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) setSessionReady(true);
+                else setError('Lien invalide ou expiré.');
+            });
+        }
+    }, []);
 
     async function onSubmit(values: { password: string; confirmPassword: string }) {
         setError(null);
@@ -161,7 +186,7 @@ export function ResetPasswordForm() {
                             <Button
                                 type="submit"
                                 className="w-full h-12 text-sm font-bold bg-gradient-to-r from-slate-900 to-slate-800 text-white hover:from-slate-800 hover:to-slate-700 shadow-lg shadow-slate-900/20 transition-all duration-300 rounded-xl mt-2"
-                                disabled={isPending}
+                                disabled={isPending || !sessionReady}
                             >
                                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                 {isPending ? "Mise à jour..." : "Changer le mot de passe"}
