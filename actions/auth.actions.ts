@@ -44,8 +44,17 @@ export async function signup(data: SignupInput) {
 
     if (error) return { error: error.message };
 
+    // Use hashed_token to build a link to our own /auth/confirm page instead of
+    // Supabase's /auth/v1/verify URL. Email scanners (Gmail, etc.) pre-fetch
+    // links in emails — hitting the Supabase URL directly would consume the OTP
+    // before the user clicks. Our /auth/confirm page just renders a button;
+    // scanners can't click it, so the OTP is preserved for the real user.
+    const hashedToken = linkData.properties.hashed_token;
+    const confirmLink = `${baseUrl}/auth/confirm?token_hash=${hashedToken}&type=signup`
+        + (data.redirectTo ? `&next=${encodeURIComponent(data.redirectTo)}` : '');
+
     const htmlContent = await render(SignupConfirmEmail({
-        confirmLink: linkData.properties.action_link,
+        confirmLink,
         firstName: data.firstName,
     }));
 

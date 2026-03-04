@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   // Supabase sends error params when the link is invalid or expired
   if (errorCode === "otp_expired" || searchParams.get("error") === "access_denied") {
     return NextResponse.redirect(
-      `${origin}/auth/login?error=link_expired`
+      `${origin}/auth/login?error=link_expired&next=${encodeURIComponent(next)}`
     );
   }
 
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   }
 
   // --- FLOW 2 : PKCE code exchange (OAuth + browser-initiated signUp) ---
-  if (!code) return NextResponse.redirect(`${origin}/auth/login`);
+  if (!code) return NextResponse.redirect(`${origin}/auth/login?next=${encodeURIComponent(next)}`);
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 

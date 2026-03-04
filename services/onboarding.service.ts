@@ -19,7 +19,10 @@ export async function bootstrapUser(invitationToken?: string | null) { // <-- On
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data: profile } = await supabase
+  // Use admin client to bypass RLS — a re-invited user may have agency_id = null
+  // which causes RLS to hide their profile from the regular client, leading to a
+  // false "profile not found" and a duplicate key error on INSERT.
+  const { data: profile } = await supabaseAdmin
     .from("profiles")
     .select("*")
     .eq("id", user.id)

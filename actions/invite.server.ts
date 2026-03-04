@@ -36,8 +36,9 @@ export async function acceptInvitation(token: string) {
     }
 
     // 4. TRANSACTION : Mettre à jour le profil + Marquer l'invitation comme acceptée
-    // On met à jour le profil de l'utilisateur avec l'agency_id et le rôle prévu
-    const { error: profileError } = await supabase
+    // On utilise supabaseAdmin pour bypasser les RLS qui bloqueraient silencieusement
+    // la mise à jour d'un profil avec agency_id = null (ex: membre ré-invité après suppression)
+    const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({
             agency_id: invite.agency_id,

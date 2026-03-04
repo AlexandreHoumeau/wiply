@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { bootstrapUser } from "@/services/onboarding.service";
 
@@ -9,8 +10,9 @@ export default async function OnboardingPage() {
 
     if (!user) redirect("/auth/login");
 
-    // Check if profile already exists — if so, no need for onboarding
-    const { data: profile } = await supabase
+    // Check if profile already exists — use admin client to bypass RLS
+    // (a removed+re-invited member has agency_id=null which hides their profile)
+    const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("id")
         .eq("id", user.id)
@@ -25,6 +27,22 @@ export default async function OnboardingPage() {
     if (meta?.agency_name) {
         await bootstrapUser();
         redirect("/app");
+    }
+
+    // Invited users (email/password) land here when bootstrapping failed in the
+    // callback (e.g. OTP expired, scanner consumed link). Detect their pending
+    // invite and bootstrap them, then send them to the invite page to accept.
+    const { data: pendingInvite } = await supabaseAdmin
+        .from("agency_invites")
+        .select("token")
+        .eq("email", user.email!)
+        .eq("accepted", false)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+
+    if (pendingInvite) {
+        await bootstrapUser(pendingInvite.token);
+        redirect(`/invite?token=${pendingInvite.token}`);
     }
 
     // Extract name from Google metadata
