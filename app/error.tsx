@@ -21,7 +21,7 @@ export default function GlobalError({
       <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6">
         <AlertTriangle className="w-10 h-10 text-red-400" />
       </div>
-      <h1 className="text-3xl font-bold mb-2">Une erreur est survenue</h1>
+      <h1 className="text-3xl mb-2">Une erreur est survenue</h1>
       <p className="text-slate-400 mb-8 max-w-md">
         Quelque chose s&apos;est mal passé. Réessayez ou revenez à l&apos;accueil.
       </p>

@@ -111,7 +111,7 @@ export default function ProjectSettingsPage() {
 
                     {project.magic_token ? (
                         <>
-                            <Button onClick={handleCopyLink} disabled={project.is_portal_active === false} className="h-12 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all">
+                            <Button onClick={handleCopyLink} disabled={project.is_portal_active === false} className="h-12 px-6 transition-all">
                                 <Copy className="w-4 h-4 mr-2" /> Copier
                             </Button>
                             {/* Bouton Pause / Play */}
@@ -120,7 +120,7 @@ export default function ProjectSettingsPage() {
                             </Button>
                         </>
                     ) : (
-                        <Button onClick={handleGenerateToken} disabled={isGeneratingToken} className="h-12 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all">
+                        <Button onClick={handleGenerateToken} disabled={isGeneratingToken} className="h-12 px-6 transition-all">
                             {isGeneratingToken ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
                             Générer le lien
                         </Button>

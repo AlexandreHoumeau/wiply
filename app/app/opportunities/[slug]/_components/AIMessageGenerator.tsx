@@ -317,7 +317,7 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 							<Button
 								type="submit"
 								disabled={isPending}
-								className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+								className="w-full font-medium"
 							>
 								{isPending ? (
 									<>

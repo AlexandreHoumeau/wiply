@@ -88,7 +88,7 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isInvitePending}>
+                                <Button type="submit" className="w-full" disabled={isInvitePending}>
                                     {isInvitePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
                                     Envoyer l'invitation
                                 </Button>

@@ -119,7 +119,7 @@ export default function ProfilePage() {
                         <span className="text-xs text-slate-400 italic">
                             Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
                         </span>
-                        <Button type="submit" disabled={isPending} className="bg-blue-600 hover:bg-blue-700 shadow-sm transition-all active:scale-95">
+                        <Button type="submit" disabled={isPending} className="shadow-sm transition-all active:scale-95">
                             {isPending ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

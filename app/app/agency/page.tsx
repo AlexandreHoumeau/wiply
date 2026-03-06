@@ -36,7 +36,7 @@ export default async function AgencyOverviewPage() {
   const secondaryColor = agency?.secondary_color || "#6366F1"
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-background">
       {/* ─────────────────── BRAND HERO ─────────────────── */}
       <div
         className="relative overflow-hidden border-b border-black/20"
@@ -89,7 +89,7 @@ export default async function AgencyOverviewPage() {
                 </h1>
 
                 {agency?.address && (
-                  <p className="mt-2 flex items-center gap-1.5 text-sm text-white/60 font-medium">
+                  <p className="mt-2 flex items-center gap-1.5 text-lg text-white/60 font-medium">
                     <MapPin className="h-4 w-4 shrink-0" />
                     {agency.address}
                   </p>
@@ -131,7 +131,7 @@ export default async function AgencyOverviewPage() {
 
             <Link
               href="/app/settings"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md transition-all duration-300 shadow-lg"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 px-5 py-2.5 text-lg font-medium text-white backdrop-blur-md transition-all duration-300 shadow-lg"
             >
               <Settings className="h-4 w-4 text-white/70" />
               Paramètres
@@ -150,13 +150,13 @@ export default async function AgencyOverviewPage() {
             <AgencyAICard ai={ai} />
 
             {/* Facturation */}
-            <div className="group overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="group overflow-hidden rounded-2xl border bg-white transition-all duration-300">
               <div className="flex items-center justify-between border-b border-slate-100/80 px-7 py-5 bg-slate-50/50">
                 <div className="flex items-center gap-3">
                   <div className="rounded-xl bg-slate-100 p-2 text-slate-600 border border-slate-200/50 shadow-sm">
                     <CreditCard className="h-4 w-4" />
                   </div>
-                  <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Abonnement & Facturation</h2>
+                  <h2 className="text-lg font-semibold text-slate-900 tracking-tight">Abonnement & Facturation</h2>
                 </div>
                 <Link
                   href="/app/settings/billing"
@@ -180,7 +180,7 @@ export default async function AgencyOverviewPage() {
                       <p className="text-2xl font-semibold tracking-tight">
                         {billing?.plan === 'PRO' ? 'Pro' : 'Free'}
                       </p>
-                      <p className="mt-1 text-sm text-white/50 font-medium">
+                      <p className="mt-1 text-lg text-white/50 font-medium">
                         {billing?.plan === 'PRO' ? '39€' : '0€'}
                         <span className="text-white/30 font-normal"> / mois</span>
                       </p>

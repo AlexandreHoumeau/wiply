@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Briefcase, Building2, ChevronsUpDown, Kanban, LayoutDashboard,
-    LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen
+    LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -32,6 +32,7 @@ const mainNav = [
 const secondaryNav = [
     { label: "Clients", href: "/app/companies", icon: Building2 },
     { label: "Agence", href: "/app/agency", icon: Users },
+    { label: "Espace interne", href: "/app/workspace", icon: Layers },
 ]
 
 interface AppSidebarProps {
@@ -73,7 +74,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
     const sidebarContent = (isMobile: boolean) => (
         <>
             {/* --- AGENCY DISPLAY (Static) --- */}
-            <div className="flex h-16 items-center px-4 overflow-hidden">
+            <div className="flex h-16 items-center px-4 overflow-hidden shrink-0">
                 <div className={cn(
                     "flex w-full items-center",
                     !isMobile && isCollapsed ? "justify-center" : "gap-3 px-2"
@@ -86,24 +87,22 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                         )}
                     </div>
                     {(isMobile || !isCollapsed) && (
-                        <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
-                            <span className="truncate font-bold text-slate-900">{agency?.name || "Mon Agence"}</span>
-                            <span className="truncate text-[10px] font-bold uppercase tracking-wider" style={{ color: secondaryColor }}>
-                                {role?.replace("agency_", "")}
-                            </span>
-                        </div>
+                        <>
+                            <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
+                                <span className="truncate font-bold text-slate-900">{agency?.name || "Mon Agence"}</span>
+                                <span className="truncate text-[10px] font-bold uppercase tracking-wider" style={{ color: secondaryColor }}>
+                                    {role?.replace("agency_", "")}
+                                </span>
+                            </div>
+                            <NotificationCenter primaryColor={primaryColor} />
+                        </>
                     )}
                 </div>
             </div>
 
-            {/* --- NAVIGATION & INBOX --- */}
+            {/* --- NAVIGATION --- */}
             <ScrollArea className="flex-1 px-3 py-4">
                 <nav className="space-y-6">
-                    
-                    {/* Inbox / Notifications at the very top */}
-                    <div className="space-y-1">
-                        <NotificationCenter isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} />
-                    </div>
 
                     <div className="space-y-1">
                         {(!isMobile && !isCollapsed) || isMobile ? (
@@ -126,10 +125,10 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
             </ScrollArea>
 
             {/* --- USER FOOTER --- */}
-            <div className="p-3 mt-auto border-t border-slate-100 bg-slate-50/50">
+            <div className="p-3 mt-auto border-t border-white/30">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className={cn("h-auto w-full transition-all group hover:bg-white hover:shadow-sm", !isMobile && isCollapsed ? "justify-center p-2" : "justify-start gap-3 p-2")}>
+                        <Button variant="ghost" className={cn("h-auto w-full transition-all group hover:bg-white/60 hover:shadow-sm", !isMobile && isCollapsed ? "justify-center p-2" : "justify-start gap-3 p-2")}>
                             <div className="relative shrink-0">
                                 <Avatar className="h-9 w-9 rounded-xl border-2 border-white shadow-sm transition-transform group-hover:scale-105">
                                     <AvatarFallback className="rounded-xl text-white text-xs font-bold" style={{ backgroundColor: primaryColor }}>{initials}</AvatarFallback>
@@ -142,7 +141,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                                     <span className="truncate text-[10px] text-slate-500">{email}</span>
                                 </div>
                             )}
-                            {(isMobile || !isCollapsed) && <ChevronsUpDown className="ml-auto size-4 text-slate-400 shrink-0" />}
+                            {(isMobile || !isCollapsed) && <ChevronsUpDown className="ml-auto size-4 text-slate-500 shrink-0" />}
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-64 rounded-2xl p-2 shadow-2xl border-slate-100 mb-2 ml-2" side={(!isMobile && isCollapsed) ? "right" : "top"} align="end" sideOffset={12}>
@@ -171,8 +170,8 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
     return (
         <TooltipProvider delayDuration={0}>
             {/* ── DESKTOP SIDEBAR ── */}
-            <motion.aside initial={false} animate={{ width: isCollapsed ? 80 : 256 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-slate-200 bg-white shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:flex">
-                <button onClick={() => setIsCollapsed(!isCollapsed)} className="absolute -right-3 top-6 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:text-slate-900 hover:bg-slate-50 transition-all focus:outline-none">
+            <motion.aside initial={false} animate={{ width: isCollapsed ? 80 : 256 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} style={{ background: "linear-gradient(to top, #FFDEAF, #F1EFFE)" }} className="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-white/40 shadow-[4px_0_24px_rgba(149,125,246,0.08)] md:flex">
+                <button onClick={() => setIsCollapsed(!isCollapsed)} className="absolute -right-3 top-6 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#e8e0fc] bg-[#F1EFFE] text-slate-500 shadow-sm hover:text-slate-900 hover:bg-white transition-all focus:outline-none">
                     {isCollapsed ? <PanelLeftOpen className="h-3 w-3" /> : <PanelLeftClose className="h-3 w-3" />}
                 </button>
                 {sidebarContent(false)}
@@ -180,7 +179,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
 
             {/* ── MOBILE DRAWER ── */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-                <SheetContent side="left" className="w-72 p-0 flex flex-col border-r border-slate-200 bg-white">
+                <SheetContent side="left" className="w-72 p-0 flex flex-col border-r border-white/40" style={{ background: "linear-gradient(to top, #FFDEAF, #F1EFFE)" }}>
                     <SheetTitle className="sr-only">Navigation</SheetTitle>
                     {sidebarContent(true)}
                 </SheetContent>
@@ -191,7 +190,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
 
 function NavItem({ item, active, isCollapsed, primaryColor }: any) {
     const navContent = (
-        <Button variant="ghost" className={cn("w-full transition-all duration-200 group relative overflow-hidden h-10", isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3", active ? "bg-slate-50" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50")} style={active ? { color: primaryColor } : undefined}>
+        <Button variant="ghost" className={cn("w-full transition-all duration-200 group relative overflow-hidden h-10", isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3", active ? "bg-white/50" : "text-slate-600 hover:text-slate-900 hover:bg-white/40")} style={active ? { color: primaryColor } : undefined}>
             {active && <motion.div layoutId="sidebarActive" className="absolute left-0 w-1 h-5 rounded-r-full" style={{ backgroundColor: primaryColor }} transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
             <item.icon className={cn("h-[18px] w-[18px] shrink-0 transition-colors", !active && "text-slate-400 group-hover:text-slate-600")} style={active ? { color: primaryColor } : undefined} />
             <AnimatePresence mode="wait">

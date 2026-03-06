@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { updateTaskStatusAndPosition } from "@/actions/task.server";
-import { AlignLeft, Bug, LayoutTemplate, PenTool, Settings, ArrowUp, ArrowDown, Equal, AlertOctagon } from "lucide-react";
+import { AlignLeft, Bug, LayoutTemplate, PenTool, Settings, ArrowUp, ArrowDown, Equal, AlertOctagon, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -149,28 +149,27 @@ export function KanbanBoard({ projectId, initialTasks }: { projectId: string, in
 }
 
 // ----------------------------------------------------
-// Sous-composant : La Carte du Ticket (SaaS Premium UI)
+// Sous-composant : La Carte du Ticket
 // ----------------------------------------------------
 function TaskCard({ task, index, onClick }: { task: any, index: number, onClick: () => void }) {
-    // Icones et couleurs dynamiques pour les "Types"
-    const TYPE_STYLES: Record<string, { icon: any, color: string }> = {
-        feature: { icon: AlignLeft, color: "text-blue-600 bg-blue-50" },
-        bug: { icon: Bug, color: "text-red-600 bg-red-50" },
-        design: { icon: LayoutTemplate, color: "text-purple-600 bg-purple-50" },
-        content: { icon: PenTool, color: "text-emerald-600 bg-emerald-50" },
-        setup: { icon: Settings, color: "text-slate-600 bg-slate-100" },
+    const TYPE_STYLES: Record<string, { icon: any, label: string, color: string }> = {
+        feature: { icon: AlignLeft,     label: "Feature",  color: "text-blue-600 bg-blue-50" },
+        bug:     { icon: Bug,           label: "Bug",      color: "text-red-600 bg-red-50" },
+        design:  { icon: LayoutTemplate,label: "Design",   color: "text-purple-600 bg-purple-50" },
+        content: { icon: PenTool,       label: "Contenu",  color: "text-emerald-600 bg-emerald-50" },
+        setup:   { icon: Settings,      label: "Setup",    color: "text-slate-600 bg-slate-100" },
     };
 
-    // Icones pour les "Priorités"
     const PRIORITY_ICONS: Record<string, any> = {
-        low: { icon: ArrowDown, color: "text-slate-400" },
-        medium: { icon: Equal, color: "text-slate-500" },
-        high: { icon: ArrowUp, color: "text-orange-500" },
+        low:    { icon: ArrowDown,    color: "text-slate-400" },
+        medium: { icon: Equal,        color: "text-slate-500" },
+        high:   { icon: ArrowUp,      color: "text-orange-500" },
         urgent: { icon: AlertOctagon, color: "text-red-600" },
     };
 
     const typeConfig = TYPE_STYLES[task.type || 'feature'];
     const priorityConfig = PRIORITY_ICONS[task.priority || 'medium'];
+    const commentCount = task.task_comments?.[0]?.count ?? 0;
 
     return (
         <Draggable draggableId={task.id} index={index}>
@@ -181,47 +180,60 @@ function TaskCard({ task, index, onClick }: { task: any, index: number, onClick:
                     {...provided.dragHandleProps}
                     onClick={onClick}
                     className={cn(
-                        "bg-white p-4 rounded-xl border border-slate-200 shadow-sm group hover:border-slate-300 hover:shadow-md transition-all select-none",
-                        snapshot.isDragging ? "shadow-xl scale-[1.02] rotate-1 z-50" : ""
+                        "p-4 rounded-xl border bg-white group hover:border-primary/30 transition-all select-none",
+                        snapshot.isDragging ? "shadow-xl scale-[1.02] rotate-1 z-50" : "shadow-sm"
                     )}
                 >
-                    <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2">
-                            {/* Identifiant du ticket (ex: PROJ-1) - Simulé ici avec les 4 premiers caractères de l'ID */}
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                TCK-{task.id.split('-')[0].substring(0, 4)}
-                            </span>
-                        </div>
-                        {/* Type Badge */}
-                        <div className={cn("p-1 rounded-md", typeConfig.color)}>
-                            <typeConfig.icon className="w-3 h-3" />
+                    {/* Top row: ticket ID + type tag */}
+                    <div className="flex justify-between items-center mb-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            TCK-{task.id.split('-')[0].substring(0, 4)}
+                        </span>
+                        <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold", typeConfig.color)}>
+                            <typeConfig.icon className="w-2.5 h-2.5" />
+                            {typeConfig.label}
                         </div>
                     </div>
 
-                    <h4 className="text-sm font-semibold text-slate-900 leading-snug mb-4">
+                    {/* Title — explicitly Inter, bigger */}
+                    <p className="font-sans text-[15px] font-semibold text-slate-900 leading-snug mb-1.5">
                         {task.title}
-                    </h4>
+                    </p>
 
-                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-50">
+                    {/* Description snippet */}
+                    {task.description && (
+                        <p className="font-sans text-xs text-slate-400 line-clamp-2 leading-relaxed mb-3">
+                            {task.description}
+                        </p>
+                    )}
+
+                    <div className={cn("flex items-center justify-between pt-3 border-t border-slate-50", task.description ? "" : "mt-3")}>
                         {/* Priorité */}
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                        <div className="flex items-center gap-1.5">
                             <priorityConfig.icon className={cn("w-3.5 h-3.5", priorityConfig.color)} />
-                            <span className="capitalize text-[10px]">{task.priority}</span>
+                            <span className="capitalize text-[10px] font-medium text-slate-400">{task.priority}</span>
                         </div>
 
-                        {/* Assignee Avatar (Simulé si vide) */}
-                        {task.assignee ? (
-                            <div
-                                className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold border border-white ring-1 ring-slate-100 text-white"
-                                style={{ backgroundColor: "var(--brand-secondary, #6366F1)" }}
-                            >
-                                {task.assignee.first_name?.charAt(0)}{task.assignee.last_name?.charAt(0)}
-                            </div>
-                        ) : (
-                            <div className="h-6 w-6 rounded-full border border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-slate-400 transition-colors">
-                                <span className="text-xs">+</span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {commentCount > 0 && (
+                                <div className="flex items-center gap-1 text-slate-400">
+                                    <MessageSquare className="w-3 h-3" />
+                                    <span className="text-[10px] font-medium">{commentCount}</span>
+                                </div>
+                            )}
+                            {task.assignee ? (
+                                <div
+                                    className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold border border-white ring-1 ring-slate-100 text-white"
+                                    style={{ backgroundColor: "var(--primary)" }}
+                                >
+                                    {task.assignee.first_name?.charAt(0)}{task.assignee.last_name?.charAt(0)}
+                                </div>
+                            ) : (
+                                <div className="h-6 w-6 rounded-full border border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:border-slate-400 transition-colors">
+                                    <span className="text-xs">+</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

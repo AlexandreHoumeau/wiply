@@ -144,7 +144,7 @@ export default function AIConfigForm() {
                     <Button
                         type="submit"
                         disabled={isPending}
-                        className="bg-blue-600 hover:bg-blue-700 px-8 font-bold shadow-lg shadow-blue-100"
+                        className="px-8 font-bold shadow-sm"
                     >
                         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         Sauvegarder les réglages

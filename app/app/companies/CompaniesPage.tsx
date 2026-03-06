@@ -40,7 +40,7 @@ export default function CompaniesPage() {
           <Building2 className="h-6 w-6 text-indigo-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Entreprises</h1>
+          <h1 className="text-2xl text-slate-900 tracking-tight">Entreprises</h1>
           <p className="text-sm font-medium text-slate-500 mt-0.5">
             {allCount === 0
               ? "Aucune entreprise enregistrée."

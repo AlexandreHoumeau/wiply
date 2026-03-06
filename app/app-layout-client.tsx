@@ -16,7 +16,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
     const primaryColor = agency?.primary_color || "#2563EB";
 
     return (
-        <div className="h-screen bg-slate-50 flex overflow-hidden">
+        <div className="h-screen bg-background flex overflow-hidden">
             <NavigationProgress />
             <AppSidebar
                 isCollapsed={isCollapsed}

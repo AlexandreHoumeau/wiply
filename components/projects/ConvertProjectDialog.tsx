@@ -128,7 +128,7 @@ export function ConvertProjectDialog({
                         <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="h-11 rounded-xl px-6 font-semibold text-slate-500">
                             Plus tard
                         </Button>
-                        <Button type="submit" disabled={isLoading} className="h-11 rounded-xl px-8 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 transition-all active:scale-95">
+                        <Button type="submit" disabled={isLoading} className="h-11 px-8 font-bold transition-all active:scale-95">
                             {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Rocket className="w-4 h-4 mr-2" />}
                             Créer le workspace
                         </Button>

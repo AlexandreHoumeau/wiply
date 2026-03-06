@@ -35,7 +35,7 @@ export default function ProjectOverviewPage() {
             
             {/* 📊 SECTION 1 : Les KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-6">
+                <div className="bg-white p-6 rounded-3xl border flex items-center gap-6">
                     <div className="h-16 w-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                         <KanbanSquare className="w-8 h-8" />
                     </div>
@@ -46,12 +46,12 @@ export default function ProjectOverviewPage() {
                             <span className="text-sm font-semibold text-slate-400">{stats.doneTasks} / {stats.totalTasks} tickets</span>
                         </div>
                         <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-600 rounded-full transition-all duration-1000" style={{ width: `${taskProgress}%` }} />
+                            <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${taskProgress}%` }} />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-6">
+                <div className="bg-white p-6 rounded-3xl border flex items-center gap-6">
                     <div className="h-16 w-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                         <ListChecks className="w-8 h-8" />
                     </div>
@@ -62,7 +62,7 @@ export default function ProjectOverviewPage() {
                             <span className="text-sm font-semibold text-slate-400">{stats.doneChecklist} / {stats.totalChecklist} éléments</span>
                         </div>
                         <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${checklistProgress}%` }} />
+                            <div className="h-full bg-secondary rounded-full transition-all duration-1000" style={{ width: `${checklistProgress}%` }} />
                         </div>
                     </div>
                 </div>
@@ -71,7 +71,7 @@ export default function ProjectOverviewPage() {
             {/* 📝 SECTION 2 : Brief & Détails */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm h-full">
+                    <div className="bg-white rounded-3xl border p-8 h-full">
                         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
                             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
                                 <AlignLeft className="w-5 h-5" />
@@ -91,7 +91,7 @@ export default function ProjectOverviewPage() {
                 </div>
 
                 <div className="space-y-6">
-                    <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm h-full">
+                    <div className="bg-white rounded-3xl border p-6 h-full">
                         <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Informations clés</h2>
                         <div className="space-y-6">
                             <div className="flex items-start gap-4">
@@ -155,7 +155,7 @@ export default function ProjectOverviewPage() {
                             </a>
                         </div>
                         
-                        <div className="bg-white p-2 rounded-[2rem] border border-slate-200 shadow-sm h-[500px] w-full relative">
+                        <div className="bg-white p-2 rounded-[2rem] border h-[500px] w-full relative">
                             <iframe
                                 title="Figma Preview"
                                 className="w-full h-full rounded-[1.5rem] border-none bg-slate-50"
@@ -181,7 +181,7 @@ export default function ProjectOverviewPage() {
                             </a>
                         </div>
                         
-                        <div className="bg-white p-2 rounded-[2rem] border border-slate-200 shadow-sm h-[500px] w-full relative group overflow-hidden">
+                        <div className="bg-white p-2 rounded-[2rem] border h-[500px] w-full relative group overflow-hidden">
                             {/* Un petit header "navigateur" factice pour faire joli */}
                             <div className="absolute top-2 left-2 right-2 h-10 bg-slate-100 rounded-t-[1.5rem] flex items-center px-4 gap-2 z-10 border-b border-slate-200">
                                 <div className="flex gap-1.5">

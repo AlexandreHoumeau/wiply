@@ -56,9 +56,9 @@ const DEVICE_ICONS: Record<string, React.ElementType> = {
 };
 
 const DEVICE_COLORS: Record<string, string> = {
-  Mobile: "bg-indigo-500 text-indigo-600",
-  Tablet: "bg-sky-500 text-sky-600",
-  Desktop: "bg-violet-500 text-violet-600",
+  Mobile: "bg-primary text-primary",
+  Tablet: "bg-secondary text-amber-600",
+  Desktop: "bg-accent text-primary",
 };
 
 function countryFlag(code: string): string {
@@ -74,7 +74,7 @@ function ChartTooltip({ active, payload, label }: any) {
     <div className="rounded-xl border border-slate-200/60 bg-white/95 backdrop-blur-sm px-4 py-3 shadow-xl">
       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
       <div className="flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+        <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(149,125,246,0.6)]" />
         <p className="text-sm font-semibold text-slate-900">
           {payload[0].value} <span className="text-slate-500 font-medium">clic{payload[0].value !== 1 ? "s" : ""}</span>
         </p>
@@ -238,7 +238,7 @@ export function AnalyticsDashboard({
             </div>
 
             {/* Chart Area */}
-            <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-3xl border bg-white overflow-hidden">
               <div className="px-8 py-6 border-b border-slate-100/80 bg-slate-50/30">
                 <h2 className="text-base font-semibold text-slate-900 tracking-tight">Trafic dans le temps</h2>
                 <p className="text-sm text-slate-500 font-medium mt-1">
@@ -257,8 +257,8 @@ export function AnalyticsDashboard({
                   >
                     <defs>
                       <linearGradient id="clicksGradColor" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.25} />
-                        <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#957DF6" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="#957DF6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -281,11 +281,11 @@ export function AnalyticsDashboard({
                     <Area
                       type="monotone"
                       dataKey="clicks"
-                      stroke="#6366f1"
+                      stroke="#957DF6"
                       strokeWidth={3}
                       fill="url(#clicksGradColor)"
                       dot={false}
-                      activeDot={{ r: 5, fill: "#6366f1", stroke: "#fff", strokeWidth: 2 }}
+                      activeDot={{ r: 5, fill: "#957DF6", stroke: "#fff", strokeWidth: 2 }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -295,7 +295,7 @@ export function AnalyticsDashboard({
             {/* Countries + Devices */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Countries */}
-              <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm flex flex-col">
+              <div className="rounded-3xl border bg-white flex flex-col">
                 <div className="px-8 py-6 border-b border-slate-100/80 flex items-center gap-3 bg-slate-50/30">
                   <div className="p-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 shadow-sm">
                     <Globe className="h-4 w-4" />
@@ -323,7 +323,7 @@ export function AnalyticsDashboard({
                           </div>
                           <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden shadow-inner">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-1000 ease-out"
+                              className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-1000 ease-out"
                               style={{ width: `${c.pct}%` }}
                             />
                           </div>
@@ -335,7 +335,7 @@ export function AnalyticsDashboard({
               </div>
 
               {/* Devices */}
-              <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm flex flex-col">
+              <div className="rounded-3xl border bg-white flex flex-col">
                 <div className="px-8 py-6 border-b border-slate-100/80 flex items-center gap-3 bg-slate-50/30">
                   <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 shadow-sm">
                     <Monitor className="h-4 w-4" />
@@ -381,7 +381,7 @@ export function AnalyticsDashboard({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Top links */}
               {data.topLinks.some((l) => l.click_count > 0) && (
-                <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm overflow-hidden flex flex-col">
+                <div className="rounded-3xl border bg-white overflow-hidden flex flex-col">
                   <div className="px-8 py-6 border-b border-slate-100/80 flex items-center gap-3 bg-slate-50/30">
                     <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shadow-sm">
                       <TrendingUp className="h-4 w-4" />
@@ -423,7 +423,7 @@ export function AnalyticsDashboard({
                               )}
                               <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden mt-2">
                                 <div
-                                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-1000 ease-out"
+                                  className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 ease-out"
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
@@ -437,7 +437,7 @@ export function AnalyticsDashboard({
 
               {/* Recent activity */}
               {data.recentClicks.length > 0 && (
-                <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm overflow-hidden flex flex-col">
+                <div className="rounded-3xl border bg-white overflow-hidden flex flex-col">
                   <div className="px-8 py-6 border-b border-slate-100/80 flex items-center justify-between bg-slate-50/30">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shadow-sm">

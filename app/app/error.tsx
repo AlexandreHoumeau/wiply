@@ -20,7 +20,7 @@ export default function AppError({
       <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
         <AlertTriangle className="w-10 h-10 text-red-400" />
       </div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-2">Une erreur est survenue</h1>
+      <h1 className="text-2xl text-slate-900 mb-2">Une erreur est survenue</h1>
       <p className="text-slate-500 mb-8 max-w-md">
         Quelque chose s&apos;est mal passé. Réessayez ou contactez le support si le problème persiste.
       </p>

@@ -115,7 +115,7 @@ export default function ClientPortalPage({ params }: { params: Promise<{ token: 
 
                 {/* Hero */}
                 <section className="text-center space-y-4">
-                    <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
+                    <h1 className="text-3xl md:text-5xl text-slate-900 tracking-tight">
                         Bonjour,{" "}
                         <span
                             className="text-transparent bg-clip-text"

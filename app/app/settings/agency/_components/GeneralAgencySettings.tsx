@@ -78,7 +78,7 @@ export default function GeneralAgencySettings(GenralAgencySettingsProps: General
 
 					<CardFooter className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex justify-between items-center">
 						<p className="text-[11px] text-slate-400 uppercase font-bold tracking-wider italic">Modifications sécurisées</p>
-						<Button type="submit" disabled={isAgencyPending} className="bg-blue-600 hover:bg-blue-700 shadow-sm transition-all active:scale-95">
+						<Button type="submit" disabled={isAgencyPending} className="shadow-sm transition-all active:scale-95">
 							{isAgencyPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
 							Enregistrer les changements
 						</Button>

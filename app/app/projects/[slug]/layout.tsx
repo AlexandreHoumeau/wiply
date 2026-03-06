@@ -12,7 +12,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
 
     return (
         <ProjectProvider project={project}>
-            <div className="flex flex-col h-full bg-slate-50">
+            <div className="flex flex-col h-full bg-background">
                 <ProjectHeader project={project} />
                 <main className="flex-1 overflow-y-auto">
                     {children}

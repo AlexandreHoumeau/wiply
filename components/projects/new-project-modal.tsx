@@ -92,7 +92,7 @@ export function NewProjectModal({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="h-11 rounded-xl px-6 bg-slate-900 hover:bg-slate-800 text-white shadow-lg transition-all active:scale-95 font-bold">
+                <Button className="h-11 px-6 transition-all active:scale-95 font-bold">
                     <Plus className="w-4 h-4 mr-2" />
                     Nouveau Projet
                 </Button>
@@ -147,7 +147,7 @@ export function NewProjectModal({
                                         <button
                                             type="button"
                                             onClick={() => form.setValue("isNewCompany", !isNewCompany)}
-                                            className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
+                                            className="text-sm font-bold text-primary hover:text-primary/80"
                                         >
                                             {isNewCompany ? "Choisir existante" : "+ Créer une entreprise"}
                                         </button>
@@ -289,7 +289,7 @@ export function NewProjectModal({
                             <Button type="button" variant="outline" className="rounded-xl" onClick={() => setOpen(false)}>
                                 Annuler
                             </Button>
-                            <Button type="submit" disabled={form.formState.isSubmitting} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
+                            <Button type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting ? "Création..." : "Créer le projet"}
                             </Button>
                         </div>

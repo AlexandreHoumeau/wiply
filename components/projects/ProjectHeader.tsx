@@ -10,12 +10,13 @@ export function ProjectHeader({ project }: { project: any }) {
     const pathname = usePathname();
     const baseUrl = `/app/projects/${project.slug}`;
 
-    const tabs = [
+    const allTabs = [
         { name: "Vue d'ensemble", path: baseUrl, icon: Layout },
         { name: "Board Kanban", path: `${baseUrl}/board`, icon: KanbanSquare },
-        { name: "Contenus attendus", path: `${baseUrl}/checklist`, icon: ListChecks },
+        ...(!project.is_internal ? [{ name: "Contenus attendus", path: `${baseUrl}/checklist`, icon: ListChecks }] : []),
         { name: "Paramètres", path: `${baseUrl}/settings`, icon: Settings },
     ];
+    const tabs = allTabs;
 
     const companyInitial = project.company?.name?.charAt(0).toUpperCase() || "P";
 
@@ -42,7 +43,10 @@ export function ProjectHeader({ project }: { project: any }) {
                                 {project.name}
                             </h1>
                             <p className="text-sm font-medium text-slate-500 mt-0.5">
-                                Client : <span className="text-slate-700">{project.company?.name || "Interne"}</span>
+                                {project.is_internal
+                                    ? <span className="text-slate-500">Espace interne</span>
+                                    : <>Client : <span className="text-slate-700">{project.company?.name || "—"}</span></>
+                                }
                             </p>
                         </div>
                     </div>

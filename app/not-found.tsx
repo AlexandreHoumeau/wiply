@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-4">
         404
       </p>
-      <h1 className="text-2xl font-bold mb-2">Page introuvable</h1>
+      <h1 className="text-2xl mb-2">Page introuvable</h1>
       <p className="text-slate-400 mb-8 max-w-md">
         La page que vous cherchez n&apos;existe pas ou a été déplacée.
       </p>

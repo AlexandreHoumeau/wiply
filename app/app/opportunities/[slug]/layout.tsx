@@ -19,7 +19,7 @@ export default async function OpportunityLayout({
 
   return (
     <OpportunityProvider opportunity={opportunity}>
-      <div className="flex flex-col h-screen bg-[#fafafa]">
+      <div className="flex flex-col h-screen bg-background">
         <OpportunityHeader opportunity={opportunity} />
 
         <main className="grid grid-cols-1 lg:grid-cols-5 flex-1 overflow-hidden">
@@ -27,7 +27,7 @@ export default async function OpportunityLayout({
             {children}
           </div>
 
-          <aside className="hidden lg:flex flex-col h-full overflow-y-auto border-l bg-white/50 backdrop-blur-md p-6 shadow-sm">
+          <aside className="hidden lg:flex flex-col h-full overflow-y-auto border-l bg-background/80 backdrop-blur-md p-6 shadow-sm">
             <OpportunitySidebarInfo {...opportunity} />
           </aside>
         </main>

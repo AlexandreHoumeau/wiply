@@ -33,7 +33,7 @@ export function AgencyTrackingCard({ stats }: { stats: AgencyTrackingStats }) {
 
   return (
     // Removed h-full to prevent vertical stretching
-    <div className="group overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="group overflow-hidden rounded-2xl border bg-white transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100/80 px-7 py-5 bg-slate-50/50">
         <div className="flex items-center gap-3">

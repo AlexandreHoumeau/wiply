@@ -1,41 +1,38 @@
 "use client"
 
 import { useState } from "react"
-import { Bell, Check, MessageSquare, UserPlus, TrendingUp, Inbox } from "lucide-react"
+import { Bell, Check, MessageSquare, UserPlus, TrendingUp, Inbox, Settings2, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { useNotifications } from "@/hooks/useNotifications"
 import { markAsRead } from "@/actions/notifications.server"
 import { useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import type { Notification } from "@/lib/validators/notifications"
+import { Button } from "@/components/ui/button"
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60_000)
   if (mins < 1) return "À l'instant"
-  if (mins < 60) return `Il y a ${mins} min`
+  if (mins < 60) return `${mins}m`
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `Il y a ${hours}h`
-  const days = Math.floor(hours / 24)
-  return `Il y a ${days}j`
+  if (hours < 24) return `${hours}h`
+  return `${Math.floor(hours / 24)}j`
 }
 
-const typeIcon: Record<string, React.ReactNode> = {
-  member_joined: <UserPlus className="size-4" />,
-  task_comment: <MessageSquare className="size-4" />,
-  opportunity_status_changed: <TrendingUp className="size-4" />,
+const typeIcon: Record<string, React.ElementType> = {
+  member_joined: UserPlus,
+  task_comment: MessageSquare,
+  opportunity_status_changed: TrendingUp,
 }
 
 function NotificationItem({ notification, onRead, primaryColor }: { notification: Notification; onRead: () => void; primaryColor: string }) {
   const router = useRouter()
   const isUnread = !notification.read_at
+  const Icon = typeIcon[notification.type] ?? Bell
 
   const handleClick = async () => {
     if (isUnread) {
@@ -48,114 +45,141 @@ function NotificationItem({ notification, onRead, primaryColor }: { notification
   }
 
   return (
-    <button
+    <div 
       onClick={handleClick}
-      className={cn("w-full text-left px-4 py-3.5 flex gap-3 transition-all duration-200 group relative", isUnread ? "bg-slate-50/50 hover:bg-slate-50" : "hover:bg-slate-50/80")}
+      className={cn(
+        "group relative flex cursor-pointer gap-4 p-4 transition-all duration-300",
+        "hover:bg-slate-50/80 active:scale-[0.98]",
+        isUnread ? "bg-white" : "opacity-70"
+      )}
     >
-      {isUnread && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-r-full" style={{ backgroundColor: primaryColor }} />}
-      <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-full mt-0.5 shadow-sm border border-slate-100", isUnread ? "bg-white text-slate-700" : "bg-slate-50 text-slate-400")}>
-        {typeIcon[notification.type] ?? <Bell className="size-4" />}
+      {/* Premium Unread Indicator */}
+      {isUnread && (
+        <div 
+          className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-1 rounded-full blur-[1px]"
+          style={{ backgroundColor: primaryColor }} 
+        />
+      )}
+      
+      <div className={cn(
+        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-shadow duration-300 group-hover:shadow-md",
+        isUnread ? "bg-white border-slate-200" : "bg-slate-50 border-transparent"
+      )}>
+        <Icon className="h-5 w-5" style={{ color: isUnread ? primaryColor : "#64748b" }} />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className={cn("text-sm leading-tight truncate mb-0.5", isUnread ? "font-bold text-slate-900" : "font-medium text-slate-600")}>
-          {notification.title}
-        </p>
-        {notification.body && <p className="text-xs text-slate-500 truncate">{notification.body}</p>}
-        <p className="text-[10px] font-medium text-slate-400 mt-1.5 uppercase tracking-wider">{relativeTime(notification.created_at)}</p>
+
+      <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className={cn(
+            "text-[13px] leading-none transition-colors",
+            isUnread ? "font-semibold text-slate-900" : "font-medium text-slate-500"
+          )}>
+            {notification.title}
+          </span>
+          <span className="text-[10px] font-medium text-slate-400 tabular-nums">
+            {relativeTime(notification.created_at)}
+          </span>
+        </div>
+        
+        {notification.body && (
+          <p className="line-clamp-2 text-[12px] leading-relaxed text-slate-500">
+            {notification.body}
+          </p>
+        )}
       </div>
-      {isUnread && <span className="mt-1.5 size-2 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: primaryColor }} />}
-    </button>
+    </div>
   )
 }
 
-export function NotificationCenter({ isCollapsed, primaryColor = "#2563EB" }: { isCollapsed?: boolean; primaryColor?: string }) {
+export function NotificationCenter({ primaryColor = "#6366f1" }: { primaryColor?: string }) {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { notifications, unreadCount, isLoading, markAllAsRead } = useNotifications()
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['notifications'] })
 
-  const triggerButton = (
-    <Button
-      variant="ghost"
-      className={cn(
-        "w-full transition-all duration-200 group relative overflow-hidden h-10",
-        isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3",
-        isOpen ? "bg-slate-50" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-      )}
-      style={isOpen ? { color: primaryColor } : undefined}
-    >
-      {isOpen && (
-        <motion.div layoutId="sidebarActive" className="absolute left-0 w-1 h-5 rounded-r-full" style={{ backgroundColor: primaryColor }} transition={{ type: "spring", stiffness: 300, damping: 30 }} />
-      )}
-
-      <Bell className={cn("h-[18px] w-[18px] shrink-0 transition-colors", !isOpen && "text-slate-400 group-hover:text-slate-600")} style={isOpen ? { color: primaryColor } : undefined} />
-
-      <AnimatePresence mode="wait">
-        {!isCollapsed && (
-          <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} exit={{ opacity: 0, width: 0 }} className={cn("flex-1 text-left text-sm whitespace-nowrap overflow-hidden", isOpen ? "font-bold" : "font-medium")}>
-            Notifications
-          </motion.span>
-        )}
-      </AnimatePresence>
-
-      {!isCollapsed && unreadCount > 0 && (
-        <Badge className="ml-auto h-5 min-w-5 flex items-center justify-center px-1.5 text-[10px] leading-none text-white border-0 shadow-sm" style={{ backgroundColor: primaryColor }}>
-          {unreadCount > 99 ? '99+' : unreadCount}
-        </Badge>
-      )}
-      
-      {isCollapsed && unreadCount > 0 && (
-        <span className="absolute top-2 right-2 size-2 rounded-full border border-white shadow-sm" style={{ backgroundColor: primaryColor }} />
-      )}
-    </Button>
-  )
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        {isCollapsed ? (
-          <Tooltip>
-            <TooltipTrigger asChild>{triggerButton}</TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-slate-900 text-white">Notifications</TooltipContent>
-          </Tooltip>
-        ) : triggerButton}
+        <button
+          className={cn(
+            "group relative flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300",
+            "hover:bg-slate-100 hover:ring-4 hover:ring-slate-50 active:scale-90",
+            isOpen && "bg-slate-100"
+          )}
+        >
+          <Bell className={cn("h-5 w-5 transition-transform duration-300 group-hover:rotate-12", isOpen ? "fill-slate-600 text-slate-600" : "text-slate-500")} />
+          {unreadCount > 0 && (
+            <span className="absolute right-2 top-2 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ backgroundColor: primaryColor }} />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full border-2 border-white" style={{ backgroundColor: primaryColor }} />
+            </span>
+          )}
+        </button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-80 p-0 rounded-2xl shadow-2xl border-slate-100 overflow-hidden" align="start" side="right" sideOffset={12}>
-        <div className="flex items-center justify-between px-4 py-3 bg-slate-50/80 border-b border-slate-100 backdrop-blur-sm">
-          <span className="text-sm font-bold text-slate-900">Notifications</span>
-          {unreadCount > 0 && (
-            <button onClick={markAllAsRead} className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-wider">
-              <Check className="size-3" />
-              Tout marquer
-            </button>
-          )}
+      <PopoverContent
+        className="w-[380px] overflow-hidden rounded-[24px] border-slate-200/60 bg-white/80 p-0 shadow-2xl backdrop-blur-xl"
+        align="end"
+        sideOffset={12}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-100/50 bg-white/50 px-5 py-4">
+          <div className="flex flex-col">
+            <h3 className="text-lg font-bold tracking-tight text-slate-900">Notifications</h3>
+            <p className="text-[11px] font-medium text-slate-400">
+              {unreadCount > 0 ? `Vous avez ${unreadCount} messages non lus` : "Tout est à jour"}
+            </p>
+          </div>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-600">
+              {/* <Settings2 className="h-4 w-4" /> */}
+            </Button>
+            {unreadCount > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={markAllAsRead}
+                className="h-8 rounded-full text-[11px] font-bold text-slate-500 hover:bg-slate-100"
+              >
+                <Check className="mr-1 h-3 w-3" />
+                Tout lire
+              </Button>
+            )}
+          </div>
         </div>
 
+        {/* Content */}
         {isLoading ? (
-          <div className="py-12 flex flex-col items-center justify-center gap-3">
-             <div className="size-5 rounded-full border-2 border-slate-200 border-t-slate-400 animate-spin" />
+          <div className="flex h-[300px] items-center justify-center">
+             <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-500" />
           </div>
         ) : notifications.length === 0 ? (
-          <div className="py-12 flex flex-col items-center justify-center gap-3 text-center px-6">
-            <div className="flex size-12 items-center justify-center rounded-full bg-slate-50">
-                <Inbox className="size-6 text-slate-300" />
+          <div className="flex flex-col items-center justify-center py-16 px-10 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-50 ring-8 ring-slate-50/50">
+              <Sparkles className="h-8 w-8 text-slate-200" />
             </div>
-            <div>
-                <p className="text-sm font-bold text-slate-900">Tout est à jour</p>
-                <p className="text-xs text-slate-500 mt-1">Vous n'avez aucune notification.</p>
-            </div>
+            <h4 className="text-sm font-semibold text-slate-900">Zéro distraction</h4>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              Profitez du calme. On vous préviendra dès qu'il y aura du nouveau.
+            </p>
           </div>
         ) : (
-          <ScrollArea className="max-h-[26rem]">
-            <div className="divide-y divide-slate-100">
+          <ScrollArea className="h-[420px]">
+            <div className="divide-y divide-slate-50">
               {notifications.map((n) => (
                 <NotificationItem key={n.id} notification={n} onRead={refresh} primaryColor={primaryColor} />
               ))}
             </div>
           </ScrollArea>
         )}
+
+        {/* Footer */}
+        {/* <div className="border-t border-slate-100/50 bg-slate-50/50 p-3">
+          <button className="w-full rounded-xl py-2 text-center text-[11px] font-bold text-slate-500 transition-colors hover:bg-white hover:text-slate-900 hover:shadow-sm">
+            Voir tout l'historique
+          </button>
+        </div> */}
       </PopoverContent>
     </Popover>
   )

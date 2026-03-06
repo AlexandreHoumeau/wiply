@@ -7,7 +7,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
 
   return (
     <SettingsProvider data={data}>
-      <div className="min-h-screen bg-slate-50/50">
+      <div className="min-h-screen bg-background">
         <div className="max-w-[1000px] mx-auto px-6 py-10">
 
           {/* Header simplifié */}

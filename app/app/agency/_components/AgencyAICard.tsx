@@ -51,7 +51,7 @@ export function AgencyAICard({ ai }: { ai: AgencyAiConfig | null }) {
   }, [state]);
 
   return (
-    <div className="group overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="group overflow-hidden rounded-2xl border bg-white transition-all duration-300">
       <div className="flex items-center justify-between border-b border-slate-100/80 px-7 py-5 bg-slate-50/50">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-white p-2 text-indigo-600 border border-slate-200/50 shadow-sm relative overflow-hidden">
@@ -167,7 +167,7 @@ export function AgencyAICard({ ai }: { ai: AgencyAiConfig | null }) {
               type="submit"
               size="sm"
               disabled={isPending}
-              className="bg-slate-900 text-white hover:bg-slate-800 shadow-md shadow-slate-900/10 transition-all"
+              className="transition-all"
             >
               {isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

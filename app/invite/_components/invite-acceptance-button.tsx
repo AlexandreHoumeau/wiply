@@ -35,7 +35,7 @@ export default function InviteAcceptanceButton({ token, isLoggedIn, userEmail, i
               Se connecter
             </Link>
           </Button>
-          <Button asChild className="h-11 bg-blue-600 hover:bg-blue-700">
+          <Button asChild className="h-11">
             <Link href={`/auth/signup?next=${next}`}>
               <UserPlus className="h-4 w-4 mr-2" />
               Créer un compte
@@ -81,7 +81,7 @@ export default function InviteAcceptanceButton({ token, isLoggedIn, userEmail, i
   return (
     <Button
       onClick={handleAccept}
-      className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-md font-semibold group shadow-lg shadow-blue-200"
+      className="w-full h-12 text-md font-semibold group"
       disabled={isLoading}
     >
       {isLoading ? (
