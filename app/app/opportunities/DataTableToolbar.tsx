@@ -1,7 +1,7 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, Star, X } from "lucide-react";
 
 import { MultiSelectFilterDropdown } from "@/components/table/MultiSelectFilterDropdown";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,9 @@ interface DataTableToolbarProps<TData> {
   setSearchInput: (value: string) => void;
   statuses: OpportunityStatus[];
   contactVia: ContactVia[];
+  starredOnly: boolean;
   onFilterChange: (key: string, values: string[]) => void;
+  onToggleStarred: () => void;
   onReset: () => void;
 }
 
@@ -32,17 +34,21 @@ export function DataTableToolbar<TData>({
   setSearchInput,
   statuses,
   contactVia,
+  starredOnly,
   onFilterChange,
+  onToggleStarred,
   onReset,
 }: DataTableToolbarProps<TData>) {
   const isFiltered =
     statuses.length < ALL_STATUSES.length ||
     contactVia.length < ALL_CONTACT_VIA.length ||
-    searchInput.length > 0;
+    searchInput.length > 0 ||
+    starredOnly;
 
   const activeFilterCount =
     (statuses.length < ALL_STATUSES.length ? 1 : 0) +
-    (contactVia.length < ALL_CONTACT_VIA.length ? 1 : 0);
+    (contactVia.length < ALL_CONTACT_VIA.length ? 1 : 0) +
+    (starredOnly ? 1 : 0);
 
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 px-4 py-3 bg-white border-b border-slate-100">
@@ -107,6 +113,20 @@ export function DataTableToolbar<TData>({
             </Badge>
           )}
         />
+
+        <div className="h-5 w-px bg-slate-100" />
+
+        <button
+          onClick={onToggleStarred}
+          className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+            starredOnly
+              ? "bg-amber-50 border-amber-300 text-amber-600"
+              : "bg-transparent border-transparent text-slate-400 hover:text-amber-500 hover:bg-amber-50 hover:border-amber-200"
+          }`}
+        >
+          <Star className={`h-3.5 w-3.5 ${starredOnly ? "fill-amber-400 text-amber-400" : ""}`} />
+          Favoris
+        </button>
 
         {isFiltered && (
           <>

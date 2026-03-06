@@ -21,6 +21,7 @@ export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: Us
     const statusParam = searchParams.get("status");
     const contactViaParam = searchParams.get("contact_via");
     const pageSizeParam = parseInt(searchParams.get("pageSize") || pageSize.toString(), 10);
+    const starredOnly = searchParams.get("starred") === "true";
 
     const statuses = statusParam
         ? (statusParam.split(",") as OpportunityStatus[])
@@ -32,7 +33,7 @@ export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: Us
 
     // Fetch data with React Query
     const { data, isLoading, error } = useQuery({
-        queryKey: ["opportunities", { page, pageSize: pageSizeParam, search, statuses, contactVia, agencyId }],
+        queryKey: ["opportunities", { page, pageSize: pageSizeParam, search, statuses, contactVia, agencyId, starredOnly }],
         queryFn: () =>
             fetchOpportunities({
                 page,
@@ -41,6 +42,7 @@ export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: Us
                 statuses: statuses.length === ALL_STATUSES.length ? undefined : statuses,
                 contactVia: contactVia.length === ALL_CONTACT_VIA.length ? undefined : contactVia,
                 agencyId,
+                isFavorite: starredOnly || undefined,
             }),
         enabled: enabled && !!agencyId,
         staleTime: 30000, // Cache for 30 seconds
@@ -79,6 +81,7 @@ export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: Us
         opportunities: data?.opportunities || [],
         total: data?.total || 0,
         page,
+        starredOnly,
         statusCounts: statusCounts || {
             to_do: 0,
             first_contact: 0,

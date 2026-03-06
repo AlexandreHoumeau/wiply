@@ -30,7 +30,7 @@ export default function OpportunitiesPage() {
 
   const {
     opportunities, total, page, pageSize, search, statuses, contactVia,
-    isLoading, statusCounts, updateURL,
+    isLoading, statusCounts, starredOnly, updateURL,
   } = useOpportunities({
     pageSize: 10,
     agencyId: profile?.agency_id || "",
@@ -77,14 +77,14 @@ export default function OpportunitiesPage() {
             <div className="p-2 bg-blue-600 rounded-xl shadow-sm">
               <Briefcase className="h-4 w-4 text-white" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Pipeline Commercial</h1>
+            <h1 className="text-2xl tracking-tight text-slate-900">Pipeline Commercial</h1>
           </div>
           <p className="text-slate-500 text-sm font-medium">Gérez vos prospects et maximisez vos conversions.</p>
         </div>
 
         <Button
           onClick={() => { setEditing(null); setDialogOpen(true); }}
-          className="bg-slate-900 hover:bg-slate-800 text-white shadow-md rounded-xl px-5 transition-all active:scale-95 shrink-0"
+          className="px-5 transition-all active:scale-95 shrink-0"
         >
           <Plus className="mr-2 h-4 w-4" />
           <span className="font-bold text-sm">Nouvelle opportunité</span>
@@ -97,7 +97,7 @@ export default function OpportunitiesPage() {
           const count = statusCounts[status] || 0;
           const colorClass = STATUS_COLORS[status].split(" ")[0];
           return (
-            <div key={status} className="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center gap-3 hover:border-slate-300 transition-colors">
+            <div key={status} className="bg-white border p-3 rounded-xl flex items-center gap-3 hover:border-primary/40 transition-colors">
               <div className={`h-2.5 w-2.5 rounded-full ${colorClass.replace("text-", "bg-")}`} />
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
@@ -111,7 +111,7 @@ export default function OpportunitiesPage() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col min-h-[500px]">
+      <div className="bg-white rounded-2xl border overflow-hidden flex-1 flex flex-col min-h-[500px]">
         <DataTable
           columns={columns}
           data={opportunities}
@@ -121,11 +121,13 @@ export default function OpportunitiesPage() {
           search={search}
           statuses={statuses}
           contactVia={contactVia}
+          starredOnly={starredOnly}
           isLoading={isLoading}
           onSearch={(val) => updateURL({ search: val, page: "1" })}
           onFilterChange={(key, values) => updateURL({ [key]: values, page: "1" })}
+          onToggleStarred={() => updateURL({ starred: starredOnly ? "" : "true", page: "1" })}
           onPagination={(newPage) => updateURL({ page: newPage.toString() })}
-          onReset={() => updateURL({ search: "", status: ALL_STATUSES, contact_via: ALL_CONTACT_VIA, page: "1" })}
+          onReset={() => updateURL({ search: "", status: ALL_STATUSES, contact_via: ALL_CONTACT_VIA, starred: "", page: "1" })}
         />
       </div>
 

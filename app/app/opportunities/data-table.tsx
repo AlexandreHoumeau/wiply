@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ContactVia, OpportunityStatus } from "@/lib/validators/oppotunities";
+import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { DataTableToolbar } from "./DataTableToolbar";
 
@@ -26,16 +27,18 @@ interface DataTableProps<TData, TValue> {
   search: string;
   statuses: OpportunityStatus[];
   contactVia: ContactVia[];
+  starredOnly: boolean;
   isLoading: boolean;
   onSearch: (search: string) => void;
   onFilterChange: (key: string, values: string[]) => void;
+  onToggleStarred: () => void;
   onPagination: (page: number) => void;
   onReset: () => void;
 }
 
 export function DataTable<TData, TValue>({
   columns, data, total, page, pageSize, search, statuses, contactVia,
-  isLoading, onSearch, onFilterChange, onPagination, onReset,
+  starredOnly, isLoading, onSearch, onFilterChange, onToggleStarred, onPagination, onReset,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [searchInput, setSearchInput] = React.useState(search);
@@ -70,7 +73,9 @@ export function DataTable<TData, TValue>({
           setSearchInput={setSearchInput}
           statuses={statuses}
           contactVia={contactVia}
+          starredOnly={starredOnly}
           onFilterChange={onFilterChange}
+          onToggleStarred={onToggleStarred}
           onReset={onReset}
         />
       </div>
@@ -104,7 +109,12 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="border-b border-slate-50 last:border-0 hover:bg-slate-50/80 transition-colors group"
+                  className={cn(
+                    "border-b border-slate-50 last:border-0 transition-colors group",
+                    (row.original as any).is_favorite
+                      ? "border-l-4 border-l-amber-400 bg-amber-50/30 hover:bg-amber-50/50"
+                      : "hover:bg-slate-50/80"
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-3 px-4 align-middle">
