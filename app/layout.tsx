@@ -1,18 +1,19 @@
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { UpgradeDialogProvider } from "@/providers/UpgradeDialogProvider";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Passion_One } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const passionOne = Passion_One({
+  variable: "--font-passion-one",
+  weight: ["400", "700", "900"],
   subsets: ["latin"],
 });
 
@@ -55,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${passionOne.variable} antialiased`}
       >
         <ReactQueryProvider>
           <UpgradeDialogProvider>
