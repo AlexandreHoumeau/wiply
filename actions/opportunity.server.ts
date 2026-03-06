@@ -12,6 +12,7 @@ export type FetchOpportunitiesParams = {
     statuses?: OpportunityStatus[];
     contactVia?: ContactVia[];
     agencyId: string;
+    isFavorite?: boolean;
 };
 
 export async function getOpportunityBySlug(slug: string): Promise<OpportunityWithCompany | null> {
@@ -40,6 +41,7 @@ export async function fetchOpportunities({
     statuses,
     contactVia,
     agencyId,
+    isFavorite,
 }: FetchOpportunitiesParams) {
     const supabase = await createClient();
 
@@ -64,6 +66,11 @@ export async function fetchOpportunities({
     // Contact via filter
     if (contactVia && contactVia.length > 0) {
         query = query.in("contact_via", contactVia);
+    }
+
+    // Starred filter
+    if (isFavorite) {
+        query = query.eq("is_favorite", true);
     }
 
     // Pagination

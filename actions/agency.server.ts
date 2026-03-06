@@ -265,6 +265,135 @@ export async function inviteTeamMember(
 }
 
 
+export async function resendInvitation(inviteId: string): Promise<{ success: boolean; message: string }> {
+    try {
+        const supabase = await createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+            return { success: false, message: "Non authentifié" }
+        }
+
+        const { data: senderProfile, error: profileError } = await supabase
+            .from("profiles")
+            .select("agency_id, role, first_name, last_name")
+            .eq("id", user.id)
+            .single()
+
+        if (profileError || !senderProfile?.agency_id) {
+            return { success: false, message: "Aucune agence associée" }
+        }
+
+        if (senderProfile.role !== 'agency_admin') {
+            return { success: false, message: "Permissions insuffisantes" }
+        }
+
+        const { data: invite, error: inviteError } = await supabase
+            .from("agency_invites")
+            .select("email, role")
+            .eq("id", inviteId)
+            .eq("agency_id", senderProfile.agency_id)
+            .eq("accepted", false)
+            .single()
+
+        if (inviteError || !invite) {
+            return { success: false, message: "Invitation introuvable" }
+        }
+
+        const token = crypto.randomBytes(32).toString('hex')
+        const expiresAt = new Date()
+        expiresAt.setDate(expiresAt.getDate() + 7)
+
+        const { error: updateError } = await supabase
+            .from("agency_invites")
+            .update({ token, expires_at: expiresAt.toISOString() })
+            .eq("id", inviteId)
+
+        if (updateError) throw updateError
+
+        const { data: agency } = await supabase
+            .from("agencies")
+            .select("name")
+            .eq("id", senderProfile.agency_id)
+            .single()
+
+        const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/invite?token=${token}`
+        const inviterName = `${senderProfile.first_name} ${senderProfile.last_name}`
+
+        const htmlContent = await render(InviteEmail({
+            agencyName: agency?.name ?? '',
+            inviterName,
+            inviteLink,
+        }))
+
+        try {
+            await getBrevoClient().transactionalEmails.sendTransacEmail({
+                sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
+                to: [{ email: invite.email }],
+                subject: `Invitation à rejoindre ${agency?.name ?? ''}`,
+                htmlContent,
+            })
+        } catch (emailError) {
+            console.error("Brevo Error:", emailError)
+            return { success: false, message: "Erreur lors de l'envoi de l'email" }
+        }
+
+        revalidatePath("/settings/agency")
+        return { success: true, message: `Invitation renvoyée à ${invite.email}` }
+    } catch (error) {
+        console.error("Unexpected error:", error)
+        return { success: false, message: "Erreur inattendue" }
+    }
+}
+
+
+export async function updateMemberRole(memberId: string, newRole: 'agency_admin' | 'agency_member'): Promise<{ success: boolean; message: string }> {
+    try {
+        const supabase = await createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+            return { success: false, message: "Non authentifié" }
+        }
+
+        const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("agency_id, role")
+            .eq("id", user.id)
+            .single()
+
+        if (profileError || !profile?.agency_id) {
+            return { success: false, message: "Aucune agence associée à votre compte" }
+        }
+
+        if (profile.role !== 'agency_admin') {
+            return { success: false, message: "Vous n'avez pas les permissions pour modifier un rôle" }
+        }
+
+        if (memberId === user.id) {
+            return { success: false, message: "Vous ne pouvez pas modifier votre propre rôle" }
+        }
+
+        const { error: updateError } = await supabaseAdmin
+            .from("profiles")
+            .update({ role: newRole })
+            .eq("id", memberId)
+            .eq("agency_id", profile.agency_id)
+
+        if (updateError) {
+            console.error("Error updating member role:", updateError)
+            return { success: false, message: "Erreur lors de la mise à jour du rôle" }
+        }
+
+        revalidatePath("/app/agency")
+
+        return { success: true, message: `Rôle mis à jour avec succès` }
+    } catch (error) {
+        console.error("Unexpected error:", error)
+        return { success: false, message: "Une erreur inattendue s'est produite" }
+    }
+}
+
 export async function removeTeamMember(memberId: string): Promise<{ success: boolean; message: string }> {
     try {
         const supabase = await createClient()

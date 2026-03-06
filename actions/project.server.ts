@@ -424,6 +424,59 @@ export async function deleteChecklistItem(
   }
 }
 
+// ─── Internal Project ──────────────────────────────────────────────────────
+
+export async function getOrCreateInternalProject(
+  agencyId: string
+): Promise<ActionResult<{ slug: string }>> {
+  const supabase = await createClient();
+
+  try {
+    // Try to find an existing internal project
+    const { data: existing } = await supabase
+      .from("projects")
+      .select("slug")
+      .eq("agency_id", agencyId)
+      .eq("is_internal", true)
+      .maybeSingle();
+
+    if (existing) {
+      return { success: true, data: { slug: existing.slug } };
+    }
+
+    // Fetch agency name for the project name
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("name")
+      .eq("id", agencyId)
+      .single();
+
+    const projectName = agency?.name ? `${agency.name} – Interne` : "Espace interne";
+    const slug = await generateUniqueSlug(supabase, projectName);
+
+    const { data: project, error } = await supabase
+      .from("projects")
+      .insert({
+        name: projectName,
+        agency_id: agencyId,
+        company_id: null,
+        slug,
+        status: "active",
+        is_internal: true,
+      })
+      .select("slug")
+      .single();
+
+    if (error) throw error;
+
+    revalidatePath("/app/projects");
+    return { success: true, data: { slug: project.slug } };
+  } catch (error) {
+    console.error("Erreur projet interne:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
 // ─── Stats ─────────────────────────────────────────────────────────────────
 
 interface ProjectOverviewStats {

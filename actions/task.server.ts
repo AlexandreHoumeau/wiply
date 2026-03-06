@@ -12,7 +12,8 @@ export async function getProjectTasks(projectId: string) {
             .select(`
                 *,
                 assignee:profiles!tasks_assignee_id_fkey(*),
-                creator:profiles!tasks_created_by_fkey(*)
+                creator:profiles!tasks_created_by_fkey(*),
+                task_comments(count)
                 `)
             .eq("project_id", projectId)
             .order("position", { ascending: true });
