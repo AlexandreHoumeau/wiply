@@ -6,7 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"
 import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState } from "@/lib/validators/agency"
 import crypto from "crypto"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { BrevoClient } from '@getbrevo/brevo'
 import { render } from '@react-email/components'
 import { z } from "zod"
@@ -105,6 +105,7 @@ export async function updateAgencyInformation(
         // 5. Revalidate
         revalidatePath("/settings/agency")
         revalidatePath("/settings")
+        revalidateTag(`settings-${user.id}`, {})
 
         return {
             success: true,
@@ -250,6 +251,7 @@ export async function inviteTeamMember(
         }
 
         revalidatePath("/settings/agency");
+        revalidateTag(`settings-${user.id}`, {})
 
         return {
             success: true,
@@ -339,6 +341,7 @@ export async function resendInvitation(inviteId: string): Promise<{ success: boo
         }
 
         revalidatePath("/settings/agency")
+        revalidateTag(`settings-${user.id}`, {})
         return { success: true, message: `Invitation renvoyée à ${invite.email}` }
     } catch (error) {
         console.error("Unexpected error:", error)
@@ -386,6 +389,7 @@ export async function updateMemberRole(memberId: string, newRole: 'agency_admin'
         }
 
         revalidatePath("/app/agency")
+        revalidateTag(`settings-${user.id}`, {})
 
         return { success: true, message: `Rôle mis à jour avec succès` }
     } catch (error) {
@@ -431,6 +435,7 @@ export async function removeTeamMember(memberId: string): Promise<{ success: boo
         }
 
         revalidatePath("/settings/agency")
+        revalidateTag(`settings-${user.id}`, {})
 
         return { success: true, message: "Membre supprimé de l'agence" }
     } catch (error) {
@@ -546,6 +551,7 @@ export async function updateAgencyBranding(
 
         revalidatePath("/app/agency");
         revalidatePath("/app", "layout");
+        revalidateTag(`settings-${user.id}`, {})
         return { success: true, message: "Branding mis à jour avec succès" };
 
     } catch (error) {

@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { AuthUserContext } from "@/lib/validators/definitions";
 import { Profile, updateProfileSchema, UpdateProfileState } from "@/lib/validators/profile";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function fetchUserProfile(): Promise<Profile | null> {
     const supabase = await createClient();
@@ -83,6 +83,7 @@ export async function updateProfile(
 
         // 5. Revalidate the settings page
         revalidatePath("/settings/profile")
+        revalidateTag(`settings-${user.id}`, {})
 
         return {
             success: true,
