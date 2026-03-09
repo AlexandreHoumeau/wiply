@@ -1,7 +1,7 @@
 import { getOpportunityBySlug } from "@/actions/opportunity.server";
 import { OpportunityProvider } from "./_components/opportunity-context";
 import OpportunityHeader from "./_components/opportunity-header";
-import OpportunitySidebarInfo from "./_components/opportunity-sidebar";
+import OpportunitySidebarWrapper from "./_components/opportunity-sidebar-wrapper";
 
 export default async function OpportunityLayout({
   children,
@@ -22,14 +22,12 @@ export default async function OpportunityLayout({
       <div className="flex flex-col h-screen bg-background">
         <OpportunityHeader opportunity={opportunity} />
 
-        <main className="grid grid-cols-1 lg:grid-cols-5 flex-1 overflow-hidden">
-          <div className="lg:col-span-4 flex flex-col overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
+        <main className="flex flex-1 overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
 
-          <aside className="hidden lg:flex flex-col h-full overflow-y-auto border-l bg-background/80 backdrop-blur-md p-6 shadow-sm">
-            <OpportunitySidebarInfo {...opportunity} />
-          </aside>
+          <OpportunitySidebarWrapper {...opportunity} />
         </main>
       </div>
     </OpportunityProvider>
