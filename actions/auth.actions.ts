@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { BrevoClient } from "@getbrevo/brevo";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { render } from "@react-email/components";
 import { SignupConfirmEmail } from "@/emails/signup-confirm";
 import { ResetPasswordEmail } from "@/emails/reset-password";
@@ -43,6 +44,17 @@ export async function signup(data: SignupInput) {
     });
 
     if (error) return { error: error.message };
+
+    const posthog = getPostHogClient();
+    posthog?.capture({
+        distinctId: linkData.user.id,
+        event: "user_signed_up",
+        properties: {
+            email: data.email,
+            $set: { email: data.email },
+        },
+    });
+    await posthog?.shutdown();
 
     // Use hashed_token to build a link to our own /auth/confirm page instead of
     // Supabase's /auth/v1/verify URL. Email scanners (Gmail, etc.) pre-fetch

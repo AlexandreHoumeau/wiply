@@ -44,3 +44,8 @@ next-env.d.ts
 
 # 
 PRODUCT.md
+
+.claude/
+ClAUDE.md
+.env.local
+posthog-setup-report.md

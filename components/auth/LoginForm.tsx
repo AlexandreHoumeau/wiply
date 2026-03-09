@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import posthog from "posthog-js";
 
 function GoogleIcon() {
     return (
@@ -58,12 +59,23 @@ export function LoginForm() {
             return;
         }
 
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            posthog.identify(user.id, {
+                email: user.email,
+            });
+            posthog.capture("user_logged_in", {
+                method: "email",
+            });
+        }
+
         router.push(next || "/app");
         router.refresh();
     }
 
     async function handleGoogleLogin() {
         setGoogleLoading(true);
+        posthog.capture("user_logged_in", { method: "google" });
         await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {

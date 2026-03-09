@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { checkProjectLimit } from "@/lib/billing/checkLimit";
 import { revalidatePath } from "next/cache";
+import { getPostHogClient } from "@/lib/posthog-server";
 import type {
   ActionResult,
   ChecklistItemData,
@@ -90,6 +91,21 @@ export async function createProjectFromOpportunity(
         .eq("id", opportunity.id);
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const posthog = getPostHogClient();
+      posthog?.capture({
+        distinctId: user.id,
+        event: "project_created_from_opportunity",
+        properties: {
+          project_id: project.id,
+          opportunity_id: opportunity.id,
+          agency_id: opportunity.agency_id,
+        },
+      });
+      await posthog?.shutdown();
+    }
+
     revalidatePath("/app/projects");
     revalidatePath("/app/opportunities");
 
@@ -150,6 +166,20 @@ export async function createProject(
 
     if (projectError) throw projectError;
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const posthog = getPostHogClient();
+      posthog?.capture({
+        distinctId: user.id,
+        event: "project_created",
+        properties: {
+          project_id: project.id,
+          agency_id: agencyId,
+        },
+      });
+      await posthog?.shutdown();
+    }
+
     revalidatePath("/app/projects");
     return { success: true, data: project };
   } catch (error) {
@@ -194,6 +224,17 @@ export async function deleteProject(
     console.error("Error deleting project:", error);
     return { success: false, error: "Erreur lors de la suppression du projet." };
   }
+
+  const posthog = getPostHogClient();
+  posthog?.capture({
+    distinctId: user!.id,
+    event: "project_deleted",
+    properties: {
+      project_id: projectId,
+      agency_id: profile.agency_id,
+    },
+  });
+  await posthog?.shutdown();
 
   revalidatePath("/app/projects");
   return { success: true, data: undefined };

@@ -11,6 +11,7 @@ import { ContactVia } from "@/lib/validators/oppotunities";
 import { AlertCircle, CheckCircle2, Copy, Instagram, Link2, LinkedinIcon, Loader2, Mail, Save, Wand2 } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAIContext }) {
 	const { profile } = useUserProfile();
@@ -150,6 +151,12 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 				setEditedSubject(result.subject || "");
 				setEditedBody(result.body || "");
 				setHasUnsavedChanges(false);
+				posthog.capture("ai_message_generated", {
+					opportunity_id: opportunity.id,
+					channel: selectedChannel,
+					tone,
+					length,
+				});
 				toast.success("Message généré avec succès!");
 			} catch {
 				setState({
@@ -166,6 +173,10 @@ export function AIMessageGenerator({ opportunity }: { opportunity: OpportunityAI
 
 	const copyToClipboard = (text: string) => {
 		navigator.clipboard.writeText(text);
+		posthog.capture("ai_message_copied", {
+			opportunity_id: opportunity.id,
+			channel: selectedChannel,
+		});
 		toast.success("Copié !");
 	};
 

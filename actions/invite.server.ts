@@ -3,6 +3,7 @@
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { createNotification } from "@/lib/notifications"
+import { getPostHogClient } from "@/lib/posthog-server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
@@ -73,6 +74,17 @@ export async function acceptInvitation(token: string) {
             metadata: { user_id: user.id },
         })
     }
+
+    const posthog = getPostHogClient()
+    posthog?.capture({
+        distinctId: user.id,
+        event: "invitation_accepted",
+        properties: {
+            agency_id: invite.agency_id,
+            role: invite.role,
+        },
+    })
+    await posthog?.shutdown()
 
     revalidatePath('/app', 'layout')
     return { success: true }

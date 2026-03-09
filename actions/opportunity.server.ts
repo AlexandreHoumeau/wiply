@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { OpportunityWithCompany } from "@/lib/validators/oppotunities";
 import { OpportunityStatus, ContactVia } from "@/lib/validators/oppotunities";
 
@@ -215,4 +216,17 @@ export async function updateOpportunityStatus(
             metadata: { opportunity_id: opportunityId, from: opp.status, to: status },
         });
     }
+
+    const posthog = getPostHogClient();
+    posthog?.capture({
+        distinctId: user.id,
+        event: "opportunity_status_changed",
+        properties: {
+            opportunity_id: opportunityId,
+            from_status: opp.status,
+            to_status: status,
+            agency_id: opp.agency_id,
+        },
+    });
+    await posthog?.shutdown();
 }

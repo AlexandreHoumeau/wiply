@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { completeOnboarding } from "@/actions/onboarding.server";
+import posthog from "posthog-js";
 
 const schema = z.object({
     agencyName: z.string().min(2, "Minimum 2 caractères"),
@@ -51,6 +52,9 @@ export function OnboardingForm({ defaultFirstName = "", defaultLastName = "" }: 
         startTransition(async () => {
             try {
                 await completeOnboarding(values);
+                posthog.capture("onboarding_completed", {
+                    agency_name: values.agencyName,
+                });
             } catch (e) {
                 if (isRedirectError(e)) throw e;
                 setError("Une erreur est survenue. Veuillez réessayer.");

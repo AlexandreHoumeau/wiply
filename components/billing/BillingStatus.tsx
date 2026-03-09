@@ -3,6 +3,7 @@
 import { useTransition } from 'react'
 import { toast } from 'sonner'
 import { createCheckoutSession, createPortalSession } from '@/actions/billing.server'
+import posthog from 'posthog-js'
 import { PLANS } from '@/lib/config/plans'
 import {
     Check,
@@ -89,6 +90,7 @@ export function BillingStatus({ billing, agencyId }: { billing: BillingData; age
     const planLimits = PLANS[billing.plan]
 
     function handleUpgrade() {
+        posthog.capture("upgrade_to_pro_clicked", { agency_id: agencyId });
         startTransition(async () => {
             const result = await createCheckoutSession(agencyId)
             if ('error' in result) {
@@ -100,6 +102,7 @@ export function BillingStatus({ billing, agencyId }: { billing: BillingData; age
     }
 
     function handleManage() {
+        posthog.capture("billing_portal_opened", { agency_id: agencyId });
         startTransition(async () => {
             const result = await createPortalSession(agencyId)
             if ('error' in result) {
