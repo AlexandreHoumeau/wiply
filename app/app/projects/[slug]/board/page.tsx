@@ -1,6 +1,6 @@
 import { getProjectBySlug } from "@/actions/project.server";
 import { getProjectTasks } from "@/actions/task.server";
-import { KanbanBoard } from "@/components/projects/KanbanBoard";
+import { BoardContainer } from "@/components/projects/BoardContainer";
 import { notFound } from "next/navigation";
 
 
@@ -18,7 +18,7 @@ export default async function ProjectBoardPage({ params }: { params: Promise<{ s
     return (
         <div className="h-full flex flex-col">
             <div className="flex-1 overflow-hidden">
-                <KanbanBoard projectId={project.id} initialTasks={initialTasks || []} />
+                <BoardContainer projectId={project.id} initialTasks={initialTasks || []} />
             </div>
         </div>
     );

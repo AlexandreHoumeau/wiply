@@ -49,6 +49,7 @@ export interface TaskData {
   type?: string;
   priority?: string;
   assignee_id?: string | null;
+  due_date?: string | null;
 }
 
 export interface ProjectSettingsData {

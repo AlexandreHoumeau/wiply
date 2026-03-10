@@ -357,6 +357,7 @@ export async function createTask(
         type: data.type ?? "feature",
         priority: data.priority ?? "medium",
         assignee_id: data.assignee_id ?? null,
+        due_date: data.due_date ?? null,
       })
       .select()
       .single();
@@ -385,6 +386,7 @@ export async function updateTaskDetails(
         type: data.type,
         priority: data.priority,
         assignee_id: data.assignee_id ?? null,
+        due_date: data.due_date ?? null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", taskId);

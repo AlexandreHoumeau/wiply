@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthenticatedUserContext } from "@/actions/profile.server";
 import { getOrCreateInternalProject } from "@/actions/project.server";
 import { getProjectTasks } from "@/actions/task.server";
-import { KanbanBoard } from "@/components/projects/KanbanBoard";
+import { BoardContainer } from "@/components/projects/BoardContainer";
 import { Layers, ArrowRight, FolderKanban } from "lucide-react";
 
 export default async function WorkspacePage() {
@@ -60,7 +60,7 @@ export default async function WorkspacePage() {
 
             {/* Kanban board */}
             <div className="flex-1 overflow-hidden">
-                <KanbanBoard projectId={internalProject.id} initialTasks={tasks} />
+                <BoardContainer projectId={internalProject.id} initialTasks={tasks} />
             </div>
         </div>
     );

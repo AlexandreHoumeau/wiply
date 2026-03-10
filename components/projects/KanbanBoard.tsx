@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { updateTaskStatusAndPosition } from "@/actions/task.server";
-import { AlignLeft, Bug, LayoutTemplate, PenTool, Settings, ArrowUp, ArrowDown, Equal, AlertOctagon, MessageSquare } from "lucide-react";
+import { AlignLeft, Bug, LayoutTemplate, PenTool, Settings, ArrowUp, ArrowDown, Equal, AlertOctagon, MessageSquare, CalendarDays } from "lucide-react";
+import dayjs from "dayjs";
+import "dayjs/locale/fr";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -17,7 +19,7 @@ const COLUMNS = [
     { id: "done", title: "Terminé", color: "bg-emerald-100 text-emerald-700" },
 ];
 
-export function KanbanBoard({ projectId, initialTasks }: { projectId: string, initialTasks: any[] }) {
+export function KanbanBoard({ projectId, tasks: initialTasks }: { projectId: string, tasks: any[] }) {
     const router = useRouter();
     const [isMounted, setIsMounted] = useState(false);
     const [tasks, setTasks] = useState(initialTasks);
@@ -170,6 +172,7 @@ function TaskCard({ task, index, onClick }: { task: any, index: number, onClick:
     const typeConfig = TYPE_STYLES[task.type || 'feature'];
     const priorityConfig = PRIORITY_ICONS[task.priority || 'medium'];
     const commentCount = task.task_comments?.[0]?.count ?? 0;
+    const isOverdue = task.due_date && dayjs(task.due_date).isBefore(dayjs(), "day") && task.status !== "done";
 
     return (
         <Draggable draggableId={task.id} index={index}>
@@ -207,7 +210,21 @@ function TaskCard({ task, index, onClick }: { task: any, index: number, onClick:
                         </p>
                     )}
 
-                    <div className={cn("flex items-center justify-between pt-3 border-t border-slate-50", task.description ? "" : "mt-3")}>
+                    {/* Due date badge */}
+                    {task.due_date && (
+                        <div className={cn(
+                            "flex items-center gap-1 mb-3 w-fit px-2 py-0.5 rounded-full text-[10px] font-semibold",
+                            isOverdue
+                                ? "bg-red-50 text-red-600"
+                                : "bg-slate-100 text-slate-500"
+                        )}>
+                            <CalendarDays className="w-3 h-3" />
+                            {dayjs(task.due_date).locale("fr").format("D MMM")}
+                            {isOverdue && " · retard"}
+                        </div>
+                    )}
+
+                    <div className={cn("flex items-center justify-between pt-3 border-t border-slate-50", task.description || task.due_date ? "" : "mt-3")}>
                         {/* Priorité */}
                         <div className="flex items-center gap-1.5">
                             <priorityConfig.icon className={cn("w-3.5 h-3.5", priorityConfig.color)} />
