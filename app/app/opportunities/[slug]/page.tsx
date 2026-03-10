@@ -1,14 +1,31 @@
-"use client";
+import { getOpportunityBySlug } from "@/actions/opportunity.server";
+import { getOpportunityTimeline } from "@/actions/timeline.server";
+import { getTrackingLinks } from "@/actions/tracking.server";
+import { getAIGeneratedMessages } from "@/actions/ai-messages";
+import OpportunityOverview from "./_components/opportunity-overview";
 
-import { AIMessageGenerator } from "./_components/AIMessageGenerator";
-import { useOpportunity } from "./_components/opportunity-context";
+export default async function OverviewPage({
+    params,
+}: {
+    params: Promise<{ slug: string }>;
+}) {
+    const { slug } = await params;
+    const opportunity = await getOpportunityBySlug(slug);
 
-export default function OpportunityPage() {
-    const opportunity = useOpportunity();
+    if (!opportunity) return null;
+
+    const [eventsResult, trackingResult, messagesResult] = await Promise.all([
+        getOpportunityTimeline(opportunity.id),
+        getTrackingLinks(opportunity.id),
+        getAIGeneratedMessages(opportunity.id),
+    ]);
 
     return (
-        <div className="w-full max-w-6xl mx-auto">
-            <AIMessageGenerator opportunity={opportunity} />
-        </div>
+        <OpportunityOverview
+            opportunity={opportunity}
+            initialEvents={eventsResult.data ?? []}
+            trackingLinks={trackingResult.data ?? []}
+            aiMessages={messagesResult.data ?? []}
+        />
     );
 }

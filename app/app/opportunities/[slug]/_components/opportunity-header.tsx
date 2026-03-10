@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Building2, Mail, Link2, BarChart3, Calendar, Sparkles } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Link2, BarChart3, Calendar, LayoutDashboard } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -21,9 +21,10 @@ const STATUS_STYLES: Record<OpportunityStatus, { bg: string; text: string; dot: 
   lost: { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400" },
 };
 
-export type OpportunityTabId = "message" | "tracking" | "analytics" | "timeline";
+export type OpportunityTabId = "overview" | "message" | "tracking" | "analytics" | "timeline";
 
 const TABS: { id: OpportunityTabId; label: string; icon: React.ElementType }[] = [
+  { id: "overview", label: "Aperçu", icon: LayoutDashboard },
   { id: "message", label: "Message IA", icon: Mail },
   { id: "tracking", label: "Liens & Tracking", icon: Link2 },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
@@ -38,11 +39,11 @@ export default function OpportunityHeader({ opportunity }: { opportunity: Opport
   const baseUrl = `/app/opportunities/${opportunity.slug}`;
 
   function getTabHref(id: OpportunityTabId) {
-    return id === "message" ? baseUrl : `${baseUrl}/${id}`;
+    return id === "overview" ? baseUrl : `${baseUrl}/${id}`;
   }
 
   function isTabActive(id: OpportunityTabId) {
-    return id === "message" ? pathname === baseUrl : pathname === `${baseUrl}/${id}`;
+    return id === "overview" ? pathname === baseUrl : pathname === `${baseUrl}/${id}`;
   }
 
   return (
@@ -120,9 +121,6 @@ export default function OpportunityHeader({ opportunity }: { opportunity: Opport
                   style={isActive ? { color: 'var(--brand-secondary, #6366F1)' } : undefined}
                 />
                 {tab.label}
-                {tab.id === "message" && isActive && (
-                  <Sparkles className="h-3 w-3" style={{ color: 'var(--brand-secondary, #6366F1)' }} />
-                )}
                 {isActive && (
                   <motion.div
                     layoutId="activeOppTab"

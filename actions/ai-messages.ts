@@ -6,8 +6,24 @@ import { checkAiEnabled } from "@/lib/billing/checkLimit";
 import { Mistral } from '@mistralai/mistralai';
 import { revalidatePath } from "next/cache";
 
+export type AIMessageRow = {
+	id: string;
+	opportunity_id: string;
+	agency_id: string | null;
+	opportunity_status: string | null;
+	channel: string;
+	tone: string;
+	length: string;
+	custom_context: string | null;
+	subject: string | null;
+	body: string;
+	created_at: string;
+	updated_at: string;
+};
+
 export type SaveAIMessageInput = {
 	opportunityId: string;
+	opportunityStatus?: string;
 	channel: string;
 	tone: string;
 	length: string;
@@ -25,6 +41,7 @@ export async function saveAIGeneratedMessage(input: SaveAIMessageInput) {
 			.from("ai_generated_messages")
 			.insert({
 				opportunity_id: input.opportunityId,
+				opportunity_status: input.opportunityStatus ?? null,
 				channel: input.channel,
 				tone: input.tone,
 				length: input.length,
@@ -57,10 +74,10 @@ export async function getAIGeneratedMessages(opportunityId: string) {
 			.eq("opportunity_id", opportunityId)
 			.order("created_at", { ascending: false });
 
-		if (error) return { success: false, error: error.message, data: [] };
-		return { success: true, data: data || [] };
+		if (error) return { success: false, error: error.message, data: [] as AIMessageRow[] };
+		return { success: true, data: (data || []) as AIMessageRow[] };
 	} catch {
-		return { success: false, error: "Une erreur est survenue", data: [] };
+		return { success: false, error: "Une erreur est survenue", data: [] as AIMessageRow[] };
 	}
 }
 
@@ -87,7 +104,7 @@ export async function updateAIGeneratedMessage(
 // --- GENERATION ENGINE ---
 
 export async function generateOpportunityMessage(
-	prevState: any,
+	_prevState: any,
 	formData: FormData,
 	agencyId?: string
 ): Promise<{ subject: string | null; body: string; error?: string; id: string | null }> {
@@ -254,6 +271,7 @@ export async function generateOpportunityMessage(
 			.insert({
 				opportunity_id: opportunity.id,
 				agency_id: agencyId,
+				opportunity_status: opportunity.status,
 				channel,
 				tone,
 				length,
