@@ -42,7 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# 
+# supabase local dev artifacts
+supabase/.temp/
+
+#
 PRODUCT.md
 
 .claude/
