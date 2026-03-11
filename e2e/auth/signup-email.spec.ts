@@ -21,7 +21,7 @@ test.describe("Signup — email/password", () => {
     await page.locator('input[type="password"]').first().fill(password);
     await page.getByLabel("Confirmation").fill(password);
 
-    await page.getByRole("button", { name: "Créer le compte" }).click();
+    await page.getByRole("button", { name: "Créer mon espace" }).click();
 
     // Wait for success state
     await expect(page.getByText("Vérifiez vos emails")).toBeVisible({
@@ -34,7 +34,7 @@ test.describe("Signup — email/password", () => {
 
     // Now sign in with the confirmed credentials
     await page.goto("/auth/login");
-    await page.getByLabel("Adresse email").fill(email);
+    await page.getByLabel("Email").fill(email);
     await page.locator('input[type="password"]').first().fill(password);
     await page.getByRole("button", { name: "Se connecter" }).click();
 
@@ -56,7 +56,7 @@ test.describe("Signup — email/password", () => {
     await page.getByLabel("Adresse email").fill(email);
     await page.locator('input[type="password"]').first().fill(password);
     await page.getByLabel("Confirmation").fill(password);
-    await page.getByRole("button", { name: "Créer le compte" }).click();
+    await page.getByRole("button", { name: "Créer mon espace" }).click();
     await expect(page.getByText("Vérifiez vos emails")).toBeVisible({
       timeout: 10_000,
     });
@@ -71,7 +71,7 @@ test.describe("Signup — email/password", () => {
     await page.getByLabel("Adresse email").fill(email);
     await page.locator('input[type="password"]').first().fill(password);
     await page.getByLabel("Confirmation").fill(password);
-    await page.getByRole("button", { name: "Créer le compte" }).click();
+    await page.getByRole("button", { name: "Créer mon espace" }).click();
 
     // Should show an error (email already in use)
     await expect(

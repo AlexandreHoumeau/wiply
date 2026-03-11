@@ -73,7 +73,7 @@ test.describe("Accept invite — login with existing account", () => {
     expect(page.url()).toContain("invite");
 
     // 6. Log in with existing credentials
-    await page.getByLabel("Adresse email").fill(existingUserEmail);
+    await page.getByLabel("Email").fill(existingUserEmail);
     await page.locator('input[type="password"]').fill(existingUserPassword);
     await page.getByRole("button", { name: "Se connecter" }).click();
 
@@ -122,7 +122,7 @@ test.describe("Accept invite — login with existing account", () => {
 
     // Sign in as the wrong user
     await page.goto("/auth/login");
-    await page.getByLabel("Adresse email").fill(wrongEmail);
+    await page.getByLabel("Email").fill(wrongEmail);
     await page.locator('input[type="password"]').fill(wrongPassword);
     await page.getByRole("button", { name: "Se connecter" }).click();
     await page.waitForURL("**/app**", { timeout: 15_000 });

@@ -41,7 +41,7 @@ test.describe("Accept invite — create new account (email/password)", () => {
     await page.locator('input[type="password"]').first().fill(inviteePassword);
     await page.getByLabel("Confirmation").fill(inviteePassword);
 
-    await page.getByRole("button", { name: "Créer le compte" }).click();
+    await page.getByRole("button", { name: "Créer mon espace" }).click();
 
     // 5. Success screen shown
     await expect(page.getByText("Vérifiez vos emails")).toBeVisible({
@@ -54,7 +54,7 @@ test.describe("Accept invite — create new account (email/password)", () => {
     // 7. Sign in via login form with the ?next param pointing back to the invite
     const nextParam = encodeURIComponent(`/invite?token=${invite.token}`);
     await page.goto(`/auth/login?next=${nextParam}`);
-    await page.getByLabel("Adresse email").fill(inviteeEmail);
+    await page.getByLabel("Email").fill(inviteeEmail);
     await page.locator('input[type="password"]').first().fill(inviteePassword);
     await page.getByRole("button", { name: "Se connecter" }).click();
 

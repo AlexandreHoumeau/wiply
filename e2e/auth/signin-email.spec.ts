@@ -8,7 +8,7 @@ test.describe("Signin — email/password", () => {
     const { email, password } = await createFullUser();
 
     await page.goto("/auth/login");
-    await page.getByLabel("Adresse email").fill(email);
+    await page.getByLabel("Email").fill(email);
     await page.locator('input[type="password"]').fill(password);
     await page.getByRole("button", { name: "Se connecter" }).click();
 
@@ -20,7 +20,7 @@ test.describe("Signin — email/password", () => {
     const { email } = await createFullUser();
 
     await page.goto("/auth/login");
-    await page.getByLabel("Adresse email").fill(email);
+    await page.getByLabel("Email").fill(email);
     await page.locator('input[type="password"]').fill("WrongPassword999!");
     await page.getByRole("button", { name: "Se connecter" }).click();
 
@@ -31,7 +31,7 @@ test.describe("Signin — email/password", () => {
 
   test("shows error for non-existent email", async ({ page }) => {
     await page.goto("/auth/login");
-    await page.getByLabel("Adresse email").fill("nope-nonexistent@wiply-test.com");
+    await page.getByLabel("Email").fill("nope-nonexistent@wiply-test.com");
     await page.locator('input[type="password"]').fill("Password123!");
     await page.getByRole("button", { name: "Se connecter" }).click();
 
@@ -45,7 +45,7 @@ test.describe("Signin — email/password", () => {
 
     // Visit login with a ?next param
     await page.goto("/auth/login?next=%2Fapp%2Fsettings");
-    await page.getByLabel("Adresse email").fill(email);
+    await page.getByLabel("Email").fill(email);
     await page.locator('input[type="password"]').fill(password);
     await page.getByRole("button", { name: "Se connecter" }).click();
 
