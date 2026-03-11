@@ -8,7 +8,7 @@ export function ActiveProjectsList({ projects }: { projects: RecentProject[] }) 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <FolderKanban className="h-4 w-4 text-slate-500" />
-          <h2 className="text-sm font-bold text-slate-900">Projets Actifs</h2>
+          <h2 className="card-title">Projets Actifs</h2>
         </div>
         <Link
           href="/app/projects"

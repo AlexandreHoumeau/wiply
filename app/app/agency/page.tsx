@@ -84,7 +84,7 @@ export default async function AgencyOverviewPage() {
                   )}
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tight">
+                <h1 className="text-4xl md:text-5xl font-semibold text-white">
                   {agency?.name ?? "Mon Agence"}
                 </h1>
 
@@ -129,13 +129,13 @@ export default async function AgencyOverviewPage() {
               </div>
             </div>
 
-            <Link
+            {/* <Link
               href="/app/settings"
               className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 px-5 py-2.5 text-lg font-medium text-white backdrop-blur-md transition-all duration-300 shadow-lg"
             >
               <Settings className="h-4 w-4 text-white/70" />
               Paramètres
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>
@@ -156,7 +156,7 @@ export default async function AgencyOverviewPage() {
                   <div className="rounded-xl bg-slate-100 p-2 text-slate-600 border border-slate-200/50 shadow-sm">
                     <CreditCard className="h-4 w-4" />
                   </div>
-                  <h2 className="text-lg font-semibold text-slate-900 tracking-tight">Abonnement & Facturation</h2>
+                  <h2 className="card-title">Abonnement & Facturation</h2>
                 </div>
                 <Link
                   href="/app/settings/billing"

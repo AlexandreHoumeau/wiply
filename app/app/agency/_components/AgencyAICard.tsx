@@ -59,7 +59,7 @@ export function AgencyAICard({ ai }: { ai: AgencyAiConfig | null }) {
             <Brain className="h-4 w-4 relative z-10" />
           </div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Agent IA</h2>
+            <h2 className="card-title">Agent IA</h2>
             {isConfigured ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/50 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                 <CheckCircle2 className="h-3 w-3" /> Configuré

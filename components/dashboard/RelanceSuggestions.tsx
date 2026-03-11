@@ -26,7 +26,7 @@ export function RelanceSuggestions({ relances }: { relances: RelanceOpp[] }) {
             <Bell className="h-4 w-4 text-amber-600" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Relances suggérées</h2>
+            <h2 className="card-title">Relances suggérées</h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Ces prospects ont cliqué sur un de vos liens ces 7 derniers jours
             </p>

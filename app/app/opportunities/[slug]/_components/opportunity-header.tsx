@@ -68,7 +68,7 @@ export default function OpportunityHeader({ opportunity }: { opportunity: Opport
               {companyInitial}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-2xl font-regular text-slate-900">
                 {opportunity.name}
               </h1>
               <div className="flex items-center gap-1.5 text-sm font-medium text-slate-500 mt-0.5">

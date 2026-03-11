@@ -40,7 +40,7 @@ export function OpportunityAnalytics({ opportunityId }: { opportunityId: string 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-900">Vue d'ensemble des liens</h2>
+                        <h2 className="card-title">Vue d'ensemble des liens</h2>
                         <Badge className="bg-blue-50 text-blue-700 border-blue-100">
                             {analytics.activeLinksCount} actifs / {links.length} total
                         </Badge>
@@ -77,7 +77,7 @@ export function OpportunityAnalytics({ opportunityId }: { opportunityId: string 
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Real-time</span>
                             </div>
                             <div className="mt-4">
-                                <h3 className="text-2xl font-black text-slate-900">{stat.value}</h3>
+                                <h3 className="text-3xl text-slate-900">{stat.value}</h3>
                                 <p className="text-xs font-medium text-slate-500">{stat.label}</p>
                             </div>
                         </CardContent>

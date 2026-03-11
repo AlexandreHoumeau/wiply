@@ -41,7 +41,7 @@ export function AgencyTrackingCard({ stats }: { stats: AgencyTrackingStats }) {
             <div className="absolute inset-0 opacity-10" style={{ backgroundColor: 'var(--brand-secondary, #6366F1)' }} />
             <BarChart3 className="h-4 w-4 relative z-10" />
           </div>
-          <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Analytics & Tracking</h2>
+          <h2 className="card-title">Analytics & Tracking</h2>
         </div>
         <Link
           href="/app/agency/analytics"

@@ -51,7 +51,7 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
           <div className="rounded-xl bg-white p-2 text-slate-600 border border-slate-200/50 shadow-sm">
             <Building2 className="h-4 w-4" />
           </div>
-          <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Identité & Coordonnées</h2>
+          <h2 className="card-title">Identité & Coordonnées</h2>
         </div>
         {isEditing ? (
           <button

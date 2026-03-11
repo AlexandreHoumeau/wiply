@@ -74,7 +74,7 @@ export default function ProjectChecklistPage() {
 
             {/* Header / Intro */}
             <div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">Chasseur de contenus</h2>
+                <h2 className="card-title">Chasseur de contenus</h2>
                 <p className="text-sm text-slate-500">Listez ici les éléments (textes, images, logos) que votre client doit vous fournir.</p>
             </div>
 
@@ -127,7 +127,7 @@ export default function ProjectChecklistPage() {
                                         {getTypeIcon(item.expected_type)}
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
+                                        <h4 className="card-title">{item.title}</h4>
                                         <div className="flex items-center gap-2 mt-1">
                                             {item.status === 'pending' ? (
                                                 <span className="inline-flex items-center text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">

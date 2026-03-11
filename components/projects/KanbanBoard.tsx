@@ -96,7 +96,7 @@ export function KanbanBoard({ projectId, tasks: initialTasks }: { projectId: str
                                 {/* Header de la Colonne */}
                                 <div className="px-4 bg-white rounded-t-2xl py-3 flex items-center justify-between border-b border-slate-200/50">
                                     <div className="flex items-center gap-2">
-                                        <h3 className="text-sm font-bold text-slate-900">{column.title}</h3>
+                                        <h3 className="card-title">{column.title}</h3>
                                         <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", column.color)}>
                                             {columnTasks.length}
                                         </span>

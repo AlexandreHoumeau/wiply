@@ -77,7 +77,7 @@ export default function OpportunitiesPage() {
             <div className="p-2 bg-blue-600 rounded-xl shadow-sm">
               <Briefcase className="h-4 w-4 text-white" />
             </div>
-            <h1 className="text-2xl tracking-tight text-slate-900">Pipeline Commercial</h1>
+            <h1 className="text-2xl text-slate-900">Pipeline Commercial</h1>
           </div>
           <p className="text-slate-500 text-sm font-medium">Gérez vos prospects et maximisez vos conversions.</p>
         </div>

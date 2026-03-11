@@ -240,7 +240,7 @@ export function AnalyticsDashboard({
             {/* Chart Area */}
             <div className="rounded-3xl border bg-white overflow-hidden">
               <div className="px-8 py-6 border-b border-slate-100/80 bg-slate-50/30">
-                <h2 className="text-base font-semibold text-slate-900 tracking-tight">Trafic dans le temps</h2>
+                <h2 className="card-title">Trafic dans le temps</h2>
                 <p className="text-sm text-slate-500 font-medium mt-1">
                   {range === "24h"
                     ? "Évolution horaire · Dernières 24h"
@@ -300,7 +300,7 @@ export function AnalyticsDashboard({
                   <div className="p-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 shadow-sm">
                     <Globe className="h-4 w-4" />
                   </div>
-                  <h2 className="text-base font-semibold text-slate-900 tracking-tight">Régions</h2>
+                  <h2 className="card-title">Régions</h2>
                 </div>
                 <div className="p-8 space-y-6 flex-1">
                   {data.countryBreakdown.length === 0 ? (
@@ -340,7 +340,7 @@ export function AnalyticsDashboard({
                   <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 shadow-sm">
                     <Monitor className="h-4 w-4" />
                   </div>
-                  <h2 className="text-base font-semibold text-slate-900 tracking-tight">Plateformes</h2>
+                  <h2 className="card-title">Plateformes</h2>
                 </div>
                 <div className="p-8 space-y-6 flex-1">
                   {data.deviceBreakdown.length === 0 ? (
@@ -386,7 +386,7 @@ export function AnalyticsDashboard({
                     <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shadow-sm">
                       <TrendingUp className="h-4 w-4" />
                     </div>
-                    <h2 className="text-base font-semibold text-slate-900 tracking-tight">Top Liens</h2>
+                    <h2 className="card-title">Top Liens</h2>
                   </div>
                   <div className="divide-y divide-slate-100/80 flex-1">
                     {data.topLinks
@@ -443,7 +443,7 @@ export function AnalyticsDashboard({
                       <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shadow-sm">
                         <Zap className="h-4 w-4" />
                       </div>
-                      <h2 className="text-base font-semibold text-slate-900 tracking-tight">Flux en direct</h2>
+                      <h2 className="card-title">Flux en direct</h2>
                     </div>
                     <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white border border-slate-200 shadow-sm">
                       <span className="relative flex h-2 w-2">

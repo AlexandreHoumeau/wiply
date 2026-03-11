@@ -43,7 +43,7 @@ export default async function WorkspacePage() {
                             <Layers className="h-5 w-5 text-slate-600" />
                         </div>
                         <div>
-                            <h1 className="text-xl text-slate-900 tracking-tight">Espace interne</h1>
+                            <h1 className="text-xl text-slate-900">Espace interne</h1>
                             <p className="text-sm font-medium text-slate-400 mt-0.5">Tickets internes, tâches admin et suivi agence.</p>
                         </div>
                     </div>

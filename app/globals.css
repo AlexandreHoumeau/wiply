@@ -48,7 +48,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #FFFFF6;
+  --background: #fcfcfc;
   --foreground: #4C4C4C;
   --card: #ffffff;
   --card-foreground: oklch(0.145 0 0);
@@ -125,12 +125,25 @@
     font-family: var(--font-inter), sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-passion-one), sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    /* font-weight: 700; */
+    /* letter-spacing: 0.03em; */
     line-height: 1.2;
   }
+}
+
+.card-title {
+  font-family: var(--font-inter), sans-serif;
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  color: #4C4C4C;
+  font-weight: 900;
 }
 
 

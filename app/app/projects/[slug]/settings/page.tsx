@@ -85,7 +85,7 @@ export default function ProjectSettingsPage() {
                 {project.is_portal_active !== false && <Sparkles className="absolute -top-4 -right-4 w-24 h-24 text-indigo-200/40 rotate-12" />}
 
                 <div className="flex items-start justify-between mb-2">
-                    <h2 className={`text-xl font-bold ${project.is_portal_active === false ? 'text-slate-500' : 'text-indigo-950'}`}>
+                    <h2 className={`card-title ${project.is_portal_active === false ? 'text-slate-500' : 'text-indigo-950'}`}>
                         Accès Client (Portail Magique)
                     </h2>
                     {project.magic_token && (
@@ -130,7 +130,7 @@ export default function ProjectSettingsPage() {
             {/* 🛠️ SECTION 2 : Paramètres généraux du projet */}
             <form onSubmit={handleSaveSettings} className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-8">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900 mb-1">Informations Générales</h2>
+                    <h2 className="card-title mb-1">Informations Générales</h2>
                     <p className="text-sm text-slate-500">Modifiez les détails fondamentaux de ce projet.</p>
                 </div>
 
@@ -165,7 +165,7 @@ export default function ProjectSettingsPage() {
                 </div>
 
                 <div className="pt-6 border-t border-slate-100">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Ressources & Liens</h3>
+                    <h3 className="card-title mb-4">Ressources & Liens</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
@@ -204,7 +204,7 @@ export default function ProjectSettingsPage() {
                 <div className="pt-6 border-t border-slate-100">
                     <div className="flex items-center gap-2 mb-4">
                         <LayoutTemplate className="w-4 h-4 text-slate-400" />
-                        <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Personnalisation du Portail</h3>
+                        <h3 className="card-title">Personnalisation du Portail</h3>
                     </div>
 
                     <div className="space-y-5">

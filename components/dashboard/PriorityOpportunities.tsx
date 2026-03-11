@@ -12,7 +12,7 @@ export function PriorityOpportunities({ opps }: { opps: FavoriteOpp[] }) {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-          <h2 className="text-sm font-bold text-slate-900">
+          <h2 className="card-title">
             Opportunités Prioritaires
           </h2>
         </div>

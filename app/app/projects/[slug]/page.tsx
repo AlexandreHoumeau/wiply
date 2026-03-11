@@ -40,7 +40,7 @@ export default function ProjectOverviewPage() {
                         <KanbanSquare className="w-8 h-8" />
                     </div>
                     <div className="flex-1">
-                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Avancement Équipe</h3>
+                        <h3 className="card-title">Avancement Équipe</h3>
                         <div className="flex items-end justify-between mb-2">
                             <span className="text-3xl font-black text-slate-900">{taskProgress}%</span>
                             <span className="text-sm font-semibold text-slate-400">{stats.doneTasks} / {stats.totalTasks} tickets</span>
@@ -56,7 +56,7 @@ export default function ProjectOverviewPage() {
                         <ListChecks className="w-8 h-8" />
                     </div>
                     <div className="flex-1">
-                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">Contenus Client</h3>
+                        <h3 className="card-title mb-1">Contenus Client</h3>
                         <div className="flex items-end justify-between mb-2">
                             <span className="text-3xl font-black text-slate-900">{checklistProgress}%</span>
                             <span className="text-sm font-semibold text-slate-400">{stats.doneChecklist} / {stats.totalChecklist} éléments</span>
@@ -76,7 +76,7 @@ export default function ProjectOverviewPage() {
                             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
                                 <AlignLeft className="w-5 h-5" />
                             </div>
-                            <h2 className="text-lg font-bold text-slate-900">Brief du projet</h2>
+                            <h2 className="card-title">Brief du projet</h2>
                         </div>
                         <div className="prose prose-slate max-w-none text-slate-600">
                             {project.description ? (
@@ -92,7 +92,7 @@ export default function ProjectOverviewPage() {
 
                 <div className="space-y-6">
                     <div className="bg-white rounded-3xl border p-6 h-full">
-                        <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Informations clés</h2>
+                        <h2 className="card-title mb-6">Informations clés</h2>
                         <div className="space-y-6">
                             <div className="flex items-start gap-4">
                                 <div className="p-2.5 bg-slate-50 rounded-xl text-slate-400 shrink-0">
@@ -148,7 +148,7 @@ export default function ProjectOverviewPage() {
                                 <div className="p-2 bg-[#F24E1E]/10 rounded-xl text-[#F24E1E]">
                                     <Figma className="w-5 h-5" />
                                 </div>
-                                <h2 className="text-lg font-bold text-slate-900">Design (Figma)</h2>
+                                <h2 className="card-title">Design (Figma)</h2>
                             </div>
                             <a href={project.figma_url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[#F24E1E] hover:text-[#F24E1E]/80 flex items-center gap-1">
                                 Ouvrir <ExternalLink className="w-3.5 h-3.5" />
@@ -174,7 +174,7 @@ export default function ProjectOverviewPage() {
                                 <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
                                     <Globe className="w-5 h-5" />
                                 </div>
-                                <h2 className="text-lg font-bold text-slate-900">Site en direct</h2>
+                                <h2 className="card-title">Site en direct</h2>
                             </div>
                             <a href={project.deployment_url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
                                 Ouvrir <ExternalLink className="w-3.5 h-3.5" />

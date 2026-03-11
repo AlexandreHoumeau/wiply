@@ -197,7 +197,7 @@ function StatusPipeline({ status }: { status: OpportunityStatus }) {
                         const isFuture = index > currentIndex;
 
                         return (
-                            <div key={stage.id} className="flex items-center shrink-0">
+                            <div key={stage.id} className="flex items-center pt-1 shrink-0">
                                 <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
                                     <div
                                         className={cn(
