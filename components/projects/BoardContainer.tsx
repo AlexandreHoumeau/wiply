@@ -4,10 +4,11 @@ import { useState, useMemo } from "react";
 import {
     LayoutGrid, List, GanttChartSquare, CalendarDays,
     AlignLeft, Bug, LayoutTemplate, PenTool, Settings,
-    ArrowUp, ArrowDown, Equal, AlertOctagon, X,
+    ArrowUp, ArrowDown, Equal, AlertOctagon, X, ChevronDown,
     Inbox, PlayCircle, Clock, CheckCircle2,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KanbanBoard } from "./KanbanBoard";
 import { ListView } from "./ListView";
 import { GanttView } from "./GanttView";
@@ -156,65 +157,121 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                     })}
                 </div>
 
-                {/* Status chips */}
-                <div className="flex items-center gap-1 flex-wrap">
-                    {Object.entries(STATUS_LABELS).map(([val, { label, icon: Icon, color }]) => {
-                        const isActive = selectedStatuses.includes(val);
-                        return (
-                            <button
-                                key={val}
-                                onClick={() => setSelectedStatuses(toggle(selectedStatuses, val))}
-                                className={cn(
-                                    "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all",
-                                    isActive ? color : "bg-transparent text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600"
-                                )}
-                            >
-                                <Icon className="w-3 h-3" />
-                                {label}
-                            </button>
-                        );
-                    })}
-                </div>
+                <div className="w-px h-5 bg-slate-200 shrink-0" />
 
-                {/* Type chips */}
-                <div className="flex items-center gap-1 flex-wrap">
-                    {Object.entries(TYPE_LABELS).map(([val, { label, icon: Icon, color }]) => {
-                        const isActive = selectedTypes.includes(val);
-                        return (
-                            <button
-                                key={val}
-                                onClick={() => setSelectedTypes(toggle(selectedTypes, val))}
-                                className={cn(
-                                    "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all",
-                                    isActive ? color : "bg-transparent text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600"
-                                )}
-                            >
-                                <Icon className="w-3 h-3" />
-                                {label}
-                            </button>
-                        );
-                    })}
-                </div>
+                {/* Status dropdown */}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <button className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all",
+                            selectedStatuses.length > 0
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : "text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                        )}>
+                            Statut
+                            {selectedStatuses.length > 0 && (
+                                <span className="bg-blue-200 text-blue-800 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                    {selectedStatuses.length}
+                                </span>
+                            )}
+                            <ChevronDown className="w-3 h-3 opacity-50" />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-44 p-1.5" align="start">
+                        {Object.entries(STATUS_LABELS).map(([val, { label, icon: Icon, color }]) => {
+                            const isActive = selectedStatuses.includes(val);
+                            return (
+                                <button
+                                    key={val}
+                                    onClick={() => setSelectedStatuses(toggle(selectedStatuses, val))}
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-semibold transition-all",
+                                        isActive ? cn(color, "border") : "text-slate-600 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                                    {label}
+                                </button>
+                            );
+                        })}
+                    </PopoverContent>
+                </Popover>
 
-                {/* Priority chips */}
-                <div className="flex items-center gap-1 flex-wrap">
-                    {Object.entries(PRIORITY_LABELS).map(([val, { label, icon: Icon, color }]) => {
-                        const isActive = selectedPriorities.includes(val);
-                        return (
-                            <button
-                                key={val}
-                                onClick={() => setSelectedPriorities(toggle(selectedPriorities, val))}
-                                className={cn(
-                                    "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-all",
-                                    isActive ? color : "bg-transparent text-slate-400 border-slate-200 hover:border-slate-300 hover:text-slate-600"
-                                )}
-                            >
-                                <Icon className="w-3 h-3" />
-                                {label}
-                            </button>
-                        );
-                    })}
-                </div>
+                {/* Type dropdown */}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <button className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all",
+                            selectedTypes.length > 0
+                                ? "bg-purple-50 text-purple-700 border-purple-200"
+                                : "text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                        )}>
+                            Type
+                            {selectedTypes.length > 0 && (
+                                <span className="bg-purple-200 text-purple-800 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                    {selectedTypes.length}
+                                </span>
+                            )}
+                            <ChevronDown className="w-3 h-3 opacity-50" />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-44 p-1.5" align="start">
+                        {Object.entries(TYPE_LABELS).map(([val, { label, icon: Icon, color }]) => {
+                            const isActive = selectedTypes.includes(val);
+                            return (
+                                <button
+                                    key={val}
+                                    onClick={() => setSelectedTypes(toggle(selectedTypes, val))}
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-semibold transition-all",
+                                        isActive ? cn(color, "border") : "text-slate-600 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                                    {label}
+                                </button>
+                            );
+                        })}
+                    </PopoverContent>
+                </Popover>
+
+                {/* Priority dropdown */}
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <button className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all",
+                            selectedPriorities.length > 0
+                                ? "bg-orange-50 text-orange-700 border-orange-200"
+                                : "text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                        )}>
+                            Priorité
+                            {selectedPriorities.length > 0 && (
+                                <span className="bg-orange-200 text-orange-800 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                    {selectedPriorities.length}
+                                </span>
+                            )}
+                            <ChevronDown className="w-3 h-3 opacity-50" />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-44 p-1.5" align="start">
+                        {Object.entries(PRIORITY_LABELS).map(([val, { label, icon: Icon, color }]) => {
+                            const isActive = selectedPriorities.includes(val);
+                            return (
+                                <button
+                                    key={val}
+                                    onClick={() => setSelectedPriorities(toggle(selectedPriorities, val))}
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-semibold transition-all",
+                                        isActive ? cn(color, "border") : "text-slate-600 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                                    {label}
+                                </button>
+                            );
+                        })}
+                    </PopoverContent>
+                </Popover>
 
                 {/* Clear */}
                 {hasActiveFilter && (
