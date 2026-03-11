@@ -51,7 +51,7 @@ export const DigestEmail = ({ firstName, notifications, appUrl }: DigestEmailPro
         <Html>
             <Head />
             <Preview>
-                {count} nouvelle{count > 1 ? "s" : ""} notification{count > 1 ? "s" : ""} sur Wiply
+                {`${count} nouvelle${count > 1 ? "s" : ""} notification${count > 1 ? "s" : ""} sur Wiply`}
             </Preview>
             <Body style={main}>
                 <Container style={container}>
