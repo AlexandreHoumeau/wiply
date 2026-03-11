@@ -28,7 +28,7 @@ type SignupValues = z.infer<typeof signupSchema>;
 
 function GoogleIcon() {
     return (
-        <svg className="w-4 h-4 mr-2 shrink-0" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 mr-3 shrink-0" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -84,241 +84,228 @@ export function SignupForm() {
         });
     }
 
-    // Success state
+    // --- SUCCESS STATE ---
     if (success) {
         return (
-            <div className="w-full max-w-md relative">
-                <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_8px_40px_rgb(0,0,0,0.4)]">
-                    <div className="bg-white px-8 py-14 text-center space-y-5">
-                        <div className="flex justify-center relative">
-                            <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full w-16 h-16 mx-auto" />
-                            <div className="p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm relative z-10">
-                                <MailOpen className="w-8 h-8 text-emerald-500" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Vérifiez vos emails</h2>
-                            <p className="text-sm font-medium text-slate-500 leading-relaxed">
-                                Nous avons envoyé un lien magique à<br />
-                                <strong className="text-slate-900">{form.getValues("email")}</strong><br />
-                                pour activer votre accès sécurisé.
-                            </p>
-                        </div>
+            <div className="w-full bg-white rounded-[2.5rem] p-8 sm:p-12 shadow-[0_30px_60px_rgba(139,109,248,0.15)] border border-white/50 text-center">
+                 <div className="flex justify-center mb-6">
+                    <div className="p-5 rounded-3xl bg-[#F1EFFD] border border-[#D1CBFA] shadow-sm">
+                        <MailOpen className="w-10 h-10 text-[#967CFB]" />
                     </div>
                 </div>
+                <h2 className="text-3xl font-black text-[#4C4C4C] font-[family-name:var(--font-passion-one)] tracking-tight mb-4">
+                    Vérifiez vos emails
+                </h2>
+                <p className="text-[#7A7A7A] font-medium leading-relaxed">
+                    Un lien magique a été envoyé à <br />
+                    <strong className="text-[#4C4C4C]">{form.getValues("email")}</strong>. <br />
+                    Cliquez dessus pour activer votre espace.
+                </p>
             </div>
         );
     }
 
+    // --- MAIN FORM ---
     return (
-        <div className="w-full max-w-md relative">
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_8px_40px_rgb(0,0,0,0.4)]">
-                {/* Visual Header */}
-                <div className="relative px-8 pt-10 pb-12 overflow-hidden text-center bg-gradient-to-br from-slate-900 to-slate-950">
-                    <div className="absolute -top-8 -right-8 w-32 h-32 bg-indigo-500/30 rounded-full blur-[40px]" />
-                    <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-violet-500/20 rounded-full blur-[40px]" />
+        <div className="w-full bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_rgba(139,109,248,0.15)] border border-white/50 relative overflow-hidden">
+            {/* Top Gradient Accent */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#FDE1BA] via-[#E8D2E1] to-[#C1B2FA]" />
 
-                    <div className="relative z-10 flex flex-col items-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/20 shadow-xl backdrop-blur-md mb-4">
-                            <Sparkles className="w-5 h-5 text-white" />
-                        </div>
-                        <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-                            {isInvited ? "Rejoindre l&apos;équipe" : "Commencer l'aventure"}
-                        </h1>
-                        <p className="text-sm font-medium text-slate-400">
-                            {isInvited ? "Créez votre profil pour accepter l'invitation" : "Créez votre espace de travail en 2 minutes"}
-                        </p>
-                    </div>
+            <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-[#F1EFFD] mb-4">
+                    <Sparkles className="w-5 h-5 text-[#967CFB]" />
                 </div>
+                <h1 className="text-3xl sm:text-4xl font-black text-[#4C4C4C] font-[family-name:var(--font-passion-one)] mb-2">
+                    {isInvited ? "Rejoindre l'équipe" : "Commencer l'aventure"}
+                </h1>
+                <p className="text-[#7A7A7A] font-medium text-sm">
+                    {isInvited ? "Créez votre profil pour collaborer" : "Créez votre espace de travail en 2 minutes"}
+                </p>
+            </div>
 
-                {/* Form Body */}
-                <div className="px-8 py-7 bg-white relative -mt-4 rounded-t-3xl">
-                    {/* Google OAuth */}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-11 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition-all shadow-sm mb-5"
-                        onClick={handleGoogleSignup}
-                        disabled={googleLoading || isPending}
-                    >
-                        {googleLoading ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                            <GoogleIcon />
-                        )}
-                        {isInvited ? "Rejoindre avec Google" : "Continuer avec Google"}
-                    </Button>
+            <Button
+                type="button"
+                variant="outline"
+                className="w-full h-14 border-[#D1CBFA] bg-white text-[#4C4C4C] font-bold text-base rounded-2xl hover:bg-[#F1EFFD]/50 transition-all shadow-sm mb-6 flex items-center justify-center"
+                onClick={handleGoogleSignup}
+                disabled={googleLoading || isPending}
+            >
+                {googleLoading ? (
+                    <Loader2 className="w-5 h-5 mr-3 animate-spin text-[#967CFB]" />
+                ) : (
+                    <GoogleIcon />
+                )}
+                {isInvited ? "Rejoindre avec Google" : "Continuer avec Google"}
+            </Button>
 
-                    <div className="relative flex items-center mb-5">
-                        <div className="flex-grow border-t border-slate-200" />
-                        <span className="flex-shrink-0 mx-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">Ou avec l&apos;email</span>
-                        <div className="flex-grow border-t border-slate-200" />
+            <div className="relative flex items-center mb-6">
+                <div className="flex-grow border-t border-[#F1EFFD]" />
+                <span className="flex-shrink-0 mx-4 text-[11px] font-black uppercase tracking-widest text-[#D1CBFA]">OU</span>
+                <div className="flex-grow border-t border-[#F1EFFD]" />
+            </div>
+
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    {error && (
+                        <Alert className="border-red-100 bg-red-50 text-red-600 rounded-2xl">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription className="text-sm font-medium ml-1">{error}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    <input type="hidden" {...form.register("isInvited")} />
+
+                    {!isInvited && (
+                        <FormField
+                            control={form.control}
+                            name="agencyName"
+                            render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                    <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Nom de l&apos;agence</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Acme Studio"
+                                            className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
+                                            disabled={isPending}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-xs text-red-500" />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                            control={form.control}
+                            name="firstName"
+                            render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                    <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Prénom</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Jean"
+                                            className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
+                                            disabled={isPending}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-xs text-red-500" />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="lastName"
+                            render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                    <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Nom</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Dupont"
+                                            className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
+                                            disabled={isPending}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-xs text-red-500" />
+                                </FormItem>
+                            )}
+                        />
                     </div>
 
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            {error && (
-                                <Alert className="py-2.5 px-3 border-red-200 bg-red-50 text-red-600 rounded-xl">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription className="text-xs font-medium ml-1">{error}</AlertDescription>
-                                </Alert>
-                            )}
+                    <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                            <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Adresse email</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="email"
+                                        placeholder="jean@agence.com"
+                                        className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
+                                        disabled={isPending}
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage className="text-xs text-red-500" />
+                            </FormItem>
+                        )}
+                    />
 
-                            <input type="hidden" {...form.register("isInvited")} />
-
-                            {!isInvited && (
-                                <FormField
-                                    control={form.control}
-                                    name="agencyName"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1.5">
-                                            <FormLabel className="text-xs font-semibold text-slate-700">Nom de l&apos;agence</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="Acme Studio"
-                                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                    disabled={isPending}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs" />
-                                        </FormItem>
-                                    )}
-                                />
-                            )}
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField
-                                    control={form.control}
-                                    name="firstName"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1.5">
-                                            <FormLabel className="text-xs font-semibold text-slate-700">Prénom</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="Jean"
-                                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                    disabled={isPending}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="lastName"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1.5">
-                                            <FormLabel className="text-xs font-semibold text-slate-700">Nom</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="Dupont"
-                                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                    disabled={isPending}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs" />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1.5">
-                                        <FormLabel className="text-xs font-semibold text-slate-700">Adresse email</FormLabel>
-                                        <FormControl>
+                    <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                    <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Password</FormLabel>
+                                    <FormControl>
+                                        <div className="relative">
                                             <Input
-                                                type="email"
-                                                placeholder="jean@agence.com"
-                                                className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
+                                                type={showPassword ? "text" : "password"}
+                                                placeholder="••••••••"
+                                                className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl pl-4 pr-10 text-[#4C4C4C]"
                                                 disabled={isPending}
                                                 {...field}
                                             />
-                                        </FormControl>
-                                        <FormMessage className="text-xs" />
-                                    </FormItem>
-                                )}
-                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D1CBFA] hover:text-[#967CFB]"
+                                            >
+                                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                            </button>
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage className="text-xs text-red-500" />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                    <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Confirmation</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••"
+                                            className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
+                                            disabled={isPending}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-xs text-red-500" />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1.5">
-                                            <FormLabel className="text-xs font-semibold text-slate-700">Mot de passe</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showPassword ? "text" : "password"}
-                                                        placeholder="••••••••"
-                                                        className="h-11 pr-9 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                        disabled={isPending}
-                                                        {...field}
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
-                                                    >
-                                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                    </button>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage className="text-xs" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="confirmPassword"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1.5">
-                                            <FormLabel className="text-xs font-semibold text-slate-700">Confirmation</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type={showPassword ? "text" : "password"}
-                                                    placeholder="••••••••"
-                                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                    disabled={isPending}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs" />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
+                    <Button
+                        type="submit"
+                        className="w-full h-14 bg-[#967CFB] text-white font-black text-lg rounded-2xl hover:bg-[#8364f9] shadow-[0_10px_20px_rgba(150,124,251,0.2)] transition-all duration-300 mt-4"
+                        disabled={isPending || googleLoading}
+                    >
+                        {isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                        {isPending ? "Création..." : "Créer mon espace"}
+                    </Button>
+                </form>
+            </Form>
 
-                            <Button
-                                type="submit"
-                                className="w-full h-12 text-sm font-bold bg-gradient-to-r from-slate-900 to-slate-800 text-white hover:from-slate-800 hover:to-slate-700 shadow-lg shadow-slate-900/20 transition-all duration-300 rounded-xl mt-2"
-                                disabled={isPending || googleLoading}
-                            >
-                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                {isPending ? "Création en cours..." : "Créer le compte"}
-                            </Button>
-                        </form>
-                    </Form>
-                </div>
-
-                <div className="bg-slate-50 px-8 py-5 border-t border-slate-100 text-center">
-                    <p className="text-sm font-medium text-slate-500">
-                        Déjà inscrit ?{" "}
-                        <Link
-                            href={`/auth/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
-                            className="text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
-                        >
-                            Se connecter
-                        </Link>
-                    </p>
-                </div>
+            <div className="mt-8 text-center">
+                <p className="text-sm font-medium text-[#7A7A7A]">
+                    Déjà inscrit ?{" "}
+                    <Link
+                        href={`/auth/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+                        className="text-[#967CFB] font-bold hover:underline"
+                    >
+                        Se connecter
+                    </Link>
+                </p>
             </div>
         </div>
     );

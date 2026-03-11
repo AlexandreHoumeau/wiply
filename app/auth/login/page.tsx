@@ -1,17 +1,28 @@
+"use client";
+
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RecoveryRedirect } from "@/components/auth/RecoveryRedirect";
 import { Suspense } from "react";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
     return (
-        <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden px-4 py-12">
+        <div className="relative flex min-h-screen items-center justify-center bg-[#FFFDF8] overflow-hidden px-4 py-12">
+            {/* Background decorative gradients to match Hero */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#EBF0FE] via-[#F1EFFD] to-[#FFFDF8] z-0" />
+
             <RecoveryRedirect />
-            <div className="absolute top-[-15%] left-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-[-15%] right-[-10%] w-96 h-96 bg-violet-600/15 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none" />
-            <Suspense>
-                <LoginForm />
-            </Suspense>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-md"
+            >
+                <Suspense>
+                    <LoginForm />
+                </Suspense>
+            </motion.div>
         </div>
     );
 }

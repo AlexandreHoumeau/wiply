@@ -1,14 +1,24 @@
+"use client";
+
 import { SignupForm } from "@/components/auth/SignupForm";
 import { Suspense } from "react";
+import { motion } from "framer-motion";
 
 export default function SignupPage() {
     return (
-        <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden px-4 py-12">
-            <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-violet-600/15 rounded-full blur-[100px] pointer-events-none" />
-            <Suspense>
-                <SignupForm />
-            </Suspense>
+        <div className="relative flex min-h-screen items-center justify-center bg-[#FFFDF8] overflow-hidden px-4 py-12">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#EBF0FE] via-[#F1EFFD] to-[#FFFDF8] z-0" />
+            
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-md"
+            >
+                <Suspense>
+                    <SignupForm />
+                </Suspense>
+            </motion.div>
         </div>
     );
 }

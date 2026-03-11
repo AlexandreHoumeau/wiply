@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { completeOnboarding } from "@/actions/onboarding.server";
 import posthog from "posthog-js";
+import { motion } from "framer-motion";
 
 const schema = z.object({
     agencyName: z.string().min(2, "Minimum 2 caractères"),
@@ -63,117 +64,117 @@ export function OnboardingForm({ defaultFirstName = "", defaultLastName = "" }: 
     }
 
     return (
-        <div className="w-full max-w-md relative">
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_8px_40px_rgb(0,0,0,0.4)]">
-                {/* Visual Header */}
-                <div className="relative px-8 pt-10 pb-12 overflow-hidden text-center bg-gradient-to-br from-slate-900 to-slate-950">
-                    <div className="absolute -top-8 -left-8 w-32 h-32 bg-indigo-500/30 rounded-full blur-[40px]" />
-                    <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-violet-500/20 rounded-full blur-[40px]" />
+        <div className="w-full bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_rgba(139,109,248,0.15)] border border-white/50 relative overflow-hidden">
+            {/* Top Gradient Accent - La signature visuelle Wiply */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#FDE1BA] via-[#E8D2E1] to-[#C1B2FA]" />
 
-                    <div className="relative z-10 flex flex-col items-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 border border-white/20 shadow-xl backdrop-blur-md mb-4">
-                            <Sparkles className="w-5 h-5 text-white" />
-                        </div>
-                        <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-                            Dernière étape !
-                        </h1>
-                        <p className="text-sm font-medium text-slate-400">
-                            Configurez votre espace de travail pour commencer
-                        </p>
-                    </div>
-                </div>
+            <div className="text-center mb-8">
+                <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="inline-flex items-center justify-center p-3 rounded-2xl bg-[#F1EFFD] mb-4"
+                >
+                    <Sparkles className="w-6 h-6 text-[#967CFB]" />
+                </motion.div>
+                
+                <h1 className="text-3xl sm:text-4xl font-black text-[#4C4C4C] font-[family-name:var(--font-passion-one)] tracking-tight mb-2">
+                    Dernière étape !
+                </h1>
+                <p className="text-[#7A7A7A] font-medium text-sm">
+                    Personnalisez votre espace pour une <br className="hidden sm:block" /> expérience sur-mesure.
+                </p>
+            </div>
 
-                {/* Form Body */}
-                <div className="px-8 py-7 bg-white relative -mt-4 rounded-t-3xl">
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            {error && (
-                                <Alert className="py-2.5 px-3 border-red-200 bg-red-50 text-red-600 rounded-xl">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertDescription className="text-xs font-medium ml-1">{error}</AlertDescription>
-                                </Alert>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                    {error && (
+                        <Alert className="border-red-100 bg-red-50 text-red-600 rounded-2xl">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription className="text-sm font-medium ml-1">{error}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    <FormField
+                        control={form.control}
+                        name="agencyName"
+                        render={({ field }) => (
+                            <FormItem className="space-y-1.5">
+                                <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">
+                                    Nom de votre agence
+                                </FormLabel>
+                                <FormControl>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#D1CBFA] pointer-events-none" />
+                                        <Input
+                                            placeholder="ex: Wiply Studio"
+                                            className="h-12 pl-11 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl text-[#4C4C4C]"
+                                            disabled={isPending}
+                                            {...field}
+                                        />
+                                    </div>
+                                </FormControl>
+                                <FormMessage className="text-xs text-red-500" />
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="firstName"
+                            render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                    <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Prénom</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Jean"
+                                            className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
+                                            disabled={isPending}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-xs text-red-500" />
+                                </FormItem>
                             )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="lastName"
+                            render={({ field }) => (
+                                <FormItem className="space-y-1.5">
+                                    <FormLabel className="text-sm font-bold text-[#4C4C4C] ml-1">Nom</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Dupont"
+                                            className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
+                                            disabled={isPending}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-xs text-red-500" />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
-                            <FormField
-                                control={form.control}
-                                name="agencyName"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1.5">
-                                        <FormLabel className="text-xs font-semibold text-slate-700">
-                                            Nom de l&apos;agence
-                                        </FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
-                                                <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                                                <Input
-                                                    placeholder="Acme Studio"
-                                                    className="h-11 pl-10 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                    disabled={isPending}
-                                                    {...field}
-                                                />
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage className="text-xs" />
-                                    </FormItem>
-                                )}
-                            />
+                    <Button
+                        type="submit"
+                        className="w-full h-14 bg-[#967CFB] text-white font-black text-lg rounded-2xl hover:bg-[#8364f9] shadow-[0_10px_20px_rgba(150,124,251,0.2)] transition-all duration-300 mt-4 group"
+                        disabled={isPending}
+                    >
+                        {isPending ? (
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        ) : null}
+                        {isPending ? "Configuration..." : "Lancer mon espace"}
+                        {!isPending && (
+                             <span className="inline-block transition-transform group-hover:translate-x-1 ml-2">→</span>
+                        )}
+                    </Button>
+                </form>
+            </Form>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField
-                                    control={form.control}
-                                    name="firstName"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1.5">
-                                            <FormLabel className="text-xs font-semibold text-slate-700">Prénom</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="Jean"
-                                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                    disabled={isPending}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="lastName"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1.5">
-                                            <FormLabel className="text-xs font-semibold text-slate-700">Nom</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="Dupont"
-                                                    className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
-                                                    disabled={isPending}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage className="text-xs" />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full h-12 text-sm font-bold bg-gradient-to-r from-slate-900 to-slate-800 text-white hover:from-slate-800 hover:to-slate-700 shadow-lg shadow-slate-900/20 transition-all duration-300 rounded-xl mt-2"
-                                disabled={isPending}
-                            >
-                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                {isPending ? "Création en cours..." : "Créer mon espace →"}
-                            </Button>
-                        </form>
-                    </Form>
-                </div>
-
-                <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">
-                    <p className="text-xs text-slate-400">
-                        Vous pourrez modifier ces informations plus tard dans les paramètres.
-                    </p>
-                </div>
+            <div className="mt-8 pt-6 border-t border-[#F1EFFD] text-center text-xs font-medium text-[#D1CBFA] tracking-wide uppercase">
+                Bienvenue dans le nouvel OS de votre agence
             </div>
         </div>
     );
