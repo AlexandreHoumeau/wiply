@@ -118,7 +118,7 @@ function MessageHistory({
                 <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-base leading-none">◷</span>
                     <span>
-                        Versions précédentes — {messages.length} message{messages.length > 1 ? "s" : ""}
+                        Historique — {messages.length} message{messages.length > 1 ? "s" : ""}
                     </span>
                 </div>
                 <ChevronDown className={cn(
@@ -131,6 +131,9 @@ function MessageHistory({
                 <div className="border-t border-gray-100 divide-y divide-gray-100">
                     {messages.map((msg) => {
                         const Icon = CHANNEL_ICONS[msg.channel] ?? Mail;
+                        const statusStyles = msg.opportunity_status
+                            ? STAGE_PILL_STYLES[msg.opportunity_status as OpportunityStatus]
+                            : null;
                         return (
                             <div key={msg.id} className="p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors">
                                 <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
@@ -145,7 +148,15 @@ function MessageHistory({
                                     <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
                                         {msg.body}
                                     </p>
-                                    <div className="flex items-center gap-1.5 mt-2">
+                                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                        {msg.opportunity_status && statusStyles && (
+                                            <span className={cn(
+                                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold",
+                                                statusStyles.bg, statusStyles.text
+                                            )}>
+                                                {mapOpportunityStatusLabel[msg.opportunity_status as OpportunityStatus]}
+                                            </span>
+                                        )}
                                         <Badge variant="outline" className="text-[10px] py-0">{msg.channel}</Badge>
                                         <Badge variant="outline" className="text-[10px] py-0">{msg.tone}</Badge>
                                         <span className="text-[10px] text-gray-400">{formatDate(msg.created_at)}</span>
@@ -606,8 +617,13 @@ export function AIMessageGenerator({
                 </CardContent>
             </Card>
 
-            {/* HISTORY — older messages for this stage (index 0 is the currently loaded one) */}
-            <MessageHistory messages={stageMessages.slice(1)} onLoad={handleLoadMessage} />
+            {/* HISTORY — all messages except the currently loaded one, newest first */}
+            <MessageHistory
+                messages={allMessages
+                    .filter((m) => m.id !== messageId)
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
+                onLoad={handleLoadMessage}
+            />
         </div>
     );
 }
