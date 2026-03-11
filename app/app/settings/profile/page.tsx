@@ -12,16 +12,43 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Switch } from '@/components/ui/switch'
 import { useSettings } from '../settings-context'
-import { useActionState } from 'react'
-import { Loader2, CheckCircle2, AlertCircle, User, Lock, Mail, Phone, Briefcase, Sparkles } from 'lucide-react'
-import { updateProfile } from '@/actions/profile.server'
-import { mapRoleToPosition } from '@/lib/validators/profile'
+import { useActionState, useState, useTransition } from 'react'
+import { Loader2, CheckCircle2, AlertCircle, User, Lock, Mail, Phone, Briefcase, Sparkles, Bell } from 'lucide-react'
+import { updateProfile, updateNotificationPreferences } from '@/actions/profile.server'
+import { mapRoleToPosition, NotificationPreferences } from '@/lib/validators/profile'
 import { Separator } from '@/components/ui/separator'
+import { toast } from 'sonner'
+
+const NOTIF_OPTIONS: { key: keyof NotificationPreferences; label: string; description: string }[] = [
+    { key: 'notify_task_assigned', label: 'Tâche assignée', description: 'Quand une tâche vous est assignée' },
+    { key: 'notify_task_comment', label: 'Commentaire sur tâche', description: 'Quand quelqu\'un commente une tâche qui vous concerne' },
+    { key: 'notify_opportunity_status', label: 'Changement de statut', description: 'Quand une opportunité change de statut' },
+    { key: 'notify_tracking_click', label: 'Lien de tracking cliqué', description: 'Quand un prospect clique sur un lien de tracking' },
+    { key: 'notify_portal_submission', label: 'Livrable reçu', description: 'Quand un client soumet un livrable via le portail' },
+]
 
 export default function ProfilePage() {
     const { profile } = useSettings()
     const [state, formAction, isPending] = useActionState(updateProfile, null)
+    const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>({
+        notify_task_assigned: profile.notify_task_assigned ?? true,
+        notify_task_comment: profile.notify_task_comment ?? true,
+        notify_opportunity_status: profile.notify_opportunity_status ?? false,
+        notify_tracking_click: profile.notify_tracking_click ?? false,
+        notify_portal_submission: profile.notify_portal_submission ?? true,
+    })
+    const [isSavingNotifs, startNotifTransition] = useTransition()
+
+    function handleNotifToggle(key: keyof NotificationPreferences, value: boolean) {
+        const updated = { ...notifPrefs, [key]: value }
+        setNotifPrefs(updated)
+        startNotifTransition(async () => {
+            const result = await updateNotificationPreferences(updated)
+            if (!result.success) toast.error(result.message)
+        })
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -149,6 +176,37 @@ export default function ProfilePage() {
                             Non modifiable
                         </Badge>
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-white border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 bg-violet-50 rounded-lg">
+                            <Bell className="h-5 w-5 text-violet-600" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-lg">Notifications email</CardTitle>
+                            <CardDescription>
+                                Choisissez les événements pour lesquels vous souhaitez recevoir un récapitulatif horaire par email.
+                            </CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                    {NOTIF_OPTIONS.map(({ key, label, description }) => (
+                        <div key={key} className="flex items-center justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-medium text-slate-900">{label}</p>
+                                <p className="text-xs text-slate-500">{description}</p>
+                            </div>
+                            <Switch
+                                checked={notifPrefs[key]}
+                                onCheckedChange={(v) => handleNotifToggle(key, v)}
+                                disabled={isSavingNotifs}
+                            />
+                        </div>
+                    ))}
                 </CardContent>
             </Card>
 

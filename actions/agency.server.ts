@@ -5,15 +5,10 @@ import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"
 import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState } from "@/lib/validators/agency"
+import { sendEmail } from "@/lib/email"
 import crypto from "crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
-import { BrevoClient } from '@getbrevo/brevo'
-import { render } from '@react-email/components'
 import { z } from "zod"
-
-function getBrevoClient() {
-    return new BrevoClient({ apiKey: process.env.BREVO_API_KEY! })
-}
 // Validation schema for agency information
 const updateAgencySchema = z.object({
     name: z.string().min(1, "Le nom de l'agence est requis").max(200),
@@ -231,19 +226,11 @@ export async function inviteTeamMember(
         const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/invite?token=${token}`;
         const inviterName = `${senderProfile.first_name} ${senderProfile.last_name}`;
 
-        // 2. Envoi de l'email
-        const htmlContent = await render(InviteEmail({
-            agencyName: agency.name,
-            inviterName: inviterName,
-            inviteLink: inviteLink,
-        }))
-
         try {
-            await getBrevoClient().transactionalEmails.sendTransacEmail({
-                sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
-                to: [{ email: validatedFields.data.email! }],
+            await sendEmail({
+                to: validatedFields.data.email!,
                 subject: `Invitation à rejoindre ${agency.name}`,
-                htmlContent,
+                template: InviteEmail({ agencyName: agency.name, inviterName, inviteLink }),
             })
         } catch (emailError) {
             console.error("Brevo Error:", emailError)
@@ -322,18 +309,11 @@ export async function resendInvitation(inviteId: string): Promise<{ success: boo
         const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL}/invite?token=${token}`
         const inviterName = `${senderProfile.first_name} ${senderProfile.last_name}`
 
-        const htmlContent = await render(InviteEmail({
-            agencyName: agency?.name ?? '',
-            inviterName,
-            inviteLink,
-        }))
-
         try {
-            await getBrevoClient().transactionalEmails.sendTransacEmail({
-                sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
-                to: [{ email: invite.email }],
+            await sendEmail({
+                to: invite.email,
                 subject: `Invitation à rejoindre ${agency?.name ?? ''}`,
-                htmlContent,
+                template: InviteEmail({ agencyName: agency?.name ?? '', inviterName, inviteLink }),
             })
         } catch (emailError) {
             console.error("Brevo Error:", emailError)

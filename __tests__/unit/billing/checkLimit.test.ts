@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkProjectLimit, checkMemberLimit, checkAiEnabled } from "@/lib/billing/checkLimit";
+import { checkProjectLimit, checkMemberLimit, checkAiEnabled, checkTrackingLinkLimit } from "@/lib/billing/checkLimit";
 
 // Mock the Supabase server client — never call real DB in unit tests
 vi.mock("@/lib/supabase/server", () => ({
@@ -16,6 +16,7 @@ function makeMockSupabase(tableData: Record<string, { data?: any; count?: number
       const chain: any = {
         select: vi.fn(() => chain),
         eq: vi.fn(() => chain),
+        gte: vi.fn(() => chain),
         single: vi.fn(() => Promise.resolve({ data: entry.data, error: null })),
       };
       // Make the chain itself awaitable (for count queries that don't call .single())
@@ -169,5 +170,55 @@ describe("checkAiEnabled", () => {
     const result = await checkAiEnabled("agency-1");
     expect(result.allowed).toBe(true);
     expect(result.reason).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkTrackingLinkLimit
+// ---------------------------------------------------------------------------
+describe("checkTrackingLinkLimit", () => {
+  it("FREE — autorise si sous la limite (9 liens sur 10)", async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeMockSupabase({
+        agencies: { data: { plan: "FREE" } },
+        tracking_links: { data: null, count: 9 },
+      }) as any
+    );
+    const result = await checkTrackingLinkLimit("agency-1");
+    expect(result.allowed).toBe(true);
+  });
+
+  it("FREE — bloque si à la limite (10 liens sur 10)", async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeMockSupabase({
+        agencies: { data: { plan: "FREE" } },
+        tracking_links: { data: null, count: 10 },
+      }) as any
+    );
+    const result = await checkTrackingLinkLimit("agency-1");
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toContain("10");
+  });
+
+  it("FREE — bloque si au-dessus de la limite (12 liens)", async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeMockSupabase({
+        agencies: { data: { plan: "FREE" } },
+        tracking_links: { data: null, count: 12 },
+      }) as any
+    );
+    const result = await checkTrackingLinkLimit("agency-1");
+    expect(result.allowed).toBe(false);
+  });
+
+  it("PRO — autorise toujours, peu importe le nombre de liens", async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      makeMockSupabase({
+        agencies: { data: { plan: "PRO" } },
+        tracking_links: { data: null, count: 999 },
+      }) as any
+    );
+    const result = await checkTrackingLinkLimit("agency-1");
+    expect(result.allowed).toBe(true);
   });
 });

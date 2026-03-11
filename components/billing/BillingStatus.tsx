@@ -23,6 +23,7 @@ type BillingData = {
     stripe_customer_id: string | null
     project_count: number
     member_count: number
+    tracking_link_count: number
 }
 
 // --- SOUS-COMPOSANTS ---
@@ -174,7 +175,7 @@ export function BillingStatus({ billing, agencyId }: { billing: BillingData; age
                             {[
                                 { title: 'Projets Illimités', icon: Layout },
                                 { title: '5 Collaborateurs', icon: Users },
-                                { title: 'Tracking Emails', icon: Mail },
+                                { title: 'Liens trackés illimités', icon: Mail },
                                 { title: 'IA Mistral', icon: Sparkles },
                             ].map((f) => (
                                 <div key={f.title} className="flex items-center gap-3">
@@ -214,9 +215,9 @@ export function BillingStatus({ billing, agencyId }: { billing: BillingData; age
                             icon={Users}
                         />
                         <UsageBar
-                            label="Tracking Emails"
-                            current={0}
-                            max={planLimits.max_tracking_emails_per_month}
+                            label="Liens trackés (ce mois)"
+                            current={billing.tracking_link_count}
+                            max={planLimits.max_tracking_links_per_month}
                             icon={Mail}
                         />
                         <div className="flex items-center justify-center p-4 border-2 border-dashed border-slate-100 rounded-xl">

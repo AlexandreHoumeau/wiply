@@ -14,6 +14,7 @@ async function fetchAgencyData(agencyId: string) {
         aiConfigResult,
         projectCountResult,
         memberCountResult,
+        trackingLinkCountResult,
     ] = await Promise.all([
         supabaseAdmin.from('agencies').select('*').eq('id', agencyId).single(),
         supabaseAdmin.from('profiles').select('id, first_name, last_name, email, role').eq('agency_id', agencyId),
@@ -21,6 +22,12 @@ async function fetchAgencyData(agencyId: string) {
         supabaseAdmin.from('agency_ai_configs').select('*').eq('agency_id', agencyId).maybeSingle(),
         supabaseAdmin.from('projects').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId),
         supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId),
+        (() => {
+            const startOfMonth = new Date()
+            startOfMonth.setUTCDate(1)
+            startOfMonth.setUTCHours(0, 0, 0, 0)
+            return supabaseAdmin.from('tracking_links').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId).gte('created_at', startOfMonth.toISOString())
+        })(),
     ])
 
     const agency = agencyResult.data
@@ -30,6 +37,7 @@ async function fetchAgencyData(agencyId: string) {
         stripe_customer_id: agency.stripe_customer_id ?? null,
         project_count: projectCountResult.count ?? 0,
         member_count: memberCountResult.count ?? 0,
+        tracking_link_count: trackingLinkCountResult.count ?? 0,
     } : null
 
     return {

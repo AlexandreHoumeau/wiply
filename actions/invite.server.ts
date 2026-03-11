@@ -3,6 +3,8 @@
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { createNotification } from "@/lib/notifications"
+import { sendEmail } from "@/lib/email"
+import { MemberJoinedEmail } from "@/emails/member-joined"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -57,10 +59,23 @@ export async function acceptInvitation(token: string) {
         .update({ accepted: true })
         .eq('id', invite.id)
 
-    // Notify all agency admins
+    // Fetch new member's profile for display name
+    const { data: memberProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user.id)
+        .single()
+
+    const memberName = memberProfile
+        ? `${memberProfile.first_name} ${memberProfile.last_name}`.trim()
+        : user.email ?? ''
+    const agencyName = (invite as any).agencies?.name ?? 'l\'agence'
+    const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wiply.fr'
+
+    // Notify all agency admins (in-app + immediate email)
     const { data: admins } = await supabaseAdmin
         .from('profiles')
-        .select('id')
+        .select('id, email')
         .eq('agency_id', invite.agency_id)
         .eq('role', 'agency_admin')
 
@@ -70,9 +85,22 @@ export async function acceptInvitation(token: string) {
             userId: admin.id,
             type: 'member_joined',
             title: 'Nouveau membre',
-            body: `${user.email} a rejoint ${(invite as any).agencies?.name ?? 'l\'agence'}`,
+            body: `${memberName} a rejoint ${agencyName}`,
             metadata: { user_id: user.id },
         })
+
+        if (admin.email) {
+            sendEmail({
+                to: admin.email,
+                subject: `${memberName} a rejoint ${agencyName}`,
+                template: MemberJoinedEmail({
+                    memberName,
+                    memberEmail: user.email ?? '',
+                    agencyName,
+                    appUrl,
+                }),
+            }).catch((err) => console.error("member-joined email error:", err))
+        }
     }
 
     const posthog = getPostHogClient()

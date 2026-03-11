@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { checkTrackingLinkLimit } from "@/lib/billing/checkLimit";
 
 export type CreateTrackingLinkInput = {
     opportunityId: string;
@@ -11,9 +12,27 @@ export type CreateTrackingLinkInput = {
     expiresAt?: Date;
 };
 
+export async function getMonthlyTrackingLinkCount(agencyId: string): Promise<number> {
+    const supabase = await createClient();
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+    const { count } = await supabase
+        .from("tracking_links")
+        .select("*", { count: "exact", head: true })
+        .eq("agency_id", agencyId)
+        .gte("created_at", startOfMonth.toISOString());
+    return count ?? 0;
+}
+
 export async function createTrackingLink(input: CreateTrackingLinkInput) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+
+    const limitCheck = await checkTrackingLinkLimit(input.agencyId);
+    if (!limitCheck.allowed) {
+        return { success: false, error: limitCheck.reason };
+    }
 
     try {
         // Générer un short code unique

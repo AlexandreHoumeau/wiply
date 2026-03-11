@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/notifications";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 
@@ -51,7 +53,28 @@ export async function GET(
 	// Mise à jour du compteur global
 	await supabase.rpc('increment_click_count', { link_id: link.id });
 
-	// 4. Redirection
+	// 5. Notify agency members who opted in (fire-and-forget)
+	supabaseAdmin
+		.from("profiles")
+		.select("id")
+		.eq("agency_id", link.agency_id)
+		.eq("notify_tracking_click", true)
+		.then(({ data: members }) => {
+			if (!members?.length) return;
+			const label = link.campaign_name ?? link.original_url;
+			for (const member of members) {
+				createNotification({
+					agencyId: link.agency_id,
+					userId: member.id,
+					type: "tracking_click",
+					title: "Lien cliqué",
+					body: `Quelqu'un a cliqué sur "${label}" (${device}, ${os})`,
+					metadata: { tracking_link_id: link.id, device, os },
+				});
+			}
+		});
+
+	// 6. Redirection
 	const redirectUrl = link.original_url || link.agencies?.website || "/";
 	return NextResponse.redirect(new URL(redirectUrl));
 }

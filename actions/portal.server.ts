@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { createNotification } from "@/lib/notifications";
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,7 +59,7 @@ export async function submitClientContent(magicToken: string, itemId: string, fo
         // Resolve project from token and verify portal is active
         const { data: project, error: projectError } = await supabaseAdmin
             .from("projects")
-            .select("id, is_portal_active")
+            .select("id, is_portal_active, agency_id")
             .eq("magic_token", magicToken)
             .single();
 
@@ -135,6 +136,26 @@ export async function submitClientContent(magicToken: string, itemId: string, fo
             .eq("id", itemId);
 
         if (error) throw error;
+
+        // Notify agency members who opted in (fire-and-forget)
+        supabaseAdmin
+            .from("profiles")
+            .select("id")
+            .eq("agency_id", project.agency_id)
+            .eq("notify_portal_submission", true)
+            .then(({ data: members }) => {
+                if (!members?.length) return;
+                for (const member of members) {
+                    createNotification({
+                        agencyId: project.agency_id,
+                        userId: member.id,
+                        type: "portal_submission",
+                        title: "Livrable reçu",
+                        body: `Un client a soumis un élément via le portail`,
+                        metadata: { project_id: project.id, checklist_item_id: itemId },
+                    });
+                }
+            });
 
         return { success: true };
     } catch (error: any) {

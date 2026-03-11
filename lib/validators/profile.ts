@@ -9,7 +9,21 @@ export type Profile = {
     phone: string
     email: string
     role: "agency_admin" | "agency_member" | "client"
+    notify_task_assigned: boolean
+    notify_task_comment: boolean
+    notify_opportunity_status: boolean
+    notify_tracking_click: boolean
+    notify_portal_submission: boolean
 }
+
+export type NotificationPreferences = Pick<
+    Profile,
+    | 'notify_task_assigned'
+    | 'notify_task_comment'
+    | 'notify_opportunity_status'
+    | 'notify_tracking_click'
+    | 'notify_portal_submission'
+>
 
 export const updateProfileSchema = z.object({
     first_name: z.string().min(1, "Le prénom est requis").max(100),

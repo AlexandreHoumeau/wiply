@@ -54,7 +54,7 @@ export function PricingSection() {
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] font-semibold">2 Projets</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] font-semibold">1 Membre (vous seul)</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Pipeline commercial</span></div>
-              <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Tracking de liens</span></div>
+              <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">10 liens trackés / mois</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Portail client</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Espace interne</span></div>
               <div className="flex items-center gap-3 opacity-40 pt-2"><X className="w-5 h-5 text-[#7A7A7A] shrink-0" strokeWidth={2} /><span className="text-[#7A7A7A] text-[15px]">Génération de messages IA</span></div>
@@ -90,9 +90,9 @@ export function PricingSection() {
             </Link>
             <div className="flex-1 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] font-semibold">Projets illimités</span></div>
-              <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] font-semibold">Jusqu'à 6 membres</span></div>
+              <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] font-semibold">Jusqu'à 5 membres</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Pipeline commercial</span></div>
-              <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Tracking de liens</span></div>
+              <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Liens trackés illimités</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Portail client</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Espace interne</span></div>
               <div className="flex items-center gap-3 pt-2"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px] font-medium">Génération de messages IA</span></div>

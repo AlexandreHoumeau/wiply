@@ -66,6 +66,35 @@ export async function checkMemberLimit(
     return { allowed: true }
 }
 
+export async function checkTrackingLinkLimit(
+    agencyId: string
+): Promise<{ allowed: boolean; reason?: string }> {
+    const supabase = await createClient()
+    const plan = await getAgencyPlan(agencyId)
+    const limit = PLANS[plan].max_tracking_links_per_month
+
+    if (limit === Infinity) return { allowed: true }
+
+    const startOfMonth = new Date()
+    startOfMonth.setUTCDate(1)
+    startOfMonth.setUTCHours(0, 0, 0, 0)
+
+    const { count } = await supabase
+        .from('tracking_links')
+        .select('*', { count: 'exact', head: true })
+        .eq('agency_id', agencyId)
+        .gte('created_at', startOfMonth.toISOString())
+
+    if ((count ?? 0) >= limit) {
+        return {
+            allowed: false,
+            reason: `Vous avez atteint la limite de ${limit} liens trackés ce mois-ci sur le plan FREE. Passez au plan PRO pour un tracking illimité.`,
+        }
+    }
+
+    return { allowed: true }
+}
+
 export async function checkAiEnabled(
     agencyId: string
 ): Promise<{ allowed: boolean; reason?: string }> {

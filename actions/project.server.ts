@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { checkProjectLimit } from "@/lib/billing/checkLimit";
+import { createNotification } from "@/lib/notifications";
 import { revalidatePath } from "next/cache";
 import { getPostHogClient } from "@/lib/posthog-server";
 import type {
@@ -346,6 +347,8 @@ export async function createTask(
   const supabase = await createClient();
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data: newTask, error } = await supabase
       .from("tasks")
       .insert({
@@ -363,6 +366,19 @@ export async function createTask(
       .single();
 
     if (error) throw error;
+
+    // Notify assignee if different from creator
+    if (data.assignee_id && user && data.assignee_id !== user.id) {
+      await createNotification({
+        agencyId,
+        userId: data.assignee_id,
+        type: "task_assigned",
+        title: "Tâche assignée",
+        body: `Vous avez été assigné à "${data.title}"`,
+        metadata: { task_id: (newTask as any).id },
+      });
+    }
+
     return { success: true, data: newTask };
   } catch (error) {
     console.error("Erreur création tâche:", error);
@@ -377,6 +393,15 @@ export async function updateTaskDetails(
   const supabase = await createClient();
 
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Fetch current task to detect assignee change
+    const { data: currentTask } = await supabase
+      .from("tasks")
+      .select("assignee_id, agency_id")
+      .eq("id", taskId)
+      .single();
+
     const { error } = await supabase
       .from("tasks")
       .update({
@@ -392,6 +417,26 @@ export async function updateTaskDetails(
       .eq("id", taskId);
 
     if (error) throw error;
+
+    // Notify new assignee if it changed and they're not the one making the change
+    const newAssignee = data.assignee_id ?? null;
+    if (
+      currentTask &&
+      newAssignee &&
+      newAssignee !== currentTask.assignee_id &&
+      user &&
+      newAssignee !== user.id
+    ) {
+      await createNotification({
+        agencyId: currentTask.agency_id,
+        userId: newAssignee,
+        type: "task_assigned",
+        title: "Tâche assignée",
+        body: `Vous avez été assigné à "${data.title}"`,
+        metadata: { task_id: taskId },
+      });
+    }
+
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Erreur mise à jour tâche:", error);

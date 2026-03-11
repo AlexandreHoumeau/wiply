@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { AuthUserContext } from "@/lib/validators/definitions";
-import { Profile, updateProfileSchema, UpdateProfileState } from "@/lib/validators/profile";
+import { NotificationPreferences, Profile, updateProfileSchema, UpdateProfileState } from "@/lib/validators/profile";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function fetchUserProfile(): Promise<Profile | null> {
@@ -95,6 +95,28 @@ export async function updateProfile(
             success: false,
             message: "Une erreur inattendue s'est produite",
         }
+    }
+}
+
+export async function updateNotificationPreferences(
+    prefs: NotificationPreferences
+): Promise<{ success: boolean; message: string }> {
+    try {
+        const supabase = await createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) return { success: false, message: "Non authentifié" }
+
+        const { error } = await supabase
+            .from("profiles")
+            .update(prefs)
+            .eq("id", user.id)
+
+        if (error) return { success: false, message: "Erreur lors de la mise à jour" }
+
+        revalidateTag(`settings-${user.id}`, {})
+        return { success: true, message: "Préférences mises à jour" }
+    } catch {
+        return { success: false, message: "Erreur inattendue" }
     }
 }
 

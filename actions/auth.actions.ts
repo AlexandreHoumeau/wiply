@@ -2,15 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { BrevoClient } from "@getbrevo/brevo";
 import { getPostHogClient } from "@/lib/posthog-server";
-import { render } from "@react-email/components";
+import { sendEmail } from "@/lib/email";
 import { SignupConfirmEmail } from "@/emails/signup-confirm";
 import { ResetPasswordEmail } from "@/emails/reset-password";
-
-function getBrevoClient() {
-    return new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
-}
 
 type SignupInput = {
     email: string;
@@ -65,17 +60,11 @@ export async function signup(data: SignupInput) {
     const confirmLink = `${baseUrl}/auth/confirm?token_hash=${hashedToken}&type=signup`
         + (data.redirectTo ? `&next=${encodeURIComponent(data.redirectTo)}` : '');
 
-    const htmlContent = await render(SignupConfirmEmail({
-        confirmLink,
-        firstName: data.firstName,
-    }));
-
     try {
-        await getBrevoClient().transactionalEmails.sendTransacEmail({
-            sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
-            to: [{ email: data.email }],
+        await sendEmail({
+            to: data.email,
             subject: 'Confirmez votre adresse email — Wiply',
-            htmlContent,
+            template: SignupConfirmEmail({ confirmLink, firstName: data.firstName }),
         });
     } catch (emailError) {
         console.error("Brevo signup email error:", emailError);
@@ -103,16 +92,11 @@ export async function resetPasswordForEmail(email: string) {
 
     if (error) return { error: error.message };
 
-    const htmlContent = await render(ResetPasswordEmail({
-        resetLink: linkData.properties.action_link,
-    }));
-
     try {
-        await getBrevoClient().transactionalEmails.sendTransacEmail({
-            sender: { name: 'Wiply', email: 'noreply@wiply.fr' },
-            to: [{ email }],
+        await sendEmail({
+            to: email,
             subject: 'Réinitialisez votre mot de passe — Wiply',
-            htmlContent,
+            template: ResetPasswordEmail({ resetLink: linkData.properties.action_link }),
         });
     } catch (emailError) {
         console.error("Brevo reset password email error:", emailError);

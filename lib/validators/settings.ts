@@ -28,5 +28,6 @@ export type SettingsData = {
         stripe_customer_id: string | null
         project_count: number
         member_count: number
+        tracking_link_count: number
     } | null
 }
