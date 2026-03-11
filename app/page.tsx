@@ -50,7 +50,7 @@ export default function Home() {
         <StickyFeatures />
 
         {/* Problems section */}
-        <section className="pt-8 pb-24 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
+        <section className="pt-8 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30, scale: 0.98 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -94,7 +94,7 @@ export default function Home() {
         </section>
 
         {/* Why us section */}
-        <section className="py-24 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
+        <section className="pt-24 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-12 sm:mb-16">
             <p className="text-[#8B6DF8] text-sm font-semibold mb-3">Pourquoi nous ?</p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#4C4C4C] font-[family-name:var(--font-passion-one)] tracking-wide">

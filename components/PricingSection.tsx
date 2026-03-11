@@ -6,7 +6,7 @@ import { Check, X } from "lucide-react";
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-24 px-4 sm:px-6 max-w-5xl mx-auto relative z-10">
+    <section id="pricing" className="pt-24 px-4 sm:px-6 max-w-5xl mx-auto relative z-10">
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
