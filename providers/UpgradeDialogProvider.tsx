@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useTransition, ReactNode } from 'react'
-import { Zap, FolderKanban, Users, Mail, Sparkles, X } from 'lucide-react'
+import { Zap, FolderKanban, Users, Mail, Sparkles, Globe, X } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     Dialog,
@@ -33,7 +33,8 @@ const PRO_FEATURES = [
     { icon: FolderKanban, label: 'Projets illimités' },
     { icon: Users, label: 'Jusqu\'à 5 collaborateurs' },
     { icon: Mail, label: 'Tracking emails illimité' },
-    { icon: Sparkles, label: 'Génération IA (Mistral)' },
+    { icon: Sparkles, label: 'Génération de messages IA' },
+    { icon: Globe, label: 'Analyse de site web IA' },
 ]
 
 export function UpgradeDialogProvider({ children }: { children: ReactNode }) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -46,11 +46,13 @@ import {
 } from "@/components/ui/popover";
 
 import { createOpportunity, updateOpportunity } from "@/actions/opportunity.client";
+import { analyzeCompanyWebsiteAction } from "@/actions/ai.server";
+import { useUpgradeDialog } from "@/providers/UpgradeDialogProvider";
 import { mapContactViaLabel, mapOpportunityStatusLabel, mapOpportunityWithCompanyToFormValues, OpportunityFormValues, opportunitySchema, OpportunityWithCompany } from "@/lib/validators/oppotunities";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useLoadingBar } from "@/hooks/useLoadingBar";
-import { Building2, FileText, Mail, MapPin, Phone, Globe, Briefcase, Check, ChevronsUpDown } from "lucide-react";
+import { Building2, FileText, Mail, MapPin, Phone, Globe, Briefcase, Check, ChevronsUpDown, Loader2, Wand2 } from "lucide-react";
 import { BUSINESS_SECTORS } from "@/utils/business-sectors";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +72,7 @@ export function OpportunityDialog({
 	userProfile
 }: OpportunityDialogProps) {
 	const [sectorOpen, setSectorOpen] = useState(false);
+	const [isAnalyzing, startAnalysis] = useTransition();
 
 	const form = useForm<OpportunityFormValues>({
 		resolver: zodResolver(opportunitySchema),
@@ -89,6 +92,24 @@ export function OpportunityDialog({
 
 	// Watch contact_via to show conditional required fields
 	const contactVia = form.watch("contact_via");
+	const companyWebsite = form.watch("company_website");
+
+	const { openUpgradeDialog } = useUpgradeDialog();
+
+	function handleAnalyzeWebsite() {
+		if (!companyWebsite) return;
+		startAnalysis(async () => {
+			const result = await analyzeCompanyWebsiteAction(companyWebsite, userProfile.agency_id);
+			if (result.success) {
+				form.setValue("description", result.analysis);
+				toast.success("Analyse générée !");
+			} else if (result.needsUpgrade) {
+				openUpgradeDialog(result.error, userProfile.agency_id);
+			} else {
+				toast.error(result.error);
+			}
+		});
+	}
 
 	useEffect(() => {
 		if (initialData) {
@@ -204,6 +225,23 @@ export function OpportunityDialog({
 													/>
 												</FormControl>
 												<FormMessage />
+												{companyWebsite && (
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														className="h-7 px-2.5 text-xs gap-1.5 text-muted-foreground"
+														onClick={handleAnalyzeWebsite}
+														disabled={isAnalyzing}
+													>
+														{isAnalyzing ? (
+															<Loader2 className="h-3 w-3 animate-spin" />
+														) : (
+															<Wand2 className="h-3 w-3" />
+														)}
+														{isAnalyzing ? "Analyse en cours…" : "Générer depuis le site web"}
+													</Button>
+												)}
 											</FormItem>
 										)}
 									/>

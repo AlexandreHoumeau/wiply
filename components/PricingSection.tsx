@@ -58,6 +58,7 @@ export function PricingSection() {
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Portail client</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Espace interne</span></div>
               <div className="flex items-center gap-3 opacity-40 pt-2"><X className="w-5 h-5 text-[#7A7A7A] shrink-0" strokeWidth={2} /><span className="text-[#7A7A7A] text-[15px]">Génération de messages IA</span></div>
+              <div className="flex items-center gap-3 opacity-40"><X className="w-5 h-5 text-[#7A7A7A] shrink-0" strokeWidth={2} /><span className="text-[#7A7A7A] text-[15px]">Analyse de site web IA</span></div>
               <div className="flex items-center gap-3 opacity-40"><X className="w-5 h-5 text-[#7A7A7A] shrink-0" strokeWidth={2} /><span className="text-[#7A7A7A] text-[15px]">Configuration IA personnalisée</span></div>
               <div className="flex items-center gap-3 opacity-40"><X className="w-5 h-5 text-[#7A7A7A] shrink-0" strokeWidth={2} /><span className="text-[#7A7A7A] text-[15px]">Collaboration d'équipe</span></div>
               <div className="flex items-center gap-3 opacity-40"><X className="w-5 h-5 text-[#7A7A7A] shrink-0" strokeWidth={2} /><span className="text-[#7A7A7A] text-[15px]">Support prioritaire</span></div>
@@ -96,6 +97,7 @@ export function PricingSection() {
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Portail client</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px]">Espace interne</span></div>
               <div className="flex items-center gap-3 pt-2"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px] font-medium">Génération de messages IA</span></div>
+              <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px] font-medium">Analyse de site web IA</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px] font-medium">Configuration IA personnalisée</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px] font-medium">Collaboration d'équipe</span></div>
               <div className="flex items-center gap-3"><Check className="w-5 h-5 text-[#8B6DF8] shrink-0" strokeWidth={2.5} /><span className="text-[#4C4C4C] text-[15px] font-medium">Support prioritaire</span></div>

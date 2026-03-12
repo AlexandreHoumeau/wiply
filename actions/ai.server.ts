@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { checkAiEnabled } from "@/lib/billing/checkLimit"
+import { Mistral } from "@mistralai/mistralai"
 
 export type AIConfigState = {
     success?: boolean
@@ -57,6 +59,73 @@ export async function updateAIConfigAction(prevState: any, formData: FormData): 
         success: true,
         message: "L'intelligence artificielle de votre agence a été mise à jour !"
     }
+}
+
+/**
+ * Analyse le site web d'un prospect et génère une description des points forts/faibles
+ * ainsi que des opportunités pour une agence web.
+ */
+export async function analyzeCompanyWebsiteAction(
+    websiteUrl: string,
+    agencyId: string
+): Promise<{ success: true; analysis: string } | { success: false; error: string; needsUpgrade?: boolean }> {
+    const aiCheck = await checkAiEnabled(agencyId)
+    if (!aiCheck.allowed) return { success: false, error: aiCheck.reason!, needsUpgrade: true }
+
+    const apiKey = process.env.MISTRAL_API_KEY
+    if (!apiKey) return { success: false, error: "Clé API Mistral manquante" }
+
+    let pageText: string
+    try {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 10000)
+        const res = await fetch(websiteUrl, {
+            signal: controller.signal,
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; Wiply-Bot/1.0)" },
+        })
+        clearTimeout(timeout)
+        const html = await res.text()
+        pageText = html
+            .replace(/<script[\s\S]*?<\/script>/gi, "")
+            .replace(/<style[\s\S]*?<\/style>/gi, "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 6000)
+    } catch {
+        return { success: false, error: "Impossible d'accéder au site web. Vérifiez l'URL." }
+    }
+
+    if (!pageText) return { success: false, error: "Aucun contenu lisible trouvé sur ce site." }
+
+    const mistral = new Mistral({ apiKey })
+    const response = await mistral.chat.complete({
+        model: "mistral-small-latest",
+        messages: [
+            {
+                role: "system",
+                content:
+                    "Tu es consultant en agence web. Analyse le contenu de ce site et génère une description concise (3 à 5 phrases) couvrant les points forts, les points faibles, et les services qu'une agence web pourrait proposer pour l'améliorer. Réponds directement en français, sans titre ni liste à puces.",
+            },
+            {
+                role: "user",
+                content: `Voici le contenu textuel du site à analyser :\n\n${pageText}`,
+            },
+        ],
+        temperature: 0.5,
+    })
+
+    const content = response.choices?.[0]?.message?.content
+    let analysis = ""
+    if (Array.isArray(content)) {
+        analysis = content.map((c) => ("text" in c ? c.text : "")).join("")
+    } else {
+        analysis = content || ""
+    }
+
+    if (!analysis) return { success: false, error: "L'analyse n'a retourné aucun résultat." }
+
+    return { success: true, analysis }
 }
 
 /**
