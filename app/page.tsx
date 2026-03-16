@@ -3,6 +3,7 @@
 import { FAQSection } from "@/components/FAQSection";
 import { FooterSection } from "@/components/FooterSection";
 import { HeroSection } from "@/components/HeroSection";
+import { NewsletterSection } from "@/components/NewsletterSection";
 import { PricingSection } from "@/components/PricingSection";
 import { StickyFeatures } from "@/components/StickyFeatures";
 import { PublicNavbar } from "@/components/PublicNavbar";
@@ -118,6 +119,7 @@ export default function Home() {
           </div>
         </section>
 
+        <NewsletterSection />
         <PricingSection />
         <FAQSection />
         <FooterSection />
