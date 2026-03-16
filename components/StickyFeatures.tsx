@@ -2,7 +2,38 @@
 
 import { AnimatePresence, motion, useScroll, useSpring, useTransform, useVelocity } from "framer-motion";
 import { Check } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
+import { FeaturePlayer } from "./FeaturePlayer";
+
+// Lazy-load compositions so each is its own chunk
+const PipelineComposition = dynamic(() =>
+  import("@/remotion/compositions/PipelineComposition").then((m) => m.PipelineComposition)
+);
+const TrackingComposition = dynamic(() =>
+  import("@/remotion/compositions/TrackingComposition").then((m) => m.TrackingComposition)
+);
+const AiComposition = dynamic(() =>
+  import("@/remotion/compositions/AiComposition").then((m) => m.AiComposition)
+);
+const KanbanComposition = dynamic(() =>
+  import("@/remotion/compositions/KanbanComposition").then((m) => m.KanbanComposition)
+);
+const PortailComposition = dynamic(() =>
+  import("@/remotion/compositions/PortailComposition").then((m) => m.PortailComposition)
+);
+
+// 700×500 = 1.4 aspect ratio matching the CSS aspect-[1.4]
+const COMP_W = 700;
+const COMP_H = 500;
+const FPS = 30;
+
+const featureCompositions = [
+  { component: PipelineComposition, durationInFrames: 180, fps: FPS, compositionWidth: COMP_W, compositionHeight: COMP_H },
+  { component: TrackingComposition, durationInFrames: 250, fps: FPS, compositionWidth: COMP_W, compositionHeight: COMP_H },
+  { component: AiComposition, durationInFrames: 250, fps: FPS, compositionWidth: COMP_W, compositionHeight: COMP_H },
+  { component: KanbanComposition, durationInFrames: 450, fps: FPS, compositionWidth: COMP_W, compositionHeight: COMP_H },
+  { component: PortailComposition, durationInFrames: 450, fps: FPS, compositionWidth: COMP_W, compositionHeight: COMP_H },];
 
 const featuresData = [
   {
@@ -65,29 +96,6 @@ const featuresData = [
     ],
     extra: "Fini les « c'est où en est mon projet ? » par email."
   },
-  // {
-  //   title: "Espace de travail interne",
-  //   subtitle: "Un Kanban privé pour les tâches de votre agence.",
-  //   description: "Votre équipe a aussi besoin de s'organiser en interne. Tickets admin, tâches récurrentes, sujets internes.",
-  //   bullets: [
-  //     "Même interface Kanban que vos projets clients",
-  //     "Totalement invisible pour vos clients",
-  //     "Idéal pour la coordination d'équipe"
-  //   ],
-  //   extra: ""
-  // },
-  // {
-  //   title: "Gestion d'équipe",
-  //   subtitle: "Invitez votre équipe et contrôlez les accès.",
-  //   description: "Collaborez avec vos collègues sur tous vos projets et opportunités, avec les bons niveaux de permissions.",
-  //   bullets: [
-  //     "Inviter des membres par email",
-  //     "Assigner des rôles : Admin ou Membre",
-  //     "Suivre les invitations en attente",
-  //     "Gérer les accès à tout moment"
-  //   ],
-  //   extra: ""
-  // }
 ];
 
 export function StickyFeatures() {
@@ -149,7 +157,11 @@ export function StickyFeatures() {
               </div>
             </div>
             <div className="w-full aspect-[1.4] drop-shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-              <motion.div style={{ clipPath: "url(#jelly-clip)" }} className="w-full h-full bg-white flex flex-col items-center justify-center" />
+              <motion.div
+                className="w-full h-full overflow-hidden"
+              >
+                <FeaturePlayer {...featureCompositions[idx]} />
+              </motion.div>
             </div>
           </div>
         ))}
@@ -199,17 +211,19 @@ export function StickyFeatures() {
         </div>
 
         <div className="w-[60%] flex flex-col gap-[80vh] pb-[40vh] pt-[35vh]">
-          {featuresData.map((feature, idx) => (
+          {featuresData.map((_, idx) => (
             <motion.div
               key={idx}
               onViewportEnter={() => setActiveIndex(idx)}
               viewport={{ margin: "-50% 0px -50% 0px" }}
-              className={`w-full aspect-[1.4] transition-opacity duration-700 drop-shadow-[0_8px_30px_rgba(0,0,0,0.04)] ${activeIndex === idx ? "opacity-100" : "opacity-40"}`}
+              className={`w-full aspect-[1.4] transition-opacity duration-700 ${activeIndex === idx ? "opacity-100" : "opacity-40"}`}
             >
               <motion.div
-                style={{ clipPath: "url(#jelly-clip)" }}
-                className="w-full h-full bg-white flex flex-col items-center justify-center"
-              />
+                // style={{ clipPath: "url(#jelly-clip)" }}
+                className="w-full h-full overflow-hidden"
+              >
+                <FeaturePlayer {...featureCompositions[idx]} />
+              </motion.div>
             </motion.div>
           ))}
         </div>
