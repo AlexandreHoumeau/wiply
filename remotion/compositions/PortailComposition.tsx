@@ -57,8 +57,8 @@ export function PortailComposition() {
 
   // ── Canvas Setup ──
   const COMP_W = 700;
-  const VIRTUAL_W = 1600; // Massive canvas for desktop illusion
-  const VIRTUAL_H = 1100;
+  const VIRTUAL_W = 1300;
+  const VIRTUAL_H = 940;
   const SCALE = COMP_W / VIRTUAL_W; 
 
   // ── 1. Cinematic Browser Entrance (0 to 40) ──
