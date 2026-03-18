@@ -19,8 +19,8 @@ export default function PolitiqueDeConfidentialite() {
 
       <h2>1. Responsable du traitement</h2>
       <p>
-        [Nom de la société]<br />
-        [Adresse]<br />
+        Alexandre Houmeau (Wiply) — Micro-entrepreneur<br />
+        4 rue Rose, 33300 Bordeaux, France<br />
         Email : <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
 
@@ -49,7 +49,8 @@ export default function PolitiqueDeConfidentialite() {
       <ul>
         <li><strong>Supabase</strong> — stockage des données (PostgreSQL, authentification)</li>
         <li><strong>Stripe</strong> — traitement des paiements</li>
-        <li><strong>Resend</strong> — envoi d&apos;emails transactionnels</li>
+        <li><strong>Brevo (Sendinblue)</strong> — envoi d&apos;emails transactionnels</li>
+        <li><strong>PostHog</strong> — analyse d&apos;audience anonymisée (avec votre consentement)</li>
         <li><strong>Vercel</strong> — hébergement de l&apos;application</li>
       </ul>
 
@@ -73,9 +74,11 @@ export default function PolitiqueDeConfidentialite() {
 
       <h2>7. Cookies</h2>
       <p>
-        Le site utilise uniquement des cookies techniques nécessaires au fonctionnement
-        du service (session d&apos;authentification). Aucun cookie publicitaire ou de tracking
-        tiers n&apos;est utilisé.
+        Le site utilise des cookies techniques nécessaires au fonctionnement du service
+        (session d&apos;authentification) ainsi que, avec votre consentement, des cookies
+        d&apos;analyse d&apos;audience via PostHog (mesure d&apos;audience anonymisée). Aucun
+        cookie publicitaire n&apos;est utilisé. Vous pouvez accepter ou refuser les cookies
+        analytiques via la bannière affichée lors de votre première visite.
       </p>
 
       <h2>8. Contact</h2>

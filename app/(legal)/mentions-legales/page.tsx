@@ -14,15 +14,15 @@ export default function MentionsLegales() {
       <h2>Éditeur du site</h2>
       <p>
         Le site <strong>Wiply</strong> est édité par :<br />
-        [Nom de la société / nom du porteur du projet]<br />
-        [Forme juridique — ex. SAS, auto-entrepreneur…]<br />
-        [Adresse du siège social]<br />
-        [Numéro SIRET]<br />
+        Alexandre Houmeau<br />
+        Micro-entrepreneur<br />
+        4 rue Rose, 33300 Bordeaux, France<br />
+        SIRET : en cours d&apos;immatriculation<br />
         Email : <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
 
       <h2>Directeur de la publication</h2>
-      <p>[Prénom Nom], en qualité de [gérant / président…].</p>
+      <p>Alexandre Houmeau, en qualité de micro-entrepreneur.</p>
 
       <h2>Hébergement</h2>
       <p>

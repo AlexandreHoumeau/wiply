@@ -14,7 +14,8 @@ export default function CGU() {
       <h2>1. Objet</h2>
       <p>
         Les présentes CGU régissent l&apos;accès et l&apos;utilisation de la plateforme Wiply,
-        disponible à l&apos;adresse <strong>wiply.fr</strong>, éditée par [Nom de la société].
+        disponible à l&apos;adresse <strong>wiply.fr</strong>, éditée par Alexandre Houmeau,
+        micro-entrepreneur.
         Toute utilisation du service implique l&apos;acceptation pleine et entière des présentes CGU.
       </p>
 
