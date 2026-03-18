@@ -52,3 +52,5 @@ PRODUCT.md
 ClAUDE.md
 .env.local
 posthog-setup-report.md
+# Sentry Config File
+.env.sentry-build-plugin

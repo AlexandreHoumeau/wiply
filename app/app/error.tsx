@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, RefreshCcw } from 'lucide-react'
@@ -13,7 +14,7 @@ export default function AppError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log de l'erreur pour le monitoring
+    Sentry.captureException(error)
     console.error(error)
   }, [error])
 

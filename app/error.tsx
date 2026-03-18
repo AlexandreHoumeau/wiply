@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,7 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log de l'erreur critique
+    Sentry.captureException(error)
     console.error(error)
   }, [error])
 
