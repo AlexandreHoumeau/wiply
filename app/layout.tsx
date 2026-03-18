@@ -70,7 +70,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" translate="no">
       <body
         className={`${inter.variable} ${passionOne.variable} antialiased`}
       >
