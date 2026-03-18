@@ -79,7 +79,7 @@ export default function OpportunitySidebarInfo(opportunity: OpportunityWithCompa
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2 text-xs text-muted-foreground hover:text-slate-900"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                     onClick={() => setEditOpen(true)}
                 >
                     <Pencil className="h-3.5 w-3.5 mr-1" />
@@ -134,7 +134,7 @@ export default function OpportunitySidebarInfo(opportunity: OpportunityWithCompa
                             {opportunity.company?.name} — {opportunity.company?.website}
                         </DialogDescription>
                     </DialogHeader>
-                    <p className="text-sm leading-relaxed text-slate-700">{analysisText}</p>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{analysisText}</p>
                     <DialogFooter className="gap-2">
                         <Button variant="outline" onClick={() => setAnalysisOpen(false)}>
                             Fermer

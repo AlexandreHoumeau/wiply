@@ -14,22 +14,22 @@ import dayjs from "dayjs";
 import "dayjs/locale/fr";
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-    feature: { label: "Feature",  icon: AlignLeft,      color: "text-blue-600 bg-blue-50" },
-    bug:     { label: "Bug",      icon: Bug,            color: "text-red-600 bg-red-50" },
-    design:  { label: "Design",   icon: LayoutTemplate, color: "text-purple-600 bg-purple-50" },
-    content: { label: "Contenu",  icon: PenTool,        color: "text-emerald-600 bg-emerald-50" },
-    setup:   { label: "Setup",    icon: Settings,       color: "text-slate-600 bg-slate-100" },
+    feature: { label: "Feature",  icon: AlignLeft,      color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40" },
+    bug:     { label: "Bug",      icon: Bug,            color: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40" },
+    design:  { label: "Design",   icon: LayoutTemplate, color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40" },
+    content: { label: "Contenu",  icon: PenTool,        color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40" },
+    setup:   { label: "Setup",    icon: Settings,       color: "text-muted-foreground bg-muted" },
 };
 
 const PRIORITY_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-    low:    { label: "Basse",   icon: ArrowDown,    color: "text-slate-400" },
-    medium: { label: "Moyenne", icon: Equal,        color: "text-slate-500" },
+    low:    { label: "Basse",   icon: ArrowDown,    color: "text-muted-foreground" },
+    medium: { label: "Moyenne", icon: Equal,        color: "text-muted-foreground" },
     high:   { label: "Haute",   icon: ArrowUp,      color: "text-orange-500" },
-    urgent: { label: "Urgente", icon: AlertOctagon, color: "text-red-600" },
+    urgent: { label: "Urgente", icon: AlertOctagon, color: "text-red-600 dark:text-red-400" },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
-    todo:        { label: "À faire",  icon: Inbox,        color: "text-slate-400" },
+    todo:        { label: "À faire",  icon: Inbox,        color: "text-muted-foreground" },
     in_progress: { label: "En cours", icon: PlayCircle,   color: "text-blue-500" },
     review:      { label: "En revue", icon: Clock,        color: "text-amber-500" },
     done:        { label: "Terminé",  icon: CheckCircle2, color: "text-emerald-500" },
@@ -67,16 +67,16 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
     });
 
     const SortIcon = ({ col }: { col: SortKey }) => {
-        if (sortKey !== col) return <ChevronUp className="w-3 h-3 text-slate-300" />;
+        if (sortKey !== col) return <ChevronUp className="w-3 h-3 text-muted-foreground/30" />;
         return sortDir === "asc"
-            ? <ChevronUp className="w-3 h-3 text-slate-600" />
-            : <ChevronDown className="w-3 h-3 text-slate-600" />;
+            ? <ChevronUp className="w-3 h-3 text-muted-foreground" />
+            : <ChevronDown className="w-3 h-3 text-muted-foreground" />;
     };
 
     const ColHeader = ({ col, label, className }: { col: SortKey; label: string; className?: string }) => (
         <th
             onClick={() => handleSort(col)}
-            className={cn("px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-slate-400 cursor-pointer hover:text-slate-600 select-none whitespace-nowrap", className)}
+            className={cn("px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-foreground select-none whitespace-nowrap", className)}
         >
             <span className="inline-flex items-center gap-1">
                 {label}
@@ -87,11 +87,11 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
 
     return (
         <>
-            <div className="h-full overflow-auto bg-slate-50/50">
+            <div className="h-full overflow-auto bg-muted/20">
                 <table className="w-full min-w-[800px] border-collapse">
-                    <thead className="sticky top-0 z-10 bg-white border-b border-slate-200/60">
+                    <thead className="sticky top-0 z-10 bg-background border-b border-border/60">
                         <tr>
-                            <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-slate-400 w-16">#</th>
+                            <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground w-16">#</th>
                             <ColHeader col="type"       label="Type"     className="w-28" />
                             <ColHeader col="title"      label="Titre"    />
                             <ColHeader col="status"     label="Statut"   className="w-28" />
@@ -101,10 +101,10 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
                             <ColHeader col="created_at" label="Créé"     className="w-24" />
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border/50">
                         {sorted.length === 0 && (
                             <tr>
-                                <td colSpan={8} className="px-4 py-12 text-center text-sm text-slate-400">
+                                <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted-foreground">
                                     Aucun ticket ne correspond aux filtres actifs.
                                 </td>
                             </tr>
@@ -124,11 +124,11 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
                                 <tr
                                     key={task.id}
                                     onClick={() => { setSelectedTask(task); setSlideOverOpen(true); }}
-                                    className="bg-white hover:bg-slate-50 cursor-pointer transition-colors group"
+                                    className="bg-background hover:bg-muted/40 cursor-pointer transition-colors group"
                                 >
                                     {/* ID */}
                                     <td className="px-4 py-3">
-                                        <span className="font-mono text-[10px] font-bold text-slate-300 group-hover:text-slate-400">
+                                        <span className="font-mono text-[10px] font-bold text-muted-foreground/40 group-hover:text-muted-foreground">
                                             {task.id.split("-")[0].substring(0, 4).toUpperCase()}
                                         </span>
                                     </td>
@@ -143,9 +143,9 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
 
                                     {/* Title */}
                                     <td className="px-4 py-3 max-w-[320px]">
-                                        <p className="text-sm font-semibold text-slate-800 truncate">{task.title}</p>
+                                        <p className="text-sm font-semibold text-foreground truncate">{task.title}</p>
                                         {task.description && (
-                                            <p className="text-xs text-slate-400 truncate mt-0.5">{task.description}</p>
+                                            <p className="text-xs text-muted-foreground truncate mt-0.5">{task.description}</p>
                                         )}
                                     </td>
 
@@ -175,14 +175,14 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
                                                 >
                                                     {initials}
                                                 </div>
-                                                <span className="text-xs text-slate-600 truncate">
+                                                <span className="text-xs text-muted-foreground truncate">
                                                     {task.assignee.first_name
                                                         ? `${task.assignee.first_name} ${task.assignee.last_name ?? ""}`.trim()
                                                         : task.assignee.email}
                                                 </span>
                                             </div>
                                         ) : (
-                                            <span className="text-xs text-slate-300">—</span>
+                                            <span className="text-xs text-muted-foreground/30">—</span>
                                         )}
                                     </td>
 
@@ -193,18 +193,18 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
                                                 "text-xs font-medium",
                                                 dayjs(task.due_date).isBefore(dayjs(), "day")
                                                     ? "text-red-500"
-                                                    : "text-slate-600"
+                                                    : "text-muted-foreground"
                                             )}>
                                                 {dayjs(task.due_date).locale("fr").format("D MMM")}
                                             </span>
                                         ) : (
-                                            <span className="text-xs text-slate-300">—</span>
+                                            <span className="text-xs text-muted-foreground/30">—</span>
                                         )}
                                     </td>
 
                                     {/* Created */}
                                     <td className="px-4 py-3">
-                                        <span className="text-xs text-slate-400">
+                                        <span className="text-xs text-muted-foreground">
                                             {dayjs(task.created_at).locale("fr").format("D MMM")}
                                         </span>
                                     </td>

@@ -12,11 +12,11 @@ import "dayjs/locale/fr";
 dayjs.extend(isBetween);
 
 const TYPE_COLORS: Record<string, { bar: string; dot: string }> = {
-    feature: { bar: "bg-blue-200",   dot: "bg-blue-500" },
-    bug:     { bar: "bg-red-200",    dot: "bg-red-500" },
-    design:  { bar: "bg-purple-200", dot: "bg-purple-500" },
-    content: { bar: "bg-emerald-200",dot: "bg-emerald-500" },
-    setup:   { bar: "bg-slate-200",  dot: "bg-slate-500" },
+    feature: { bar: "bg-blue-200 dark:bg-blue-800/60",    dot: "bg-blue-500" },
+    bug:     { bar: "bg-red-200 dark:bg-red-800/60",      dot: "bg-red-500" },
+    design:  { bar: "bg-purple-200 dark:bg-purple-800/60",dot: "bg-purple-500" },
+    content: { bar: "bg-emerald-200 dark:bg-emerald-800/60", dot: "bg-emerald-500" },
+    setup:   { bar: "bg-muted",                           dot: "bg-muted-foreground" },
 };
 
 const WINDOW_DAYS = 90;
@@ -91,32 +91,32 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
         <>
             <div className="flex flex-col h-full overflow-hidden">
                 {/* Navigation */}
-                <div className="shrink-0 flex items-center gap-3 px-6 py-3 bg-white border-b border-slate-200/60">
+                <div className="shrink-0 flex items-center gap-3 px-6 py-3 bg-background border-b border-border/60">
                     <button
                         onClick={() => setWindowStart((s) => s.subtract(30, "day"))}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <span className="text-sm font-semibold text-slate-700 capitalize min-w-[200px] text-center">
+                    <span className="text-sm font-semibold text-foreground capitalize min-w-[200px] text-center">
                         {windowStart.locale("fr").format("MMMM YYYY")}
                         {" → "}
                         {windowEnd.locale("fr").format("MMMM YYYY")}
                     </span>
                     <button
                         onClick={() => setWindowStart((s) => s.add(30, "day"))}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => setWindowStart(dayjs().startOf("month"))}
-                        className="ml-2 px-3 py-1 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors border border-slate-200"
+                        className="ml-2 px-3 py-1 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border"
                     >
                         Aujourd&apos;hui
                     </button>
                     {undatedTasks.length > 0 && (
-                        <span className="ml-auto text-xs text-slate-400">
+                        <span className="ml-auto text-xs text-muted-foreground">
                             {undatedTasks.length} ticket{undatedTasks.length > 1 ? "s" : ""} sans échéance
                         </span>
                     )}
@@ -125,13 +125,13 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                 <div className="flex-1 overflow-auto">
                     <div style={{ minWidth: 280 + cellW * days.length }}>
                         {/* Month row */}
-                        <div className="flex sticky top-0 z-20 bg-white border-b border-slate-200">
-                            <div className="w-[280px] shrink-0 border-r border-slate-200" />
+                        <div className="flex sticky top-0 z-20 bg-background border-b border-border">
+                            <div className="w-[280px] shrink-0 border-r border-border" />
                             {monthGroups.map((g, i) => (
                                 <div
                                     key={i}
                                     style={{ width: g.count * cellW }}
-                                    className="shrink-0 px-2 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 capitalize border-r border-slate-100"
+                                    className="shrink-0 px-2 py-1.5 text-[11px] font-bold uppercase tracking-widest text-muted-foreground capitalize border-r border-border/50"
                                 >
                                     {g.label}
                                 </div>
@@ -139,8 +139,8 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                         </div>
 
                         {/* Day header */}
-                        <div className="flex sticky top-[33px] z-20 bg-white border-b border-slate-200">
-                            <div className="w-[280px] shrink-0 border-r border-slate-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <div className="flex sticky top-[33px] z-20 bg-background border-b border-border">
+                            <div className="w-[280px] shrink-0 border-r border-border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                 Ticket
                             </div>
                             {days.map((d, i) => (
@@ -149,7 +149,7 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                                     style={{ width: cellW }}
                                     className={cn(
                                         "shrink-0 flex items-center justify-center py-1 text-[10px] font-semibold",
-                                        d.day() === 0 || d.day() === 6 ? "text-slate-300 bg-slate-50" : "text-slate-400",
+                                        d.day() === 0 || d.day() === 6 ? "text-muted-foreground/40 bg-muted/30" : "text-muted-foreground",
                                         d.isSame(dayjs(), "day") ? "text-white bg-[var(--brand-secondary,#6366F1)] rounded-sm" : ""
                                     )}
                                 >
@@ -160,7 +160,7 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
 
                         {/* Empty state */}
                         {datedTasks.length === 0 && (
-                            <div className="px-6 py-12 text-center text-sm text-slate-400">
+                            <div className="px-6 py-12 text-center text-sm text-muted-foreground">
                                 Aucun ticket avec une échéance.<br />
                                 <span className="text-xs">Ajoutez une échéance dans l&apos;éditeur de ticket.</span>
                             </div>
@@ -180,12 +180,12 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                             return (
                                 <div
                                     key={task.id}
-                                    className="flex border-b border-slate-100 hover:bg-slate-50/50 group"
+                                    className="flex border-b border-border/50 hover:bg-muted/30 group"
                                     style={{ height: 48 }}
                                 >
                                     {/* Task name column */}
                                     <div
-                                        className="w-[280px] shrink-0 border-r border-slate-200 flex items-center gap-2 px-4 cursor-pointer"
+                                        className="w-[280px] shrink-0 border-r border-border flex items-center gap-2 px-4 cursor-pointer"
                                         onClick={() => { setSelectedTask(task); setSlideOverOpen(true); }}
                                     >
                                         {task.assignee && (
@@ -196,11 +196,11 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                                                 {initials}
                                             </div>
                                         )}
-                                        <span className="text-xs font-semibold text-slate-700 truncate group-hover:text-slate-900">
+                                        <span className="text-xs font-semibold text-muted-foreground truncate group-hover:text-foreground">
                                             {task.title}
                                         </span>
                                         {isOverdue && (
-                                            <span className="ml-auto shrink-0 text-[9px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">
+                                            <span className="ml-auto shrink-0 text-[9px] font-bold text-red-500 bg-red-50 dark:bg-red-950/40 px-1.5 py-0.5 rounded-full">
                                                 En retard
                                             </span>
                                         )}
@@ -210,7 +210,7 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                                     <div className="relative flex items-center" style={{ width: cellW * days.length }}>
                                         {/* Weekend shading */}
                                         {days.map((d, i) => d.day() === 0 || d.day() === 6 ? (
-                                            <div key={i} className="absolute top-0 bottom-0 bg-slate-50/70" style={{ left: i * cellW, width: cellW }} />
+                                            <div key={i} className="absolute top-0 bottom-0 bg-muted/30" style={{ left: i * cellW, width: cellW }} />
                                         ) : null)}
 
                                         {/* Today line */}
@@ -226,7 +226,7 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                                             <div
                                                 className={cn(
                                                     "absolute h-5 rounded-full z-10 cursor-pointer hover:brightness-95 transition-all flex items-center",
-                                                    isOverdue ? "bg-red-200" : colors.bar,
+                                                    isOverdue ? "bg-red-200 dark:bg-red-800/60" : colors.bar,
                                                     // Flat left edge if starts before window
                                                     startsBeforeWindow ? "rounded-l-none" : "",
                                                     endsAfterWindow    ? "rounded-r-none" : "",
@@ -237,7 +237,7 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                                             >
                                                 {/* Inline title on bar if wide enough */}
                                                 {barWidth > 80 && (
-                                                    <span className="px-2 text-[10px] font-semibold text-slate-600 truncate">
+                                                    <span className="px-2 text-[10px] font-semibold text-foreground/70 truncate">
                                                         {task.title}
                                                     </span>
                                                 )}
@@ -263,7 +263,7 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                                         {/* Created_at start marker */}
                                         {!startsBeforeWindow && (
                                             <div
-                                                className="absolute w-2 h-2 rounded-full z-20 bg-white border-2 border-slate-400"
+                                                className="absolute w-2 h-2 rounded-full z-20 bg-background border-2 border-muted-foreground"
                                                 style={{
                                                     left: clampedStart * cellW + cellW / 2 - 4,
                                                     top: "50%",
@@ -280,8 +280,8 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                         {/* Undated tasks */}
                         {undatedTasks.length > 0 && (
                             <>
-                                <div className="flex border-b border-slate-200 bg-slate-50">
-                                    <div className="w-[280px] shrink-0 border-r border-slate-200 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                <div className="flex border-b border-border bg-muted/30">
+                                    <div className="w-[280px] shrink-0 border-r border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                         Sans échéance
                                     </div>
                                     <div style={{ width: cellW * days.length }} />
@@ -289,15 +289,15 @@ export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[
                                 {undatedTasks.map((task) => (
                                     <div
                                         key={task.id}
-                                        className="flex border-b border-slate-100 hover:bg-slate-50/50 cursor-pointer"
+                                        className="flex border-b border-border/50 hover:bg-muted/30 cursor-pointer"
                                         style={{ height: 44 }}
                                         onClick={() => { setSelectedTask(task); setSlideOverOpen(true); }}
                                     >
-                                        <div className="w-[280px] shrink-0 border-r border-slate-200 flex items-center gap-2 px-4">
-                                            <span className="text-xs font-semibold text-slate-500 truncate">{task.title}</span>
+                                        <div className="w-[280px] shrink-0 border-r border-border flex items-center gap-2 px-4">
+                                            <span className="text-xs font-semibold text-muted-foreground truncate">{task.title}</span>
                                         </div>
                                         <div style={{ width: cellW * days.length }} className="flex items-center px-6">
-                                            <div className="w-full h-px border-t border-dashed border-slate-200" />
+                                            <div className="w-full h-px border-t border-dashed border-border" />
                                         </div>
                                     </div>
                                 ))}

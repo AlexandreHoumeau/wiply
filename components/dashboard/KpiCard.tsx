@@ -20,20 +20,20 @@ export function KpiCard({
   href?: string;
 }) {
   const inner = (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-slate-300 hover:shadow-md transition-all h-full">
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all h-full">
       <div className="flex items-start justify-between mb-4">
         <div className={cn("p-2.5 rounded-xl", iconBg)}>
           <Icon className={cn("h-5 w-5", iconColor)} />
         </div>
         {href && (
-          <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+          <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
         )}
       </div>
-      <p className="text-3xl font-black text-slate-900 leading-none">{value}</p>
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1.5">
+      <p className="text-3xl font-black text-foreground leading-none">{value}</p>
+      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1.5">
         {title}
       </p>
-      <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
+      <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
     </div>
   );
 

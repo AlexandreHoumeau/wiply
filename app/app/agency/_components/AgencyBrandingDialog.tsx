@@ -63,24 +63,24 @@ function ColorPicker({
 
   return (
     <div className="space-y-1.5">
-      <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
         {label}
       </p>
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger asChild>
           <button
             type="button"
-            className="w-full flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 hover:border-slate-300 transition-colors shadow-sm text-left"
+            className="w-full flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 hover:border-border/80 transition-colors shadow-sm text-left"
           >
             <div
               className="h-8 w-8 rounded-lg shrink-0 border border-black/10 shadow-sm"
               style={{ backgroundColor: safeColor }}
             />
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-800 font-mono uppercase tracking-wide">
+              <p className="text-xs font-semibold text-foreground font-mono uppercase tracking-wide">
                 {safeColor}
               </p>
-              <p className="text-[10px] text-slate-400">{sublabel}</p>
+              <p className="text-[10px] text-muted-foreground">{sublabel}</p>
             </div>
           </button>
         </Popover.Trigger>
@@ -93,7 +93,7 @@ function ColorPicker({
             side="bottom"
             align="start"
             sideOffset={8}
-            className="z-[200] rounded-2xl border border-slate-200 bg-white shadow-xl p-4 w-[240px] space-y-3 outline-none animate-in fade-in-0 zoom-in-95"
+            className="z-[200] rounded-2xl border border-border bg-background shadow-xl p-4 w-[240px] space-y-3 outline-none animate-in fade-in-0 zoom-in-95"
           >
             {/* Picker */}
             <HexColorPicker
@@ -103,19 +103,19 @@ function ColorPicker({
             />
 
             {/* Hex input */}
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-              <span className="text-xs font-semibold text-slate-400">#</span>
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
+              <span className="text-xs font-semibold text-muted-foreground">#</span>
               <HexColorInput
                 color={safeColor}
                 onChange={onChange}
                 prefixed={false}
-                className="flex-1 bg-transparent text-xs font-mono font-semibold text-slate-800 uppercase outline-none tracking-widest min-w-0"
+                className="flex-1 bg-transparent text-xs font-mono font-semibold text-foreground uppercase outline-none tracking-widest min-w-0"
               />
             </div>
 
             {/* Preset swatches */}
             <div>
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
                 Couleurs rapides
               </p>
               <div className="grid grid-cols-6 gap-1.5">
@@ -135,7 +135,7 @@ function ColorPicker({
               </div>
             </div>
 
-            <Popover.Arrow className="fill-white" />
+            <Popover.Arrow className="fill-background" />
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
@@ -227,21 +227,21 @@ export function AgencyBrandingDialog({
 
       <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100">
+        <div className="px-6 py-5 border-b border-border">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-slate-900">
+            <DialogTitle className="text-base font-semibold text-foreground">
               Identité visuelle
             </DialogTitle>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Personnalisez le logo et les couleurs de votre agence.
             </p>
           </DialogHeader>
         </div>
 
-        <form action={formAction} className="divide-y divide-slate-100">
+        <form action={formAction} className="divide-y divide-border">
           {/* Live brand preview */}
-          <div className="px-6 py-5 bg-slate-50/60">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
+          <div className="px-6 py-5 bg-muted/50">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
               Aperçu en direct
             </p>
             <div
@@ -289,14 +289,14 @@ export function AgencyBrandingDialog({
 
           {/* Logo upload */}
           <div className="px-6 py-5 space-y-2">
-            <p className="text-xs font-semibold text-slate-700">
+            <p className="text-xs font-semibold text-foreground">
               Logo de l&apos;agence
             </p>
             <div
               className={`relative rounded-xl border-2 border-dashed transition-all duration-200 cursor-pointer ${
                 isDragging
-                  ? "border-slate-400 bg-slate-100"
-                  : "border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50"
+                  ? "border-border bg-muted"
+                  : "border-border bg-muted/50 hover:border-border/80 hover:bg-muted"
               }`}
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => {
@@ -307,7 +307,7 @@ export function AgencyBrandingDialog({
               onDrop={handleDrop}
             >
               <div className="flex items-center gap-4 p-4">
-                <div className="h-14 w-14 rounded-xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                <div className="h-14 w-14 rounded-xl border border-border bg-card flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
                   {preview ? (
                     <img
                       src={preview}
@@ -315,17 +315,17 @@ export function AgencyBrandingDialog({
                       className="h-full w-full object-contain p-1"
                     />
                   ) : (
-                    <Upload className="h-5 w-5 text-slate-300" />
+                    <Upload className="h-5 w-5 text-muted-foreground/30" />
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-700">
+                  <p className="text-sm font-medium text-foreground">
                     {preview ? "Changer le logo" : "Ajouter un logo"}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     PNG, JPEG, SVG · Max 2 MB
                   </p>
-                  <p className="text-xs text-slate-500 mt-1 font-medium">
+                  <p className="text-xs text-muted-foreground mt-1 font-medium">
                     Cliquer ou glisser-déposer
                   </p>
                 </div>
@@ -343,7 +343,7 @@ export function AgencyBrandingDialog({
 
           {/* Color pickers */}
           <div className="px-6 py-5 space-y-3">
-            <p className="text-xs font-semibold text-slate-700">
+            <p className="text-xs font-semibold text-foreground">
               Couleurs de marque
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -365,7 +365,7 @@ export function AgencyBrandingDialog({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 bg-slate-50/60 space-y-3">
+          <div className="px-6 py-4 bg-muted/50 space-y-3">
             {state?.message && (
               <p
                 className={`text-xs text-center font-medium ${

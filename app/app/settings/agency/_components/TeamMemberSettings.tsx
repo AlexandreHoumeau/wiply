@@ -43,8 +43,8 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
 
     return (
         <TabsContent value="team" className="space-y-8">
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-6">
+            <Card className="border-border shadow-sm overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-6">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2">
                             <ShieldCheck className="h-5 w-5 text-blue-600" />
@@ -53,7 +53,7 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
                         <CardDescription>Personnes ayant un accès actuel à l'agence.</CardDescription>
                     </div>
 
-                    <Button variant="outline" className="border-slate-200 hover:bg-slate-50 shadow-sm" onClick={onInviteClick}>
+                    <Button variant="outline" className="border-border hover:bg-muted shadow-sm" onClick={onInviteClick}>
                         <UserPlus className="h-4 w-4 mr-2 text-blue-600" /> Inviter un membre
                     </Button>
 
@@ -100,34 +100,34 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
                 <CardContent className="p-0">
                     {team.length === 0 ? (
                         <div className="py-16 text-center">
-                            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 mb-4">
-                                <UserPlus className="h-6 w-6 text-slate-300" />
+                            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+                                <UserPlus className="h-6 w-6 text-muted-foreground/30" />
                             </div>
-                            <p className="text-sm font-medium text-slate-900">Aucun membre actif</p>
+                            <p className="text-sm font-medium text-foreground">Aucun membre actif</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-border">
                             {team.map((member) => {
                                 const isMe = member.email === profile.email;
 
                                 return (
-                                    <div key={member.id || member.email} className={`flex items-center justify-between p-4 transition-colors group ${isMe ? 'bg-blue-50/30' : 'hover:bg-slate-50/50'}`}>
+                                    <div key={member.id || member.email} className={`flex items-center justify-between p-4 transition-colors group ${isMe ? 'bg-blue-50/30 dark:bg-blue-950/20' : 'hover:bg-muted/50'}`}>
                                         <div className="flex items-center gap-4">
                                             <div className="relative">
-                                                <Avatar className={`h-10 w-10 border-2 shadow-sm ${isMe ? 'border-blue-400' : 'border-white'}`}>
-                                                    <AvatarFallback className={`${isMe ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'} text-xs font-bold`}>
+                                                <Avatar className={`h-10 w-10 border-2 shadow-sm ${isMe ? 'border-blue-400' : 'border-background'}`}>
+                                                    <AvatarFallback className={`${isMe ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'} text-xs font-bold`}>
                                                         {getInitials(member.first_name, member.last_name, member.email)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 {isMe && (
-                                                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 border-2 border-white">
+                                                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 border-2 border-background">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="grid gap-0.5">
                                                 <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-semibold text-slate-900">
+                                                    <p className="text-sm font-semibold text-foreground">
                                                         {member.first_name} {member.last_name}
                                                     </p>
                                                     {isMe && (
@@ -136,14 +136,14 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
                                                         </Badge>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                     <Mail className="h-3 w-3" /> {member.email}
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-3">
-                                            <Badge variant="secondary" className={member.role === 'agency_admin' ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"}>
+                                            <Badge variant="secondary" className={member.role === 'agency_admin' ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}>
                                                 {member.role === 'agency_admin' ? 'Admin' : 'Membre'}
                                             </Badge>
 
@@ -151,7 +151,7 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
                                             {!isMe && (
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <MoreVertical className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
@@ -179,27 +179,27 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
             {invites.length > 0 && (
                 <div className="space-y-4 pt-4">
                     <div className="flex items-center gap-2 px-1">
-                        <Clock className="h-4 w-4 text-slate-400" />
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">Invitations envoyées</h3>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Invitations envoyées</h3>
                     </div>
 
                     <div className="grid gap-3">
                         {invites.map((invite: any) => (
-                            <div key={invite.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 border-dashed rounded-xl shadow-sm hover:border-blue-200 transition-colors">
+                            <div key={invite.id} className="flex items-center justify-between p-4 bg-card border border-border border-dashed rounded-xl shadow-sm hover:border-blue-200 transition-colors">
                                 <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
-                                        <Mail className="h-5 w-5 text-slate-400" />
+                                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border border-border">
+                                        <Mail className="h-5 w-5 text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-900">{invite.email}</p>
-                                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                                        <p className="text-sm font-semibold text-foreground">{invite.email}</p>
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
                                             <Sparkles className="h-3 w-3 text-amber-500" />
                                             Expire le {dayjs(invite.expires_at).locale('fr').format('D MMM YYYY')}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <Badge variant="outline" className="bg-slate-50/50 text-slate-500 border-slate-200 font-normal">
+                                    <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-border font-normal">
                                         {invite.role === 'agency_admin' ? 'Futur Admin' : 'Futur Membre'}
                                     </Badge>
                                     <Button variant="ghost" size="sm" className="h-8 text-[11px] font-bold uppercase text-destructive hover:bg-destructive/5 tracking-tighter">

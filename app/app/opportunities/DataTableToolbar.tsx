@@ -51,21 +51,21 @@ export function DataTableToolbar<TData>({
     (starredOnly ? 1 : 0);
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 px-4 py-3 bg-white border-b border-slate-100">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 px-4 py-3 bg-card border-b border-border">
 
       {/* Search */}
       <div className="relative flex-1">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <Input
           placeholder="Rechercher..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="pl-9 pr-4 h-9 w-full bg-slate-50 border-slate-200 hover:border-slate-300 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-50 rounded-lg text-sm placeholder:text-slate-400 transition-all"
+          className="pl-9 pr-4 h-9 w-full bg-muted border-border hover:border-border/80 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-50 rounded-lg text-sm placeholder:text-muted-foreground transition-all"
         />
         {searchInput.length > 0 && (
           <button
             onClick={() => setSearchInput("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -73,11 +73,11 @@ export function DataTableToolbar<TData>({
       </div>
 
       {/* Divider */}
-      <div className="hidden sm:block h-8 w-px bg-slate-100" />
+      <div className="hidden sm:block h-8 w-px bg-border" />
 
       {/* Filters */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 uppercase tracking-widest pr-1">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-widest pr-1">
           <SlidersHorizontal className="h-3 w-3" />
           <span>Filtres</span>
           {activeFilterCount > 0 && (
@@ -87,7 +87,7 @@ export function DataTableToolbar<TData>({
           )}
         </div>
 
-        <div className="h-5 w-px bg-slate-100" />
+        <div className="h-5 w-px bg-border" />
 
         <MultiSelectFilterDropdown
           label="Statut"
@@ -114,14 +114,14 @@ export function DataTableToolbar<TData>({
           )}
         />
 
-        <div className="h-5 w-px bg-slate-100" />
+        <div className="h-5 w-px bg-border" />
 
         <button
           onClick={onToggleStarred}
           className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
             starredOnly
               ? "bg-amber-50 border-amber-300 text-amber-600"
-              : "bg-transparent border-transparent text-slate-400 hover:text-amber-500 hover:bg-amber-50 hover:border-amber-200"
+              : "bg-transparent border-transparent text-muted-foreground hover:text-amber-500 hover:bg-amber-50 hover:border-amber-200"
           }`}
         >
           <Star className={`h-3.5 w-3.5 ${starredOnly ? "fill-amber-400 text-amber-400" : ""}`} />
@@ -130,13 +130,13 @@ export function DataTableToolbar<TData>({
 
         {isFiltered && (
           <>
-            <div className="h-5 w-px bg-slate-100" />
+            <div className="h-5 w-px bg-border" />
             <button
               onClick={() => {
                 setSearchInput("");
                 onReset();
               }}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors px-1 py-1 rounded-md hover:bg-red-50"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-red-500 transition-colors px-1 py-1 rounded-md hover:bg-red-50"
             >
               <X className="h-3.5 w-3.5" />
               Réinitialiser

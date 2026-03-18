@@ -66,10 +66,10 @@ export default function ProfilePage() {
             )}
 
             <form action={formAction}>
-                <Card className="border-slate-200 shadow-sm overflow-hidden">
-                    <CardHeader className="bg-white border-b border-slate-100">
+                <Card className="border-border shadow-sm overflow-hidden">
+                    <CardHeader className="bg-card border-b border-border">
                         <div className="flex items-center gap-2">
-                            <div className="p-2 bg-blue-50 rounded-lg">
+                            <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
                                 <User className="h-5 w-5 text-blue-600" />
                             </div>
                             <div>
@@ -84,7 +84,7 @@ export default function ProfilePage() {
                     <CardContent className="p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="first_name" className="text-slate-700">Prénom</Label>
+                                <Label htmlFor="first_name" className="text-foreground">Prénom</Label>
                                 <Input
                                     id="first_name"
                                     name="first_name"
@@ -98,7 +98,7 @@ export default function ProfilePage() {
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="last_name" className="text-slate-700">Nom</Label>
+                                <Label htmlFor="last_name" className="text-foreground">Nom</Label>
                                 <Input
                                     id="last_name"
                                     name="last_name"
@@ -113,12 +113,12 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        <Separator className="bg-slate-100" />
+                        <Separator />
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-slate-700 flex items-center gap-2">
-                                    <Phone className="h-3.5 w-3.5 text-slate-400" />
+                                <Label htmlFor="phone" className="text-foreground flex items-center gap-2">
+                                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                                     Téléphone
                                 </Label>
                                 <Input
@@ -131,19 +131,19 @@ export default function ProfilePage() {
                                 />
                             </div>
                             <div className="space-y-2 uppercase tracking-wide">
-                                <Label htmlFor="position" className="text-slate-700 flex items-center gap-2">
-                                    <Briefcase className="h-3.5 w-3.5 text-slate-400" />
+                                <Label htmlFor="position" className="text-foreground flex items-center gap-2">
+                                    <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
                                     Rôle actuel
                                 </Label>
-                                <div className="px-3 py-2 rounded-md bg-slate-50 border border-slate-200 text-sm text-slate-500 font-medium select-none">
+                                <div className="px-3 py-2 rounded-md bg-muted border border-border text-sm text-muted-foreground font-medium select-none">
                                     {mapRoleToPosition(profile.role)}
                                 </div>
                             </div>
                         </div>
                     </CardContent>
 
-                    <CardFooter className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex justify-between items-center">
-                        <span className="text-xs text-slate-400 italic">
+                    <CardFooter className="bg-muted/50 border-t border-border px-6 py-4 flex justify-between items-center">
+                        <span className="text-xs text-muted-foreground italic">
                             Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
                         </span>
                         <Button type="submit" disabled={isPending} className="shadow-sm transition-all active:scale-95">
@@ -160,29 +160,29 @@ export default function ProfilePage() {
                 </Card>
             </form>
 
-            <Card className="border-slate-200 shadow-sm border-l-4 border-l-blue-400">
+            <Card className="border-border shadow-sm border-l-4 border-l-blue-400">
                 <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-slate-100 rounded-full text-slate-500">
+                            <div className="p-3 bg-muted rounded-full text-muted-foreground">
                                 <Mail className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-slate-900 italic">Adresse email du compte</p>
-                                <p className="text-sm text-slate-500">{profile.email}</p>
+                                <p className="text-sm font-semibold text-foreground italic">Adresse email du compte</p>
+                                <p className="text-sm text-muted-foreground">{profile.email}</p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="w-fit text-slate-500 font-normal">
+                        <Badge variant="outline" className="w-fit text-muted-foreground font-normal">
                             Non modifiable
                         </Badge>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
-                <CardHeader className="bg-white border-b border-slate-100">
+            <Card className="border-border shadow-sm overflow-hidden">
+                <CardHeader className="bg-card border-b border-border">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-violet-50 rounded-lg">
+                        <div className="p-2 bg-violet-50 dark:bg-violet-950/40 rounded-lg">
                             <Bell className="h-5 w-5 text-violet-600" />
                         </div>
                         <div>
@@ -197,8 +197,8 @@ export default function ProfilePage() {
                     {NOTIF_OPTIONS.map(({ key, label, description }) => (
                         <div key={key} className="flex items-center justify-between gap-4">
                             <div>
-                                <p className="text-sm font-medium text-slate-900">{label}</p>
-                                <p className="text-xs text-slate-500">{description}</p>
+                                <p className="text-sm font-medium text-foreground">{label}</p>
+                                <p className="text-xs text-muted-foreground">{description}</p>
                             </div>
                             <Switch
                                 checked={notifPrefs[key]}
@@ -210,11 +210,11 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            <Card className="border-slate-200 shadow-sm opacity-90 transition-opacity hover:opacity-100">
+            <Card className="border-border shadow-sm opacity-90 transition-opacity hover:opacity-100">
                 <CardHeader>
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-slate-100 rounded-lg">
-                            <Lock className="h-5 w-5 text-slate-600" />
+                        <div className="p-2 bg-muted rounded-lg">
+                            <Lock className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
                             <CardTitle className="text-lg italic">Sécurité & Mot de passe</CardTitle>
@@ -227,21 +227,21 @@ export default function ProfilePage() {
                 <CardContent className="p-6 space-y-4 pt-0">
                     <div className="grid grid-cols-1 gap-4 max-w-md">
                         <div className="space-y-2">
-                            <Label className="text-slate-400">Ancien mot de passe</Label>
-                            <Input type="password" disabled className="bg-slate-50/50 cursor-not-allowed border-dashed" placeholder="••••••••" />
+                            <Label className="text-muted-foreground">Ancien mot de passe</Label>
+                            <Input type="password" disabled className="bg-muted/50 cursor-not-allowed border-dashed" placeholder="••••••••" />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-slate-400">Nouveau mot de passe</Label>
-                            <Input type="password" disabled className="bg-slate-50/50 cursor-not-allowed border-dashed" placeholder="••••••••" />
+                            <Label className="text-muted-foreground">Nouveau mot de passe</Label>
+                            <Input type="password" disabled className="bg-muted/50 cursor-not-allowed border-dashed" placeholder="••••••••" />
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+                <CardFooter className="bg-muted/50 border-t border-border px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-full border border-amber-100 dark:border-amber-800/40">
                         <Sparkles className="h-3.5 w-3.5" />
                         <span className="text-[11px] font-bold uppercase tracking-tighter">Bientôt disponible</span>
                     </div>
-                    <Button variant="outline" disabled className="text-slate-400 border-slate-200">
+                    <Button variant="outline" disabled className="text-muted-foreground border-border">
                         Changer le mot de passe
                     </Button>
                 </CardFooter>

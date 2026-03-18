@@ -71,12 +71,12 @@ function countryFlag(code: string): string {
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-slate-200/60 bg-white/95 backdrop-blur-sm px-4 py-3 shadow-xl">
-      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+    <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm px-4 py-3 shadow-xl">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
       <div className="flex items-center gap-2">
         <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(149,125,246,0.6)]" />
-        <p className="text-sm font-semibold text-slate-900">
-          {payload[0].value} <span className="text-slate-500 font-medium">clic{payload[0].value !== 1 ? "s" : ""}</span>
+        <p className="text-sm font-semibold text-foreground">
+          {payload[0].value} <span className="text-muted-foreground font-medium">clic{payload[0].value !== 1 ? "s" : ""}</span>
         </p>
       </div>
     </div>
@@ -84,7 +84,7 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 function Bone({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-2xl bg-slate-100/80", className)} />;
+  return <div className={cn("animate-pulse rounded-2xl bg-muted", className)} />;
 }
 
 function LoadingSkeleton() {
@@ -106,12 +106,12 @@ function EmptyState({ range }: { range: AnalyticsRange }) {
   const label =
     range === "24h" ? "dernières 24h" : range === "7d" ? "7 derniers jours" : "30 derniers jours";
   return (
-    <div className="flex flex-col items-center justify-center py-32 text-center rounded-3xl border border-dashed border-slate-200/80 bg-slate-50/50">
-      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-200/50 bg-white shadow-sm">
+    <div className="flex flex-col items-center justify-center py-32 text-center rounded-3xl border border-dashed border-border bg-muted/30">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-card shadow-sm">
         <MousePointerClick className="h-6 w-6 text-indigo-300" />
       </div>
-      <p className="text-lg font-semibold text-slate-900 tracking-tight">Aucune activité enregistrée</p>
-      <p className="mt-2 text-sm text-slate-500 max-w-sm leading-relaxed">
+      <p className="text-lg font-semibold text-foreground tracking-tight">Aucune activité enregistrée</p>
+      <p className="mt-2 text-sm text-muted-foreground max-w-sm leading-relaxed">
         Nous n'avons détecté aucun trafic sur vos liens de tracking lors des {label}.
       </p>
     </div>
@@ -144,23 +144,23 @@ export function AnalyticsDashboard({
     range === "24h" ? "dernières 24h" : range === "7d" ? "7 derniers jours" : "30 derniers jours";
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-background">
       {/* ── Sticky header with premium segmented control ── */}
-      <div className="sticky top-0 z-50 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm">
             <Link
               href="/app/agency"
-              className="flex items-center gap-1.5 font-medium text-slate-500 hover:text-indigo-600 transition-colors bg-slate-50 hover:bg-slate-100 px-2.5 py-1.5 rounded-md border border-slate-200/50"
+              className="flex items-center gap-1.5 font-medium text-muted-foreground hover:text-indigo-600 transition-colors bg-muted hover:bg-muted px-2.5 py-1.5 rounded-md border border-border/50"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               {agencyName}
             </Link>
-            <span className="text-slate-300">/</span>
-            <span className="font-semibold text-slate-900 tracking-tight">Vue d'ensemble</span>
+            <span className="text-muted-foreground/40">/</span>
+            <span className="font-semibold text-foreground tracking-tight">Vue d'ensemble</span>
           </div>
 
-          <div className="flex items-center p-1 rounded-xl border border-slate-200/60 bg-slate-100/50">
+          <div className="flex items-center p-1 rounded-xl border border-border bg-muted/50">
             {RANGES.map((r) => {
               const isActive = range === r.value;
               return (
@@ -171,8 +171,8 @@ export function AnalyticsDashboard({
                   className={cn(
                     "relative px-4 py-1.5 text-xs font-semibold transition-all duration-300 rounded-lg disabled:opacity-50",
                     isActive
-                      ? "text-indigo-700 shadow-sm bg-white"
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/30"
+                      ? "text-indigo-700 dark:text-indigo-400 shadow-sm bg-card"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
                   {r.label}
@@ -195,9 +195,9 @@ export function AnalyticsDashboard({
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {(
                 [
-                  { label: "Clics Totaux", value: data.totalClicks, sub: rangeLabel, icon: MousePointerClick, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
-                  { label: "Visiteurs uniques", value: data.uniqueIPs, sub: "IPs distinctes", icon: Users, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
-                  { label: "Liens Actifs", value: data.activeLinks, sub: "en ce moment", icon: Link2, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+                  { label: "Clics Totaux", value: data.totalClicks, sub: rangeLabel, icon: MousePointerClick, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/40", border: "border-violet-100 dark:border-violet-800/40" },
+                  { label: "Visiteurs uniques", value: data.uniqueIPs, sub: "IPs distinctes", icon: Users, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/40", border: "border-blue-100 dark:border-blue-800/40" },
+                  { label: "Liens Actifs", value: data.activeLinks, sub: "en ce moment", icon: Link2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/40", border: "border-emerald-100 dark:border-emerald-800/40" },
                   {
                     label: "Top Pays",
                     value: data.topCountry
@@ -205,9 +205,9 @@ export function AnalyticsDashboard({
                       : "—",
                     sub: "le plus d'engagement",
                     icon: Globe,
-                    color: "text-amber-600",
-                    bg: "bg-amber-50",
-                    border: "border-amber-100",
+                    color: "text-amber-600 dark:text-amber-400",
+                    bg: "bg-amber-50 dark:bg-amber-950/40",
+                    border: "border-amber-100 dark:border-amber-800/40",
                   },
                 ] as const
               ).map((stat) => {
@@ -216,17 +216,17 @@ export function AnalyticsDashboard({
                 return (
                   <div
                     key={stat.label}
-                    className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-300"
+                    className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-300"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
                       <div className={cn("rounded-lg p-1.5 border transition-colors", stat.bg, stat.border, stat.color)}>
                         <Icon className="h-4 w-4" />
                       </div>
                     </div>
                     <p
                       className={cn(
-                        "font-semibold text-slate-900 tracking-tight",
+                        "font-semibold text-foreground tracking-tight",
                         isStr ? "text-xl truncate" : "text-4xl tabular-nums"
                       )}
                     >
@@ -238,10 +238,10 @@ export function AnalyticsDashboard({
             </div>
 
             {/* Chart Area */}
-            <div className="rounded-3xl border bg-white overflow-hidden">
-              <div className="px-8 py-6 border-b border-slate-100/80 bg-slate-50/30">
+            <div className="rounded-3xl border border-border bg-card overflow-hidden">
+              <div className="px-8 py-6 border-b border-border/50 bg-muted/20">
                 <h2 className="card-title">Trafic dans le temps</h2>
-                <p className="text-sm text-slate-500 font-medium mt-1">
+                <p className="text-sm text-muted-foreground font-medium mt-1">
                   {range === "24h"
                     ? "Évolution horaire · Dernières 24h"
                     : range === "7d"
@@ -261,23 +261,23 @@ export function AnalyticsDashboard({
                         <stop offset="100%" stopColor="#957DF6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis
                       dataKey="label"
-                      tick={{ fontSize: 11, fill: "#64748b", fontWeight: 500 }}
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                       axisLine={false}
                       tickLine={false}
                       tickMargin={12}
                       interval={range === "24h" ? 3 : range === "30d" ? 4 : 0}
                     />
                     <YAxis
-                      tick={{ fontSize: 11, fill: "#64748b", fontWeight: 500 }}
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                       axisLine={false}
                       tickLine={false}
                       tickMargin={12}
                       allowDecimals={false}
                     />
-                    <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1, strokeDasharray: '4 4' }} />
                     <Area
                       type="monotone"
                       dataKey="clicks"
@@ -295,33 +295,33 @@ export function AnalyticsDashboard({
             {/* Countries + Devices */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Countries */}
-              <div className="rounded-3xl border bg-white flex flex-col">
-                <div className="px-8 py-6 border-b border-slate-100/80 flex items-center gap-3 bg-slate-50/30">
-                  <div className="p-2 bg-amber-50 text-amber-600 rounded-xl border border-amber-100 shadow-sm">
+              <div className="rounded-3xl border border-border bg-card flex flex-col">
+                <div className="px-8 py-6 border-b border-border/50 flex items-center gap-3 bg-muted/20">
+                  <div className="p-2 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-100 dark:border-amber-800/40 shadow-sm">
                     <Globe className="h-4 w-4" />
                   </div>
                   <h2 className="card-title">Régions</h2>
                 </div>
                 <div className="p-8 space-y-6 flex-1">
                   {data.countryBreakdown.length === 0 ? (
-                    <p className="text-sm text-slate-400 font-medium">Aucune donnée de localisation</p>
+                    <p className="text-sm text-muted-foreground font-medium">Aucune donnée de localisation</p>
                   ) : (
                     data.countryBreakdown.map((c) => (
                       <div key={c.code} className="flex items-center gap-4 group/country">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-lg shadow-sm">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted border border-border text-lg shadow-sm">
                           {countryFlag(c.code)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-semibold text-slate-800 truncate">
+                            <span className="text-sm font-semibold text-foreground truncate">
                               {COUNTRY_NAMES[c.code] ?? c.code}
                             </span>
-                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 tabular-nums">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground tabular-nums">
                               {c.clicks}
-                              <span className="text-xs font-medium text-slate-400 w-8 text-right">{c.pct}%</span>
+                              <span className="text-xs font-medium text-muted-foreground w-8 text-right">{c.pct}%</span>
                             </div>
                           </div>
-                          <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden shadow-inner">
+                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden shadow-inner">
                             <div
                               className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-1000 ease-out"
                               style={{ width: `${c.pct}%` }}
@@ -335,16 +335,16 @@ export function AnalyticsDashboard({
               </div>
 
               {/* Devices */}
-              <div className="rounded-3xl border bg-white flex flex-col">
-                <div className="px-8 py-6 border-b border-slate-100/80 flex items-center gap-3 bg-slate-50/30">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 shadow-sm">
+              <div className="rounded-3xl border border-border bg-card flex flex-col">
+                <div className="px-8 py-6 border-b border-border/50 flex items-center gap-3 bg-muted/20">
+                  <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl border border-indigo-100 dark:border-indigo-800/40 shadow-sm">
                     <Monitor className="h-4 w-4" />
                   </div>
                   <h2 className="card-title">Plateformes</h2>
                 </div>
                 <div className="p-8 space-y-6 flex-1">
                   {data.deviceBreakdown.length === 0 ? (
-                    <p className="text-sm text-slate-400 font-medium">Aucune donnée technique</p>
+                    <p className="text-sm text-muted-foreground font-medium">Aucune donnée technique</p>
                   ) : (
                     data.deviceBreakdown.map((d) => {
                       const Icon = DEVICE_ICONS[d.device] ?? Monitor;
@@ -352,18 +352,18 @@ export function AnalyticsDashboard({
                       const [bgColor, textColor] = theme.split(" ");
                       return (
                         <div key={d.device} className="flex items-center gap-4 group/device">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 shadow-sm transition-colors group-hover/device:border-slate-200">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted border border-border shadow-sm transition-colors group-hover/device:border-border">
                             <Icon className={cn("h-4 w-4 transition-colors", textColor)} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-semibold text-slate-800">{d.device}</span>
-                              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 tabular-nums">
+                              <span className="text-sm font-semibold text-foreground">{d.device}</span>
+                              <div className="flex items-center gap-2 text-sm font-semibold text-foreground tabular-nums">
                                 {d.clicks}
-                                <span className="text-xs font-medium text-slate-400 w-8 text-right">{d.pct}%</span>
+                                <span className="text-xs font-medium text-muted-foreground w-8 text-right">{d.pct}%</span>
                               </div>
                             </div>
-                            <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden shadow-inner">
+                            <div className="h-2 w-full rounded-full bg-muted overflow-hidden shadow-inner">
                               <div
                                 className={cn("h-full rounded-full transition-all duration-1000 ease-out", bgColor)}
                                 style={{ width: `${d.pct}%` }}
@@ -381,14 +381,14 @@ export function AnalyticsDashboard({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Top links */}
               {data.topLinks.some((l) => l.click_count > 0) && (
-                <div className="rounded-3xl border bg-white overflow-hidden flex flex-col">
-                  <div className="px-8 py-6 border-b border-slate-100/80 flex items-center gap-3 bg-slate-50/30">
-                    <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shadow-sm">
+                <div className="rounded-3xl border border-border bg-card overflow-hidden flex flex-col">
+                  <div className="px-8 py-6 border-b border-border/50 flex items-center gap-3 bg-muted/20">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-800/40 shadow-sm">
                       <TrendingUp className="h-4 w-4" />
                     </div>
                     <h2 className="card-title">Top Liens</h2>
                   </div>
-                  <div className="divide-y divide-slate-100/80 flex-1">
+                  <div className="divide-y divide-border/50 flex-1">
                     {data.topLinks
                       .filter((l) => l.click_count > 0)
                       .map((link, i) => {
@@ -396,8 +396,8 @@ export function AnalyticsDashboard({
                         const pct = Math.round((link.click_count / maxClicks) * 100);
                         const href = link.opportunity_slug ? `/app/opportunities/${link.opportunity_slug}` : null;
                         return (
-                          <div key={link.opportunity_slug ?? i} className="px-8 py-5 flex items-center gap-5 hover:bg-slate-50/50 transition-colors group/link">
-                            <span className="w-5 shrink-0 text-center text-xs font-bold text-slate-300 tabular-nums group-hover/link:text-blue-500 transition-colors">
+                          <div key={link.opportunity_slug ?? i} className="px-8 py-5 flex items-center gap-5 hover:bg-muted/30 transition-colors group/link">
+                            <span className="w-5 shrink-0 text-center text-xs font-bold text-muted-foreground/40 tabular-nums group-hover/link:text-blue-500 transition-colors">
                               {i + 1}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -405,23 +405,23 @@ export function AnalyticsDashboard({
                                 {href ? (
                                   <Link
                                     href={href}
-                                    className="text-sm font-semibold text-slate-800 truncate tracking-tight hover:text-blue-700 hover:underline underline-offset-2 transition-colors"
+                                    className="text-sm font-semibold text-foreground truncate tracking-tight hover:text-blue-600 dark:hover:text-blue-400 hover:underline underline-offset-2 transition-colors"
                                   >
                                     {link.opportunity_name ?? "—"}
                                   </Link>
                                 ) : (
-                                  <span className="text-sm font-semibold text-slate-800 truncate tracking-tight">
+                                  <span className="text-sm font-semibold text-foreground truncate tracking-tight">
                                     {link.opportunity_name ?? "—"}
                                   </span>
                                 )}
-                                <span className="ml-3 shrink-0 rounded-md bg-white border border-slate-200 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-900 shadow-sm group-hover/link:border-blue-200">
+                                <span className="ml-3 shrink-0 rounded-md bg-card border border-border px-2.5 py-0.5 text-xs font-semibold tabular-nums text-foreground shadow-sm group-hover/link:border-blue-200">
                                   {link.click_count} clics
                                 </span>
                               </div>
                               {link.links_count > 1 && (
-                                <p className="text-[10px] text-slate-400 mb-2">{link.links_count} liens trackés</p>
+                                <p className="text-[10px] text-muted-foreground mb-2">{link.links_count} liens trackés</p>
                               )}
-                              <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden mt-2">
+                              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mt-2">
                                 <div
                                   className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-1000 ease-out"
                                   style={{ width: `${pct}%` }}
@@ -437,65 +437,65 @@ export function AnalyticsDashboard({
 
               {/* Recent activity */}
               {data.recentClicks.length > 0 && (
-                <div className="rounded-3xl border bg-white overflow-hidden flex flex-col">
-                  <div className="px-8 py-6 border-b border-slate-100/80 flex items-center justify-between bg-slate-50/30">
+                <div className="rounded-3xl border border-border bg-card overflow-hidden flex flex-col">
+                  <div className="px-8 py-6 border-b border-border/50 flex items-center justify-between bg-muted/20">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 shadow-sm">
+                      <div className="p-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-800/40 shadow-sm">
                         <Zap className="h-4 w-4" />
                       </div>
                       <h2 className="card-title">Flux en direct</h2>
                     </div>
-                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-card border border-border shadow-sm">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                       </span>
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         Live
                       </span>
                     </div>
                   </div>
-                  <div className="divide-y divide-slate-100/80 flex-1">
+                  <div className="divide-y divide-border/50 flex-1">
                     {data.recentClicks.slice(0, 6).map((click, i) => {
                       const DevIcon = DEVICE_ICONS[click.device_type ?? "Desktop"] ?? Monitor;
                       return (
                         <div
                           key={i}
-                          className="px-8 py-4 flex items-center gap-4 hover:bg-slate-50/50 transition-colors group/click"
+                          className="px-8 py-4 flex items-center gap-4 hover:bg-muted/30 transition-colors group/click"
                         >
-                          <div className="h-9 w-9 shrink-0 rounded-xl border border-slate-200/60 bg-white shadow-sm flex items-center justify-center group-hover/click:border-emerald-200 transition-colors">
-                            <DevIcon className="h-4 w-4 text-slate-400 group-hover/click:text-emerald-600 transition-colors" />
+                          <div className="h-9 w-9 shrink-0 rounded-xl border border-border bg-card shadow-sm flex items-center justify-center group-hover/click:border-emerald-200 transition-colors">
+                            <DevIcon className="h-4 w-4 text-muted-foreground group-hover/click:text-emerald-600 dark:group-hover/click:text-emerald-400 transition-colors" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                              <span className="font-mono text-xs font-semibold text-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
                                 {click.ip_address}
                               </span>
                               {click.country_code && (
-                                <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+                                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                                   {countryFlag(click.country_code)}
                                   {COUNTRY_NAMES[click.country_code] ?? click.country_code}
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 text-[11px] font-medium text-slate-400 tracking-tight">
+                            <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground tracking-tight">
                               {click.os_type && <span>{click.os_type}</span>}
                               {click.os_type && click.opportunity_name && <span>•</span>}
                               {click.opportunity_name && (
                                 click.opportunity_slug ? (
                                   <Link
                                     href={`/app/opportunities/${click.opportunity_slug}`}
-                                    className="text-slate-600 hover:text-blue-600 hover:underline underline-offset-2 transition-colors"
+                                    className="text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:underline underline-offset-2 transition-colors"
                                   >
                                     {click.opportunity_name}
                                   </Link>
                                 ) : (
-                                  <span className="text-slate-600">{click.opportunity_name}</span>
+                                  <span className="text-muted-foreground">{click.opportunity_name}</span>
                                 )
                               )}
                             </div>
                           </div>
-                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-slate-400 text-right w-16">
+                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground text-right w-16">
                             {dayjs(click.clicked_at).locale("fr").fromNow(true)}
                           </span>
                         </div>

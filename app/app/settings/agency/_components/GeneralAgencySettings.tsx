@@ -17,10 +17,10 @@ export default function GeneralAgencySettings(GenralAgencySettingsProps: General
 	return (
 		<TabsContent value="general" className="space-y-6">
 			<form action={agencyFormAction}>
-				<Card className="border-slate-200 shadow-sm overflow-hidden">
-					<CardHeader className="bg-white border-b border-slate-100 pb-6">
+				<Card className="border-border shadow-sm overflow-hidden">
+					<CardHeader className="bg-card border-b border-border pb-6">
 						<div className="flex items-center gap-3">
-							<div className="p-2 bg-blue-50 rounded-lg">
+							<div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
 								<Building className="h-5 w-5 text-blue-600" />
 							</div>
 							<div>
@@ -33,7 +33,7 @@ export default function GeneralAgencySettings(GenralAgencySettingsProps: General
 					<CardContent className="p-6 space-y-8">
 						<div className="grid gap-6 md:grid-cols-2">
 							<div className="space-y-2">
-								<Label htmlFor="agency-name" className="text-slate-700 font-medium">Nom commercial</Label>
+								<Label htmlFor="agency-name" className="text-foreground font-medium">Nom commercial</Label>
 								<Input
 									id="agency-name"
 									name="name"
@@ -46,8 +46,8 @@ export default function GeneralAgencySettings(GenralAgencySettingsProps: General
 								)}
 							</div>
 							<div className="space-y-2">
-								<Label htmlFor="agency-website" className="text-slate-700 font-medium flex items-center gap-2">
-									<Globe className="h-3.5 w-3.5 text-slate-400" /> Site internet
+								<Label htmlFor="agency-website" className="text-foreground font-medium flex items-center gap-2">
+									<Globe className="h-3.5 w-3.5 text-muted-foreground" /> Site internet
 								</Label>
 								<Input id="agency-website" name="website" type="url" placeholder="https://..." defaultValue={agency.website!} disabled={isAgencyPending} />
 							</div>
@@ -55,29 +55,29 @@ export default function GeneralAgencySettings(GenralAgencySettingsProps: General
 
 						<div className="grid gap-6 md:grid-cols-2">
 							<div className="space-y-2">
-								<Label htmlFor="agency-email" className="text-slate-700 font-medium flex items-center gap-2">
-									<Mail className="h-3.5 w-3.5 text-slate-400" /> Email contact
+								<Label htmlFor="agency-email" className="text-foreground font-medium flex items-center gap-2">
+									<Mail className="h-3.5 w-3.5 text-muted-foreground" /> Email contact
 								</Label>
 								<Input id="agency-email" name="email" type="email" defaultValue={agency.email!} disabled={isAgencyPending} />
 							</div>
 							<div className="space-y-2">
-								<Label htmlFor="agency-phone" className="text-slate-700 font-medium flex items-center gap-2">
-									<Phone className="h-3.5 w-3.5 text-slate-400" /> Téléphone
+								<Label htmlFor="agency-phone" className="text-foreground font-medium flex items-center gap-2">
+									<Phone className="h-3.5 w-3.5 text-muted-foreground" /> Téléphone
 								</Label>
 								<Input id="agency-phone" name="phone" type="tel" defaultValue={agency.phone!} disabled={isAgencyPending} />
 							</div>
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor="agency-address" className="text-slate-700 font-medium flex items-center gap-2">
-								<MapPin className="h-3.5 w-3.5 text-slate-400" /> Adresse du siège
+							<Label htmlFor="agency-address" className="text-foreground font-medium flex items-center gap-2">
+								<MapPin className="h-3.5 w-3.5 text-muted-foreground" /> Adresse du siège
 							</Label>
 							<Input id="agency-address" name="address" defaultValue={agency.address!} disabled={isAgencyPending} />
 						</div>
 					</CardContent>
 
-					<CardFooter className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex justify-between items-center">
-						<p className="text-[11px] text-slate-400 uppercase font-bold tracking-wider italic">Modifications sécurisées</p>
+					<CardFooter className="bg-muted/50 border-t border-border px-6 py-4 flex justify-between items-center">
+						<p className="text-[11px] text-muted-foreground uppercase font-bold tracking-wider italic">Modifications sécurisées</p>
 						<Button type="submit" disabled={isAgencyPending} className="shadow-sm transition-all active:scale-95">
 							{isAgencyPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
 							Enregistrer les changements

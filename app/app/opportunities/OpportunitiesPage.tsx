@@ -77,9 +77,9 @@ export default function OpportunitiesPage() {
             <div className="p-2 bg-blue-600 rounded-xl shadow-sm">
               <Briefcase className="h-4 w-4 text-white" />
             </div>
-            <h1 className="text-2xl text-slate-900">Pipeline Commercial</h1>
+            <h1 className="text-2xl text-foreground">Pipeline Commercial</h1>
           </div>
-          <p className="text-slate-500 text-sm font-medium">Gérez vos prospects et maximisez vos conversions.</p>
+          <p className="text-muted-foreground text-sm font-medium">Gérez vos prospects et maximisez vos conversions.</p>
         </div>
 
         <Button
@@ -97,13 +97,13 @@ export default function OpportunitiesPage() {
           const count = statusCounts[status] || 0;
           const colorClass = STATUS_COLORS[status].split(" ")[0];
           return (
-            <div key={status} className="bg-white border p-3 rounded-xl flex items-center gap-3 hover:border-primary/40 transition-colors">
+            <div key={status} className="bg-card border p-3 rounded-xl flex items-center gap-3 hover:border-primary/40 transition-colors">
               <div className={`h-2.5 w-2.5 rounded-full ${colorClass.replace("text-", "bg-")}`} />
               <div className="flex-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
                   {mapOpportunityStatusLabel[status]}
                 </p>
-                <p className="text-xl font-black text-slate-900 leading-none mt-0.5">{count}</p>
+                <p className="text-xl font-black text-foreground leading-none mt-0.5">{count}</p>
               </div>
             </div>
           );
@@ -111,7 +111,7 @@ export default function OpportunitiesPage() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl border overflow-hidden flex-1 flex flex-col min-h-[500px]">
+      <div className="bg-card rounded-2xl border overflow-hidden flex-1 flex flex-col min-h-[500px]">
         <DataTable
           columns={columns}
           data={opportunities}

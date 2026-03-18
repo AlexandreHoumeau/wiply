@@ -3,6 +3,7 @@ import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { UpgradeDialogProvider } from "@/providers/UpgradeDialogProvider";
 import type { Metadata } from "next";
 import { Inter, Passion_One } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -70,19 +71,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" translate="no">
+    <html lang="fr" translate="no" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${passionOne.variable} antialiased`}
       >
-        <ReactQueryProvider>
-          <UpgradeDialogProvider>
-            <TooltipProvider>
-              {children}
-            </TooltipProvider>
-          </UpgradeDialogProvider>
-        </ReactQueryProvider>
-        <Toaster />
-        <CookieConsent />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ReactQueryProvider>
+            <UpgradeDialogProvider>
+              <TooltipProvider>
+                {children}
+              </TooltipProvider>
+            </UpgradeDialogProvider>
+          </ReactQueryProvider>
+          <Toaster />
+          <CookieConsent />
+        </ThemeProvider>
       </body>
     </html>
   );

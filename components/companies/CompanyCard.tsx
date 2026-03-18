@@ -38,7 +38,7 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
   }
 
   return (
-    <div className="bg-white border border-slate-200/75 rounded-3xl p-6 flex flex-col h-full transition-all duration-300 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1">
+    <div className="bg-card border border-border/75 rounded-3xl p-6 flex flex-col h-full transition-all duration-300 hover:border-border hover:shadow-xl hover:-translate-y-1">
 
       {/* Top row: avatar + name + badge */}
       <div className="flex items-start justify-between gap-3 mb-5">
@@ -47,11 +47,11 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
             {company.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-slate-900 truncate leading-tight">{company.name}</p>
+            <p className="font-bold text-foreground truncate leading-tight">{company.name}</p>
             {company.business_sector ? (
-              <p className="text-xs text-slate-400 font-medium mt-0.5 truncate">{company.business_sector}</p>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">{company.business_sector}</p>
             ) : (
-              <p className="text-xs text-slate-300 italic mt-0.5">Secteur non défini</p>
+              <p className="text-xs text-muted-foreground/50 italic mt-0.5">Secteur non défini</p>
             )}
           </div>
         </div>
@@ -60,8 +60,8 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
             className={cn(
               "text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full",
               isClient
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-slate-100 text-slate-600"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                : "bg-muted text-muted-foreground"
             )}
           >
             {isClient ? "Client" : "Prospect"}
@@ -70,7 +70,7 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button
-                className="h-7 w-7 flex items-center justify-center rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                className="h-7 w-7 flex items-center justify-center rounded-xl text-muted-foreground/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
                 disabled={isPending}
                 title="Supprimer l'entreprise"
               >
@@ -103,15 +103,15 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
         {company.email && (
           <a
             href={`mailto:${company.email}`}
-            className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-900 transition-colors group"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <Mail className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
+            <Mail className="w-3.5 h-3.5 shrink-0 text-muted-foreground/60 group-hover:text-muted-foreground" />
             <span className="truncate">{company.email}</span>
           </a>
         )}
         {company.phone_number && (
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <Phone className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Phone className="w-3.5 h-3.5 shrink-0 text-muted-foreground/60" />
             <span>{company.phone_number}</span>
           </div>
         )}
@@ -120,22 +120,22 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
             href={company.website}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-900 transition-colors group"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <Globe className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
+            <Globe className="w-3.5 h-3.5 shrink-0 text-muted-foreground/60 group-hover:text-muted-foreground" />
             <span className="truncate">{company.website.replace(/^https?:\/\//, "")}</span>
           </a>
         )}
         {!company.email && !company.phone_number && !company.website && (
-          <p className="text-xs text-slate-300 italic">Aucune information de contact</p>
+          <p className="text-xs text-muted-foreground/50 italic">Aucune information de contact</p>
         )}
       </div>
 
       {/* Bottom: projects or opportunities */}
-      <div className="mt-5 pt-4 border-t border-slate-100">
+      <div className="mt-5 pt-4 border-t border-border/50">
         {isClient ? (
           <>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
               Projets
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -143,7 +143,7 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
                 <Link
                   key={p.id}
                   href={`/app/projects/${p.slug}`}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
                 >
                   {p.name}
                 </Link>
@@ -152,7 +152,7 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
           </>
         ) : (
           <>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
               Opportunités
             </p>
             {company.opportunities.length > 0 ? (
@@ -161,19 +161,19 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
                   <Link
                     key={o.id}
                     href={`/app/opportunities/${o.slug}`}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors"
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-muted-foreground border border-border hover:bg-muted/80 transition-colors"
                   >
                     {o.name}
                   </Link>
                 ))}
                 {company.opportunities.length > 2 && (
-                  <span className="text-xs text-slate-400 font-semibold self-center">
+                  <span className="text-xs text-muted-foreground font-semibold self-center">
                     +{company.opportunities.length - 2}
                   </span>
                 )}
               </div>
             ) : (
-              <p className="text-xs text-slate-300 italic">Aucune opportunité</p>
+              <p className="text-xs text-muted-foreground/50 italic">Aucune opportunité</p>
             )}
           </>
         )}

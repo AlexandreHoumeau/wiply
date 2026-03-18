@@ -65,8 +65,8 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="border-b border-slate-100">
+    <div className="flex flex-col h-full bg-card">
+      <div className="border-b border-border">
         <DataTableToolbar
           table={table}
           searchInput={searchInput}
@@ -83,11 +83,11 @@ export function DataTable<TData, TValue>({
       {/* TABLE CONTAINER */}
       <div className="flex-1 overflow-auto">
         <Table>
-          <TableHeader className="bg-slate-50/50 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <TableHeader className="bg-muted/50 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent border-none">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} colSpan={header.colSpan} className="h-11 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                  <TableHead key={header.id} colSpan={header.colSpan} className="h-11 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -98,7 +98,7 @@ export function DataTable<TData, TValue>({
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-[400px] text-center">
-                  <div className="flex flex-col items-center justify-center text-slate-400 gap-3">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground gap-3">
                     <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
                     <span className="text-sm font-medium">Chargement de vos opportunités...</span>
                   </div>
@@ -110,10 +110,10 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(
-                    "border-b border-slate-50 last:border-0 transition-colors group",
+                    "border-b border-border/30 last:border-0 transition-colors group",
                     (row.original as any).is_favorite
-                      ? "border-l-4 border-l-amber-400 bg-amber-50/30 hover:bg-amber-50/50"
-                      : "hover:bg-slate-50/80"
+                      ? "border-l-4 border-l-amber-400 bg-amber-50/30 dark:bg-amber-950/20 hover:bg-amber-50/50 dark:hover:bg-amber-950/30"
+                      : "hover:bg-muted/80"
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -125,7 +125,7 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-[400px] text-center text-slate-500 text-sm">
+                <TableCell colSpan={columns.length} className="h-[400px] text-center text-muted-foreground text-sm">
                   Aucune opportunité trouvée. Ajustez vos filtres ou créez-en une nouvelle.
                 </TableCell>
               </TableRow>
@@ -135,19 +135,19 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* PAGINATION */}
-      <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
-        <div className="text-xs font-medium text-slate-500">
-          Affichage de <span className="text-slate-900 font-bold">{data.length}</span> sur <span className="text-slate-900 font-bold">{total}</span> opportunités
+      <div className="border-t border-border bg-muted/50 px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
+        <div className="text-xs font-medium text-muted-foreground">
+          Affichage de <span className="text-foreground font-bold">{data.length}</span> sur <span className="text-foreground font-bold">{total}</span> opportunités
         </div>
 
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Lignes par page</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest hidden sm:block">Lignes par page</p>
             <Select value={`${pageSize}`} onValueChange={(value) => onFilterChange("pageSize", [value])}>
-              <SelectTrigger className="h-8 w-[70px] rounded-lg border-slate-200 bg-white text-xs font-bold focus:ring-blue-500 shadow-sm">
+              <SelectTrigger className="h-8 w-[70px] rounded-lg border-border bg-card text-xs font-bold focus:ring-blue-500 shadow-sm">
                 <SelectValue placeholder={pageSize} />
               </SelectTrigger>
-              <SelectContent side="top" className="rounded-xl shadow-xl border-slate-100">
+              <SelectContent side="top" className="rounded-xl shadow-xl border-border">
                 {[10, 20, 30, 50].map((size) => (
                   <SelectItem key={size} value={`${size}`} className="text-xs font-medium">
                     {size}
@@ -158,13 +158,13 @@ export function DataTable<TData, TValue>({
           </div>
 
           <div className="flex items-center space-x-1">
-            <Button variant="outline" className="h-8 w-8 p-0 rounded-lg border-slate-200 bg-white shadow-sm hover:text-blue-600 hover:border-blue-200 transition-all" onClick={() => onPagination(page - 1)} disabled={page === 1}>
+            <Button variant="outline" className="h-8 w-8 p-0 rounded-lg border-border bg-card shadow-sm hover:text-blue-600 hover:border-blue-200 transition-all" onClick={() => onPagination(page - 1)} disabled={page === 1}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex w-[80px] items-center justify-center text-xs font-bold text-slate-700">
+            <div className="flex w-[80px] items-center justify-center text-xs font-bold text-foreground">
               Page {page} / {Math.max(1, Math.ceil(total / pageSize))}
             </div>
-            <Button variant="outline" className="h-8 w-8 p-0 rounded-lg border-slate-200 bg-white shadow-sm hover:text-blue-600 hover:border-blue-200 transition-all" onClick={() => onPagination(page + 1)} disabled={page * pageSize >= total}>
+            <Button variant="outline" className="h-8 w-8 p-0 rounded-lg border-border bg-card shadow-sm hover:text-blue-600 hover:border-blue-200 transition-all" onClick={() => onPagination(page + 1)} disabled={page * pageSize >= total}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

@@ -51,24 +51,24 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl text-slate-900">
+          <h1 className="text-2xl text-foreground">
             Bonjour, {userContext.first_name} 👋
           </h1>
-          <p className="text-sm font-medium text-slate-500 mt-0.5">
+          <p className="text-sm font-medium text-muted-foreground mt-0.5">
             Voici l'état de votre agence aujourd'hui.
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
           <Link
             href="/app/opportunities"
-            className="inline-flex items-center gap-2 text-sm font-bold bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+            className="inline-flex items-center gap-2 text-sm font-bold bg-foreground text-background px-4 py-2 rounded-xl hover:bg-foreground/90 transition-all shadow-sm active:scale-95"
           >
             <Briefcase className="w-4 h-4" />
             Pipeline
           </Link>
           <Link
             href="/app/projects"
-            className="inline-flex items-center gap-2 text-sm font-bold bg-white text-slate-700 px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 transition-all shadow-sm active:scale-95"
+            className="inline-flex items-center gap-2 text-sm font-bold bg-card text-foreground px-4 py-2 rounded-xl border border-border hover:border-border/70 transition-all shadow-sm active:scale-95"
           >
             <FolderKanban className="w-4 h-4" />
             Projets
@@ -83,7 +83,7 @@ export default async function DashboardPage() {
           value={activeOpps}
           subtitle={`${wonCount} gagnée${wonCount !== 1 ? "s" : ""} au total`}
           icon={Briefcase}
-          iconBg="bg-blue-50"
+          iconBg="bg-blue-50 dark:bg-blue-950/40"
           iconColor="text-blue-600"
           href="/app/opportunities"
         />
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
               : "Pas encore de données"
           }
           icon={conversionRate !== null && conversionRate >= 50 ? TrendingUp : TrendingDown}
-          iconBg={conversionRate !== null && conversionRate >= 50 ? "bg-emerald-50" : "bg-red-50"}
+          iconBg={conversionRate !== null && conversionRate >= 50 ? "bg-emerald-50 dark:bg-emerald-950/40" : "bg-red-50 dark:bg-red-950/40"}
           iconColor={conversionRate !== null && conversionRate >= 50 ? "text-emerald-600" : "text-red-500"}
         />
         <KpiCard
@@ -104,7 +104,7 @@ export default async function DashboardPage() {
           value={activeProjectsCount}
           subtitle={`${totalProjectsCount} projet${totalProjectsCount !== 1 ? "s" : ""} au total`}
           icon={FolderKanban}
-          iconBg="bg-indigo-50"
+          iconBg="bg-indigo-50 dark:bg-indigo-950/40"
           iconColor="text-indigo-600"
           href="/app/projects"
         />
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
           value={uniqueProspects7d}
           subtitle={`${totalClicks7d} clic${totalClicks7d !== 1 ? "s" : ""} sur vos liens`}
           icon={MousePointerClick}
-          iconBg="bg-amber-50"
+          iconBg="bg-amber-50 dark:bg-amber-950/40"
           iconColor="text-amber-500"
           href="/app/opportunities"
         />

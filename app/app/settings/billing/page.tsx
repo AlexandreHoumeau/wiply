@@ -8,8 +8,8 @@ export default async function BillingPage() {
         <div className="space-y-8">
             <section>
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-slate-900">Facturation</h2>
-                    <p className="text-sm text-slate-500 mt-1">Gérez votre abonnement et vos paiements</p>
+                    <h2 className="text-xl font-semibold text-foreground">Facturation</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Gérez votre abonnement et vos paiements</p>
                 </div>
 
                 {settings.billing && settings.agency ? (

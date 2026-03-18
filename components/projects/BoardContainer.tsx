@@ -24,25 +24,25 @@ const VIEWS: { id: View; label: string; icon: any }[] = [
 ];
 
 const TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> = {
-    feature: { label: "Fonctionnalité", icon: AlignLeft,      color: "bg-blue-50 text-blue-700 border-blue-200" },
-    bug:     { label: "Bug",            icon: Bug,            color: "bg-red-50 text-red-700 border-red-200" },
-    design:  { label: "Design",         icon: LayoutTemplate, color: "bg-purple-50 text-purple-700 border-purple-200" },
-    content: { label: "Contenu",        icon: PenTool,        color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    setup:   { label: "Setup",          icon: Settings,       color: "bg-slate-100 text-slate-600 border-slate-200" },
+    feature: { label: "Fonctionnalité", icon: AlignLeft,      color: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/40" },
+    bug:     { label: "Bug",            icon: Bug,            color: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/40" },
+    design:  { label: "Design",         icon: LayoutTemplate, color: "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/40" },
+    content: { label: "Contenu",        icon: PenTool,        color: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40" },
+    setup:   { label: "Setup",          icon: Settings,       color: "bg-muted text-muted-foreground border-border" },
 };
 
 const STATUS_LABELS: Record<string, { label: string; icon: any; color: string }> = {
-    todo:        { label: "À faire",  icon: Inbox,        color: "bg-slate-100 text-slate-600 border-slate-300" },
-    in_progress: { label: "En cours", icon: PlayCircle,   color: "bg-blue-50 text-blue-700 border-blue-200" },
-    review:      { label: "En revue", icon: Clock,        color: "bg-amber-50 text-amber-700 border-amber-200" },
-    done:        { label: "Terminé",  icon: CheckCircle2, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    todo:        { label: "À faire",  icon: Inbox,        color: "bg-muted text-muted-foreground border-border" },
+    in_progress: { label: "En cours", icon: PlayCircle,   color: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/40" },
+    review:      { label: "En revue", icon: Clock,        color: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/40" },
+    done:        { label: "Terminé",  icon: CheckCircle2, color: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40" },
 };
 
 const PRIORITY_LABELS: Record<string, { label: string; icon: any; color: string }> = {
-    low:    { label: "Basse",   icon: ArrowDown,    color: "bg-slate-50 text-slate-500 border-slate-200" },
-    medium: { label: "Moyenne", icon: Equal,        color: "bg-slate-50 text-slate-600 border-slate-200" },
-    high:   { label: "Haute",   icon: ArrowUp,      color: "bg-orange-50 text-orange-600 border-orange-200" },
-    urgent: { label: "Urgente", icon: AlertOctagon, color: "bg-red-50 text-red-600 border-red-200" },
+    low:    { label: "Basse",   icon: ArrowDown,    color: "bg-muted text-muted-foreground border-border" },
+    medium: { label: "Moyenne", icon: Equal,        color: "bg-muted text-muted-foreground border-border" },
+    high:   { label: "Haute",   icon: ArrowUp,      color: "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/40" },
+    urgent: { label: "Urgente", icon: AlertOctagon, color: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40" },
 };
 
 export function BoardContainer({ projectId, initialTasks }: { projectId: string; initialTasks: any[] }) {
@@ -87,10 +87,10 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
     return (
         <div className="flex flex-col h-full">
             {/* ── Toolbar ──────────────────────────────────────────────── */}
-            <div className="shrink-0 bg-background border-b border-slate-200/60 px-6 py-2.5 flex items-center gap-4 flex-wrap">
+            <div className="shrink-0 bg-background border-b border-border/60 px-6 py-2.5 flex items-center gap-4 flex-wrap">
 
                 {/* View switcher */}
-                <div className="flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5 shrink-0">
+                <div className="flex items-center bg-muted rounded-lg p-0.5 gap-0.5 shrink-0">
                     {VIEWS.map(({ id, label, icon: Icon }) => (
                         <button
                             key={id}
@@ -98,8 +98,8 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                             className={cn(
                                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                                 view === id
-                                    ? "bg-white text-slate-900 shadow-sm"
-                                    : "text-slate-500 hover:text-slate-700"
+                                    ? "bg-card text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             <Icon className="w-3.5 h-3.5" />
@@ -108,7 +108,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                     ))}
                 </div>
 
-                <div className="w-px h-5 bg-slate-200 shrink-0" />
+                <div className="w-px h-5 bg-border shrink-0" />
 
                 {/* Assignee avatars */}
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -123,8 +123,8 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                                     className={cn(
                                         "h-7 w-7 rounded-full border-2 border-dashed flex items-center justify-center text-xs transition-all",
                                         isActive
-                                            ? "border-slate-500 bg-slate-200 text-slate-700 ring-2 ring-slate-400 ring-offset-1"
-                                            : "border-slate-300 text-slate-400 hover:border-slate-400 hover:bg-slate-50 opacity-70 hover:opacity-100"
+                                            ? "border-muted-foreground bg-muted text-foreground ring-2 ring-muted-foreground ring-offset-1"
+                                            : "border-muted-foreground/30 text-muted-foreground hover:border-muted-foreground/50 hover:bg-muted opacity-70 hover:opacity-100"
                                     )}
                                 >
                                     ?
@@ -147,7 +147,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                                     "h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white border-2 transition-all",
                                     isActive
                                         ? "border-[var(--brand-secondary,#6366F1)] ring-2 ring-[var(--brand-secondary,#6366F1)] ring-offset-1 scale-110"
-                                        : "border-white ring-1 ring-slate-200 opacity-60 hover:opacity-100 hover:scale-105"
+                                        : "border-background ring-1 ring-border opacity-60 hover:opacity-100 hover:scale-105"
                                 )}
                                 style={{ backgroundColor: "var(--brand-secondary,#6366F1)" }}
                             >
@@ -157,7 +157,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                     })}
                 </div>
 
-                <div className="w-px h-5 bg-slate-200 shrink-0" />
+                <div className="w-px h-5 bg-border shrink-0" />
 
                 {/* Status dropdown */}
                 <Popover>
@@ -165,12 +165,12 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                         <button className={cn(
                             "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all",
                             selectedStatuses.length > 0
-                                ? "bg-blue-50 text-blue-700 border-blue-200"
-                                : "text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                                ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/40"
+                                : "text-muted-foreground border-border hover:border-border hover:text-foreground"
                         )}>
                             Statut
                             {selectedStatuses.length > 0 && (
-                                <span className="bg-blue-200 text-blue-800 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                <span className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
                                     {selectedStatuses.length}
                                 </span>
                             )}
@@ -186,7 +186,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                                     onClick={() => setSelectedStatuses(toggle(selectedStatuses, val))}
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-semibold transition-all",
-                                        isActive ? cn(color, "border") : "text-slate-600 hover:bg-slate-50"
+                                        isActive ? cn(color, "border") : "text-muted-foreground hover:bg-muted"
                                     )}
                                 >
                                     <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -203,12 +203,12 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                         <button className={cn(
                             "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all",
                             selectedTypes.length > 0
-                                ? "bg-purple-50 text-purple-700 border-purple-200"
-                                : "text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                                ? "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/40"
+                                : "text-muted-foreground border-border hover:border-border hover:text-foreground"
                         )}>
                             Type
                             {selectedTypes.length > 0 && (
-                                <span className="bg-purple-200 text-purple-800 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                <span className="bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
                                     {selectedTypes.length}
                                 </span>
                             )}
@@ -224,7 +224,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                                     onClick={() => setSelectedTypes(toggle(selectedTypes, val))}
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-semibold transition-all",
-                                        isActive ? cn(color, "border") : "text-slate-600 hover:bg-slate-50"
+                                        isActive ? cn(color, "border") : "text-muted-foreground hover:bg-muted"
                                     )}
                                 >
                                     <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -241,12 +241,12 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                         <button className={cn(
                             "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all",
                             selectedPriorities.length > 0
-                                ? "bg-orange-50 text-orange-700 border-orange-200"
-                                : "text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700"
+                                ? "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/40"
+                                : "text-muted-foreground border-border hover:border-border hover:text-foreground"
                         )}>
                             Priorité
                             {selectedPriorities.length > 0 && (
-                                <span className="bg-orange-200 text-orange-800 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                <span className="bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
                                     {selectedPriorities.length}
                                 </span>
                             )}
@@ -262,7 +262,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                                     onClick={() => setSelectedPriorities(toggle(selectedPriorities, val))}
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-semibold transition-all",
-                                        isActive ? cn(color, "border") : "text-slate-600 hover:bg-slate-50"
+                                        isActive ? cn(color, "border") : "text-muted-foreground hover:bg-muted"
                                     )}
                                 >
                                     <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -277,7 +277,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
                 {hasActiveFilter && (
                     <button
                         onClick={clearFilters}
-                        className="ml-auto flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-slate-700 transition-colors"
+                        className="ml-auto flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
                     >
                         <X className="w-3 h-3" />
                         Réinitialiser
@@ -286,7 +286,7 @@ export function BoardContainer({ projectId, initialTasks }: { projectId: string;
 
                 {/* Task count */}
                 <span className={cn(
-                    "text-[11px] font-medium text-slate-400 shrink-0",
+                    "text-[11px] font-medium text-muted-foreground shrink-0",
                     hasActiveFilter ? "" : "ml-auto"
                 )}>
                     {filtered.length} ticket{filtered.length !== 1 ? "s" : ""}

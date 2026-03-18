@@ -71,7 +71,7 @@ function ResendInviteButton({ inviteId }: { inviteId: string }) {
     <button
       onClick={handleResend}
       disabled={isPending}
-      className="shrink-0 flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors disabled:opacity-50"
+      className="shrink-0 flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors disabled:opacity-50"
     >
       {isPending ? (
         <Loader2 className="h-3 w-3 animate-spin" />
@@ -93,19 +93,19 @@ function MemberActions({ member, onRoleChange, onRemove }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center justify-center h-7 w-7 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors opacity-0 group-hover/row:opacity-100 focus:opacity-100">
+        <button className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors opacity-0 group-hover/row:opacity-100 focus:opacity-100">
           <MoreHorizontal className="h-4 w-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 rounded-xl border-slate-200">
+      <DropdownMenuContent align="end" className="w-48 rounded-xl border-border">
         <DropdownMenuItem
           className="gap-2 rounded-lg cursor-pointer text-sm"
           onClick={() => onRoleChange(member.id, isAdmin ? "agency_member" : "agency_admin")}
         >
           {isAdmin ? (
-            <><ShieldOff className="h-3.5 w-3.5 text-slate-500" /> Rétrograder en membre</>
+            <><ShieldOff className="h-3.5 w-3.5 text-muted-foreground" /> Rétrograder en membre</>
           ) : (
-            <><Shield className="h-3.5 w-3.5 text-slate-500" /> Promouvoir admin</>
+            <><Shield className="h-3.5 w-3.5 text-muted-foreground" /> Promouvoir admin</>
           )}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -178,15 +178,15 @@ export function AgencyTeamCard({
 
   return (
     <>
-      <div className="group overflow-hidden rounded-2xl border bg-white transition-all duration-300">
-        <div className="flex items-center justify-between border-b border-slate-100/80 px-7 py-5 bg-slate-50/50">
+      <div className="group overflow-hidden rounded-2xl border bg-card transition-all duration-300">
+        <div className="flex items-center justify-between border-b border-border/80 px-7 py-5 bg-muted/50">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-white p-2 text-slate-600 border border-slate-200/50 shadow-sm">
+            <div className="rounded-xl bg-card p-2 text-foreground/70 border border-border/50 shadow-sm">
               <Users className="h-4 w-4" />
             </div>
             <div className="flex items-center gap-2">
               <h2 className="card-title">Collaborateurs</h2>
-              <span className="rounded-md bg-slate-200/50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+              <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
                 {team.length}
               </span>
             </div>
@@ -195,21 +195,21 @@ export function AgencyTeamCard({
           {isAdmin && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <button className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors">
+                <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
                   <UserPlus className="h-3.5 w-3.5" /> Inviter
                 </button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[420px] rounded-2xl p-6">
                 <DialogHeader className="mb-4">
                   <DialogTitle className="text-xl font-semibold tracking-tight">Inviter un membre</DialogTitle>
-                  <DialogDescription className="text-sm text-slate-500">
+                  <DialogDescription className="text-sm text-muted-foreground">
                     Un email sera envoyé pour lui donner accès à l'espace agence.
                   </DialogDescription>
                 </DialogHeader>
 
                 <form action={formAction} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="invite-email" className="text-xs font-semibold text-slate-700">Adresse email</Label>
+                    <Label htmlFor="invite-email" className="text-xs font-semibold text-foreground">Adresse email</Label>
                     <Input
                       id="invite-email"
                       name="email"
@@ -217,7 +217,7 @@ export function AgencyTeamCard({
                       placeholder="collaborateur@agence.com"
                       disabled={isPending}
                       required
-                      className="h-10 border-slate-200 focus:border-slate-900 focus:ring-slate-900 shadow-sm"
+                      className="h-10 border-border focus:border-foreground focus:ring-foreground shadow-sm"
                     />
                     {state?.errors?.email && (
                       <p className="text-xs text-red-500 font-medium">{state.errors.email[0]}</p>
@@ -225,12 +225,12 @@ export function AgencyTeamCard({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-700">Rôle d'accès</Label>
+                    <Label className="text-xs font-semibold text-foreground">Rôle d'accès</Label>
                     <Select name="role" defaultValue="agency_member">
-                      <SelectTrigger className="h-10 border-slate-200 focus:ring-slate-900 shadow-sm">
+                      <SelectTrigger className="h-10 border-border focus:ring-foreground shadow-sm">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-slate-200">
+                      <SelectContent className="rounded-xl border-border">
                         <SelectItem value="agency_admin" className="rounded-lg">Administrateur</SelectItem>
                         <SelectItem value="agency_member" className="rounded-lg">Membre standard</SelectItem>
                       </SelectContent>
@@ -256,26 +256,26 @@ export function AgencyTeamCard({
         </div>
 
         {/* Team list */}
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-border">
           {team.map((member) => {
             const isMe = member.email === profile.email;
             const initials = getInitials(member.first_name, member.last_name, member.email);
 
             return (
-              <div key={member.id} className="group/row flex items-center gap-4 px-7 py-4 hover:bg-slate-50 transition-colors">
+              <div key={member.id} className="group/row flex items-center gap-4 px-7 py-4 hover:bg-muted transition-colors">
                 <div className="relative shrink-0">
                   <div
                     className={cn(
                       "flex h-9 w-9 items-center justify-center rounded-full border text-xs font-medium shadow-sm",
                       isMe
-                        ? "border-slate-300 bg-slate-100 text-slate-700"
-                        : "border-slate-200 bg-white text-slate-600"
+                        ? "border-border bg-muted text-foreground"
+                        : "border-border bg-card text-foreground"
                     )}
                   >
                     {initials}
                   </div>
                   {isMe && (
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white" style={{ backgroundColor: 'var(--brand-secondary, #6366F1)' }}>
+                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-background" style={{ backgroundColor: 'var(--brand-secondary, #6366F1)' }}>
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                     </span>
                   )}
@@ -283,24 +283,24 @@ export function AgencyTeamCard({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-slate-900">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {member.first_name} {member.last_name}
                     </p>
                     {isMe && (
-                      <span className="shrink-0 rounded-md bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                      <span className="shrink-0 rounded-md bg-muted border border-border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
                         Vous
                       </span>
                     )}
                   </div>
-                  <p className="truncate text-xs text-slate-500">{member.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">{member.email}</p>
                 </div>
 
                 <span
                   className={cn(
                     "shrink-0 rounded-md px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider",
                     member.role === "agency_admin"
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600 border border-slate-200"
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground border border-border"
                   )}
                 >
                   {member.role === "agency_admin" ? "Admin" : "Membre"}
@@ -319,19 +319,19 @@ export function AgencyTeamCard({
 
           {team.length === 0 && (
             <div className="flex flex-col items-center py-10 text-center">
-              <Users className="mb-3 h-8 w-8 text-slate-300" />
-              <p className="text-sm font-medium text-slate-900">Aucun collaborateur</p>
-              <p className="text-xs text-slate-500 mt-1">Invitez des membres pour collaborer.</p>
+              <Users className="mb-3 h-8 w-8 text-muted-foreground/30" />
+              <p className="text-sm font-medium text-foreground">Aucun collaborateur</p>
+              <p className="text-xs text-muted-foreground mt-1">Invitez des membres pour collaborer.</p>
             </div>
           )}
         </div>
 
         {/* Pending invites */}
         {invites.length > 0 && (
-          <div className="bg-slate-50/50 border-t border-slate-100 px-7 py-5">
+          <div className="bg-muted/50 border-t border-border px-7 py-5">
             <div className="mb-3 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-slate-400" />
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 {invites.length} invitation{invites.length > 1 ? "s" : ""} en attente
               </p>
             </div>
@@ -339,12 +339,12 @@ export function AgencyTeamCard({
               {invites.slice(0, 3).map((invite: any) => (
                 <div
                   key={invite.id}
-                  className="flex items-center gap-3 rounded-xl border bg-white p-3"
+                  className="flex items-center gap-3 rounded-xl border bg-card p-3"
                 >
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-50 border border-slate-100">
-                    <Mail className="h-3.5 w-3.5 text-slate-400" />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted border border-border">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
-                  <p className="flex-1 truncate text-xs font-medium text-slate-700">{invite.email}</p>
+                  <p className="flex-1 truncate text-xs font-medium text-foreground">{invite.email}</p>
                   <ResendInviteButton inviteId={invite.id} />
                 </div>
               ))}

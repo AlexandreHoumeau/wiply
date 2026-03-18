@@ -36,20 +36,20 @@ export default async function WorkspacePage() {
         <div className="flex flex-col h-full bg-background">
 
             {/* Header */}
-            <div className="bg-background border-b border-slate-200/60 px-6 py-5 shrink-0">
+            <div className="bg-background border-b border-border px-6 py-5 shrink-0">
                 <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="h-11 w-11 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                            <Layers className="h-5 w-5 text-slate-600" />
+                        <div className="h-11 w-11 rounded-2xl bg-muted border border-border flex items-center justify-center shrink-0">
+                            <Layers className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
-                            <h1 className="text-xl text-slate-900">Espace interne</h1>
-                            <p className="text-sm font-medium text-slate-400 mt-0.5">Tickets internes, tâches admin et suivi agence.</p>
+                            <h1 className="text-xl text-foreground">Espace interne</h1>
+                            <p className="text-sm font-medium text-muted-foreground mt-0.5">Tickets internes, tâches admin et suivi agence.</p>
                         </div>
                     </div>
                     <Link
                         href="/app/projects"
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-indigo-600 transition-colors group"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors group"
                     >
                         <FolderKanban className="h-4 w-4" />
                         Tous les projets clients

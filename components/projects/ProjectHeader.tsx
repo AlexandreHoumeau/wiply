@@ -21,10 +21,10 @@ export function ProjectHeader({ project }: { project: any }) {
     const companyInitial = project.company?.name?.charAt(0).toUpperCase() || "P";
 
     return (
-        <div className="bg-white border-b border-slate-200">
+        <div className="bg-background border-b border-border">
             {/* TOP BAR : Breadcrumb & Links */}
             <div className="max-w-[1400px] mx-auto px-6 pt-6 pb-4">
-                <Link href="/app/projects" className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors mb-6 group">
+                <Link href="/app/projects" className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-foreground transition-colors mb-6 group">
                     <ArrowLeft className="w-3.5 h-3.5 mr-1.5 group-hover:-translate-x-1 transition-transform" />
                     Tous les projets
                 </Link>
@@ -39,13 +39,13 @@ export function ProjectHeader({ project }: { project: any }) {
                             {companyInitial}
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">
+                            <h1 className="text-2xl font-bold text-foreground">
                                 {project.name}
                             </h1>
-                            <p className="text-sm font-medium text-slate-500 mt-0.5">
+                            <p className="text-sm font-medium text-muted-foreground mt-0.5">
                                 {project.is_internal
-                                    ? <span className="text-slate-500">Espace interne</span>
-                                    : <>Client : <span className="text-slate-700">{project.company?.name || "—"}</span></>
+                                    ? <span className="text-muted-foreground">Espace interne</span>
+                                    : <>Client : <span className="text-foreground/80">{project.company?.name || "—"}</span></>
                                 }
                             </p>
                         </div>
@@ -54,21 +54,21 @@ export function ProjectHeader({ project }: { project: any }) {
                     {/* Quick Assets Links (Figma, Repo, Live) */}
                     <div className="flex items-center gap-2 flex-wrap">
                         {project.figma_url && (
-                            <Button variant="outline" size="sm" className="h-9 rounded-xl border-slate-200 text-slate-600 hover:bg-[#F24E1E]/10 hover:text-[#F24E1E] hover:border-[#F24E1E]/30 transition-colors" asChild>
+                            <Button variant="outline" size="sm" className="h-9 rounded-xl border-border text-muted-foreground hover:bg-[#F24E1E]/10 hover:text-[#F24E1E] hover:border-[#F24E1E]/30 transition-colors" asChild>
                                 <a href={project.figma_url} target="_blank" rel="noopener noreferrer">
                                     <Figma className="w-4 h-4 mr-2" /> Maquettes
                                 </a>
                             </Button>
                         )}
                         {project.github_url && (
-                            <Button variant="outline" size="sm" className="h-9 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors" asChild>
+                            <Button variant="outline" size="sm" className="h-9 rounded-xl border-border text-muted-foreground hover:bg-muted transition-colors" asChild>
                                 <a href={project.github_url} target="_blank" rel="noopener noreferrer">
                                     <Github className="w-4 h-4 mr-2" /> Repository
                                 </a>
                             </Button>
                         )}
                         {project.deployment_url && (
-                            <Button variant="outline" size="sm" className="h-9 rounded-xl border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors" asChild>
+                            <Button variant="outline" size="sm" className="h-9 rounded-xl border-border text-muted-foreground hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800/40 transition-colors" asChild>
                                 <a href={project.deployment_url} target="_blank" rel="noopener noreferrer">
                                     <Globe className="w-4 h-4 mr-2" /> Production
                                 </a>
@@ -87,8 +87,7 @@ export function ProjectHeader({ project }: { project: any }) {
                             <Link
                                 key={tab.path}
                                 href={tab.path}
-                                className={`relative px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${isActive ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
-                                    }`}
+                                className={`relative px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                             >
                                 <div className="flex items-center gap-2 relative z-10">
                                     <tab.icon

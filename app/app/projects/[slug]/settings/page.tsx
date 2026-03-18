@@ -14,7 +14,6 @@ import { Loader2, LinkIcon, Copy, Save, Sparkles, PlayCircle, PauseCircle, Layou
 export default function ProjectSettingsPage() {
     const project = useProject();
 
-    // États pour le formulaire
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingToken, setIsGeneratingToken] = useState(false);
 
@@ -31,7 +30,6 @@ export default function ProjectSettingsPage() {
 
     if (!project) return null;
 
-    // L'URL de base pour le portail client (à adapter avec ton vrai nom de domaine en prod)
     const clientPortalUrl = project.magic_token
         ? `${typeof window !== 'undefined' ? window.location.origin : ''}/portal/${project.magic_token}`
         : "";
@@ -48,7 +46,6 @@ export default function ProjectSettingsPage() {
 
         if (result.success) {
             toast.success("Nouveau lien magique généré avec succès !");
-            // Le useProject provider devrait se rafraîchir grâce au revalidatePath
         } else {
             toast.error("Erreur lors de la génération du lien.");
         }
@@ -75,37 +72,53 @@ export default function ProjectSettingsPage() {
         }
     };
 
-    const inputClasses = "h-11 rounded-xl bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none";
+    const inputClasses = "h-11 rounded-xl bg-muted/50 border-border focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none";
 
     return (
         <div className="max-w-[1000px] overflow-scroll mx-auto p-6 md:p-8 space-y-8 animate-in fade-in duration-500 pb-20">
 
-            {/* 🎯 SECTION 1 : Le Portail Client (Anti-Geek) */}
-            <div className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden transition-colors ${project.is_portal_active === false ? 'bg-slate-50 border-slate-200' : 'bg-gradient-to-br from-indigo-50 to-white border-indigo-100'}`}>
+            {/* 🎯 SECTION 1 : Le Portail Client */}
+            <div className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden transition-colors ${
+                project.is_portal_active === false
+                    ? 'bg-muted border-border'
+                    : 'bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/40 dark:to-background border-indigo-100 dark:border-indigo-900/40'
+            }`}>
                 {project.is_portal_active !== false && <Sparkles className="absolute -top-4 -right-4 w-24 h-24 text-indigo-200/40 rotate-12" />}
 
                 <div className="flex items-start justify-between mb-2">
-                    <h2 className={`card-title ${project.is_portal_active === false ? 'text-slate-500' : 'text-indigo-950'}`}>
+                    <h2 className={`card-title ${project.is_portal_active === false ? 'text-muted-foreground' : 'text-indigo-950 dark:text-indigo-200'}`}>
                         Accès Client (Portail Magique)
                     </h2>
                     {project.magic_token && (
-                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${project.is_portal_active === false ? 'bg-slate-200 text-slate-500' : 'bg-emerald-100 text-emerald-700'}`}>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                            project.is_portal_active === false
+                                ? 'bg-muted text-muted-foreground'
+                                : 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
+                        }`}>
                             {project.is_portal_active === false ? "En Pause" : "Actif"}
                         </span>
                     )}
                 </div>
 
-                <p className={`text-sm mb-6 max-w-2xl ${project.is_portal_active === false ? 'text-slate-400' : 'text-indigo-900/60'}`}>
+                <p className={`text-sm mb-6 max-w-2xl ${
+                    project.is_portal_active === false
+                        ? 'text-muted-foreground/70'
+                        : 'text-indigo-900/60 dark:text-indigo-300/60'
+                }`}>
                     C'est ce lien que vous devez envoyer à votre client. Aucune inscription n'est requise.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <div className="relative flex-1">
-                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                             readOnly
                             value={clientPortalUrl || "Aucun lien généré pour le moment."}
-                            className={`pl-11 h-12 border-indigo-100 font-medium rounded-xl shadow-sm ${project.is_portal_active === false ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-600'}`}
+                            className={`pl-11 h-12 border-indigo-100 dark:border-indigo-900/40 font-medium rounded-xl shadow-sm ${
+                                project.is_portal_active === false
+                                    ? 'bg-muted text-muted-foreground'
+                                    : 'bg-card text-muted-foreground'
+                            }`}
                         />
                     </div>
 
@@ -114,9 +127,14 @@ export default function ProjectSettingsPage() {
                             <Button onClick={handleCopyLink} disabled={project.is_portal_active === false} className="h-12 px-6 transition-all">
                                 <Copy className="w-4 h-4 mr-2" /> Copier
                             </Button>
-                            {/* Bouton Pause / Play */}
-                            <Button onClick={handleTogglePause} variant="outline" className={`h-12 px-4 rounded-xl border-2 transition-all ${project.is_portal_active === false ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50' : 'border-amber-200 text-amber-600 hover:bg-amber-50'}`}>
-                                {project.is_portal_active === false ? <><PlayCircle className="w-4 h-4 mr-2" /> Réactiver</> : <><PauseCircle className="w-4 h-4 mr-2" /> Suspendre</>}
+                            <Button onClick={handleTogglePause} variant="outline" className={`h-12 px-4 rounded-xl border-2 transition-all ${
+                                project.is_portal_active === false
+                                    ? 'border-emerald-200 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                                    : 'border-amber-200 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                            }`}>
+                                {project.is_portal_active === false
+                                    ? <><PlayCircle className="w-4 h-4 mr-2" /> Réactiver</>
+                                    : <><PauseCircle className="w-4 h-4 mr-2" /> Suspendre</>}
                             </Button>
                         </>
                     ) : (
@@ -127,16 +145,17 @@ export default function ProjectSettingsPage() {
                     )}
                 </div>
             </div>
+
             {/* 🛠️ SECTION 2 : Paramètres généraux du projet */}
-            <form onSubmit={handleSaveSettings} className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-8">
+            <form onSubmit={handleSaveSettings} className="bg-card p-6 md:p-8 rounded-3xl border border-border shadow-sm space-y-8">
                 <div>
                     <h2 className="card-title mb-1">Informations Générales</h2>
-                    <p className="text-sm text-slate-500">Modifiez les détails fondamentaux de ce projet.</p>
+                    <p className="text-sm text-muted-foreground">Modifiez les détails fondamentaux de ce projet.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 md:col-span-2">
-                        <Label className="text-sm font-semibold text-slate-700">Nom du projet</Label>
+                        <Label className="text-sm font-semibold text-foreground">Nom du projet</Label>
                         <Input
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -145,16 +164,16 @@ export default function ProjectSettingsPage() {
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                        <Label className="text-sm font-semibold text-slate-700">Description / Brief</Label>
+                        <Label className="text-sm font-semibold text-foreground">Description / Brief</Label>
                         <Textarea
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="min-h-[120px] rounded-xl bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none resize-none"
+                            className="min-h-[120px] rounded-xl bg-muted/50 border-border focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none resize-none"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-slate-700">Date de démarrage</Label>
+                        <Label className="text-sm font-semibold text-foreground">Date de démarrage</Label>
                         <Input
                             type="date"
                             value={formData.start_date}
@@ -164,12 +183,12 @@ export default function ProjectSettingsPage() {
                     </div>
                 </div>
 
-                <div className="pt-6 border-t border-slate-100">
+                <div className="pt-6 border-t border-border">
                     <h3 className="card-title mb-4">Ressources & Liens</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-slate-700">Maquettes (Figma)</Label>
+                            <Label className="text-sm font-semibold text-foreground">Maquettes (Figma)</Label>
                             <Input
                                 placeholder="https://figma.com/..."
                                 value={formData.figma_url}
@@ -179,7 +198,7 @@ export default function ProjectSettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-slate-700">Repository (Github)</Label>
+                            <Label className="text-sm font-semibold text-foreground">Repository (Github)</Label>
                             <Input
                                 placeholder="https://github.com/..."
                                 value={formData.github_url}
@@ -189,7 +208,7 @@ export default function ProjectSettingsPage() {
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
-                            <Label className="text-sm font-semibold text-slate-700">Lien de production (Live)</Label>
+                            <Label className="text-sm font-semibold text-foreground">Lien de production (Live)</Label>
                             <Input
                                 placeholder="https://mon-super-site.com"
                                 value={formData.deployment_url}
@@ -201,18 +220,18 @@ export default function ProjectSettingsPage() {
                 </div>
 
                 {/* Portal personalization */}
-                <div className="pt-6 border-t border-slate-100">
+                <div className="pt-6 border-t border-border">
                     <div className="flex items-center gap-2 mb-4">
-                        <LayoutTemplate className="w-4 h-4 text-slate-400" />
+                        <LayoutTemplate className="w-4 h-4 text-muted-foreground" />
                         <h3 className="card-title">Personnalisation du Portail</h3>
                     </div>
 
                     <div className="space-y-5">
                         {/* Show progress toggle */}
-                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="flex items-center justify-between p-4 bg-muted rounded-2xl border border-border">
                             <div>
-                                <p className="font-semibold text-slate-800 text-sm">Afficher la barre de progression</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Montrer au client l'avancement de la checklist</p>
+                                <p className="font-semibold text-foreground text-sm">Afficher la barre de progression</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Montrer au client l'avancement de la checklist</p>
                             </div>
                             <Switch
                                 checked={formData.portal_show_progress}
@@ -222,20 +241,20 @@ export default function ProjectSettingsPage() {
 
                         {/* Custom message */}
                         <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-slate-700">Message pour le client</Label>
+                            <Label className="text-sm font-semibold text-foreground">Message pour le client</Label>
                             <Textarea
                                 placeholder="Ex: Bonjour ! Voici votre espace de suivi. N'hésitez pas à nous contacter si vous avez des questions…"
                                 value={formData.portal_message}
                                 onChange={(e) => setFormData({ ...formData, portal_message: e.target.value })}
-                                className="min-h-[100px] rounded-xl bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none resize-none"
+                                className="min-h-[100px] rounded-xl bg-muted/50 border-border focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none resize-none"
                             />
-                            <p className="text-xs text-slate-400">Affiché en haut du portail client, sous le titre de bienvenue.</p>
+                            <p className="text-xs text-muted-foreground">Affiché en haut du portail client, sous le titre de bienvenue.</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
-                    <Button type="submit" disabled={isLoading} className="h-11 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition-all active:scale-95">
+                    <Button type="submit" disabled={isLoading} className="h-11 px-8 rounded-xl bg-foreground hover:bg-foreground/90 text-background shadow-sm transition-all active:scale-95">
                         {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                         Enregistrer les modifications
                     </Button>

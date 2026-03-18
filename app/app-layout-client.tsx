@@ -30,10 +30,10 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
                 isCollapsed ? "md:pl-20" : "md:pl-64"
             )}>
                 {/* Mobile top bar */}
-                <header className="flex items-center gap-3 h-14 px-4 border-b border-slate-200 bg-white md:hidden shrink-0">
+                <header className="flex items-center gap-3 h-14 px-4 border-b border-border bg-background md:hidden shrink-0">
                     <button
                         onClick={() => setIsMobileOpen(true)}
-                        className="flex items-center justify-center h-9 w-9 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                        className="flex items-center justify-center h-9 w-9 rounded-xl border border-border text-muted-foreground hover:bg-muted transition-colors"
                     >
                         <Menu className="h-5 w-5" />
                     </button>
@@ -50,7 +50,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
                                 agency?.name?.charAt(0)?.toUpperCase() || "A"
                             )}
                         </div>
-                        <span className="font-bold text-slate-900 text-sm truncate">{agency?.name}</span>
+                        <span className="font-bold text-foreground text-sm truncate">{agency?.name}</span>
                     </div>
                 </header>
 

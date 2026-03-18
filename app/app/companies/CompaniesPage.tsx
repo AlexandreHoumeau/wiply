@@ -36,12 +36,12 @@ export default function CompaniesPage() {
     <div className="w-full flex-1 p-6 md:p-8 space-y-8 animate-in fade-in duration-500">
 
       <div className="flex items-center gap-4">
-        <div className="h-12 w-12 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-center shrink-0">
-          <Building2 className="h-6 w-6 text-indigo-600" />
+        <div className="h-12 w-12 bg-card border border-border rounded-2xl shadow-sm flex items-center justify-center shrink-0">
+          <Building2 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-2xl text-slate-900 tracking-tight">Entreprises</h1>
-          <p className="text-sm font-medium text-slate-500 mt-0.5">
+          <h1 className="text-2xl text-foreground tracking-tight">Entreprises</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-0.5">
             {allCount === 0
               ? "Aucune entreprise enregistrée."
               : `${allCount} entreprise${allCount > 1 ? "s" : ""} — ${clientsCount} client${clientsCount > 1 ? "s" : ""}, ${prospectsCount} prospect${prospectsCount > 1 ? "s" : ""}`}

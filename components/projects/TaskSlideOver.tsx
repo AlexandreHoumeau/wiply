@@ -35,25 +35,25 @@ interface TaskSlideOverProps {
 }
 
 const TYPE_CONFIG: Record<string, { icon: any; label: string; dot: string; chip: string }> = {
-    feature: { icon: AlignLeft,      label: "Fonctionnalité", dot: "bg-blue-500",    chip: "bg-blue-50 text-blue-700 border-blue-200" },
-    bug:     { icon: Bug,            label: "Bug",            dot: "bg-red-500",     chip: "bg-red-50 text-red-700 border-red-200" },
-    design:  { icon: LayoutTemplate, label: "Design",         dot: "bg-purple-500",  chip: "bg-purple-50 text-purple-700 border-purple-200" },
-    content: { icon: PenTool,        label: "Contenu",        dot: "bg-emerald-500", chip: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    setup:   { icon: Settings,       label: "Setup / Infra",  dot: "bg-slate-400",   chip: "bg-slate-100 text-slate-600 border-slate-200" },
+    feature: { icon: AlignLeft,      label: "Fonctionnalité", dot: "bg-blue-500",    chip: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/40" },
+    bug:     { icon: Bug,            label: "Bug",            dot: "bg-red-500",     chip: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/40" },
+    design:  { icon: LayoutTemplate, label: "Design",         dot: "bg-purple-500",  chip: "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/40" },
+    content: { icon: PenTool,        label: "Contenu",        dot: "bg-emerald-500", chip: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40" },
+    setup:   { icon: Settings,       label: "Setup / Infra",  dot: "bg-muted-foreground/40", chip: "bg-muted text-muted-foreground border-border" },
 };
 
 const PRIORITY_CONFIG: Record<string, { icon: any; label: string; color: string; badge: string }> = {
-    low:    { icon: ArrowDown,    label: "Basse",   color: "text-slate-400",   badge: "bg-slate-100 text-slate-500" },
-    medium: { icon: Equal,        label: "Moyenne", color: "text-slate-500",   badge: "bg-slate-100 text-slate-600" },
-    high:   { icon: ArrowUp,      label: "Haute",   color: "text-orange-500",  badge: "bg-orange-50 text-orange-600" },
-    urgent: { icon: AlertOctagon, label: "Urgente", color: "text-red-500",     badge: "bg-red-50 text-red-600" },
+    low:    { icon: ArrowDown,    label: "Basse",   color: "text-muted-foreground",  badge: "bg-muted text-muted-foreground" },
+    medium: { icon: Equal,        label: "Moyenne", color: "text-muted-foreground",  badge: "bg-muted text-muted-foreground" },
+    high:   { icon: ArrowUp,      label: "Haute",   color: "text-orange-500",        badge: "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400" },
+    urgent: { icon: AlertOctagon, label: "Urgente", color: "text-red-500",           badge: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400" },
 };
 
 const STATUS_CONFIG: Record<string, { icon: any; label: string; color: string; badge: string }> = {
-    todo:        { icon: Inbox,        label: "À faire",  color: "text-slate-400",   badge: "bg-slate-100 text-slate-600" },
-    in_progress: { icon: PlayCircle,   label: "En cours", color: "text-blue-500",    badge: "bg-blue-50 text-blue-700" },
-    review:      { icon: Clock,        label: "En revue", color: "text-amber-500",   badge: "bg-amber-50 text-amber-700" },
-    done:        { icon: CheckCircle2, label: "Terminé",  color: "text-emerald-500", badge: "bg-emerald-50 text-emerald-700" },
+    todo:        { icon: Inbox,        label: "À faire",  color: "text-muted-foreground",  badge: "bg-muted text-muted-foreground" },
+    in_progress: { icon: PlayCircle,   label: "En cours", color: "text-blue-500",           badge: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400" },
+    review:      { icon: Clock,        label: "En revue", color: "text-amber-500",          badge: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400" },
+    done:        { icon: CheckCircle2, label: "Terminé",  color: "text-emerald-500",        badge: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400" },
 };
 
 export function TaskSlideOver({
@@ -167,13 +167,13 @@ export function TaskSlideOver({
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-[900px] w-full p-0 flex flex-col bg-white border-l border-slate-200/80 shadow-2xl [&>button:first-of-type]:hidden">
+            <SheetContent className="sm:max-w-[900px] w-full p-0 flex flex-col bg-card border-l border-border/80 shadow-2xl [&>button:first-of-type]:hidden">
 
                 {/* ── Top bar ────────────────────────────────────────────── */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 shrink-0">
                     <div className="flex items-center gap-3">
                         {task && (
-                            <span className="font-mono text-xs font-bold text-slate-300 tracking-widest">
+                            <span className="font-mono text-xs font-bold text-muted-foreground/40 tracking-widest">
                                 TCK-{task.id.split("-")[0].substring(0, 4).toUpperCase()}
                             </span>
                         )}
@@ -188,14 +188,14 @@ export function TaskSlideOver({
                         {/* Status badge */}
                         <span className={cn(
                             "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold",
-                            STATUS_CONFIG[status]?.badge ?? "bg-slate-100 text-slate-600"
+                            STATUS_CONFIG[status]?.badge ?? "bg-muted text-muted-foreground"
                         )}>
                             <StatusIcon className="w-3.5 h-3.5" />
                             {STATUS_CONFIG[status]?.label}
                         </span>
                         {/* Overdue badge */}
                         {isOverdue && (
-                            <span className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200">
+                            <span className="flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/40">
                                 En retard
                             </span>
                         )}
@@ -205,7 +205,7 @@ export function TaskSlideOver({
                             <button
                                 onClick={handleDelete}
                                 disabled={isLoading}
-                                className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-red-50"
+                                className="text-xs font-semibold text-muted-foreground hover:text-red-500 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40"
                             >
                                 Supprimer
                             </button>
@@ -221,7 +221,7 @@ export function TaskSlideOver({
                         </Button>
                         <button
                             onClick={() => onOpenChange(false)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -240,7 +240,7 @@ export function TaskSlideOver({
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Titre du ticket..."
                                 autoFocus={!task}
-                                className="w-full text-2xl font-bold text-slate-900 placeholder:text-slate-300 bg-transparent border-none outline-none leading-tight"
+                                className="w-full text-2xl font-bold text-foreground placeholder:text-muted-foreground/30 bg-transparent border-none outline-none leading-tight"
                             />
                         </div>
 
@@ -250,27 +250,27 @@ export function TaskSlideOver({
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="Contexte, liens utiles, critères d'acceptation…"
-                                className="min-h-[180px] text-sm leading-relaxed text-slate-600 placeholder:text-slate-300 bg-transparent border-none shadow-none focus-visible:ring-0 resize-none p-0"
+                                className="min-h-[180px] text-sm leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 bg-transparent border-none shadow-none focus-visible:ring-0 resize-none p-0"
                             />
                         </div>
 
                         {/* Activity */}
                         {task && (
                             <div className="px-8 pb-10">
-                                <div className="border-t border-slate-100 pt-6 space-y-5">
+                                <div className="border-t border-border/50 pt-6 space-y-5">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                        <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
                                             Activité
                                         </span>
                                         {comments.length > 0 && (
-                                            <span className="text-[11px] text-slate-400">
+                                            <span className="text-[11px] text-muted-foreground">
                                                 {comments.length} commentaire{comments.length > 1 ? "s" : ""}
                                             </span>
                                         )}
                                     </div>
 
                                     {comments.length === 0 && (
-                                        <p className="text-sm text-slate-400">Aucun commentaire pour l&apos;instant.</p>
+                                        <p className="text-sm text-muted-foreground">Aucun commentaire pour l&apos;instant.</p>
                                     )}
 
                                     <div className="space-y-5">
@@ -288,30 +288,33 @@ export function TaskSlideOver({
                                             return (
                                                 <div key={comment.id} className="flex gap-3 group/comment">
                                                     <div
-                                                        className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5 ring-2 ring-white"
+                                                        className={cn(
+                                                            "h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5 ring-2 ring-background",
+                                                            !isOwn && "bg-muted text-muted-foreground"
+                                                        )}
                                                         style={isOwn
                                                             ? { backgroundColor: "var(--brand-secondary,#6366F1)", color: "#fff" }
-                                                            : { backgroundColor: "#e2e8f0", color: "#64748b" }
+                                                            : undefined
                                                         }
                                                     >
                                                         {initials}
                                                     </div>
                                                     <div className="flex-1 min-w-0 space-y-1.5">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-semibold text-slate-800">{authorName}</span>
+                                                            <span className="text-sm font-semibold text-foreground">{authorName}</span>
                                                             {isOwn && (
-                                                                <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                                                                     Vous
                                                                 </span>
                                                             )}
-                                                            <span className="text-[11px] text-slate-400 ml-auto">
+                                                            <span className="text-[11px] text-muted-foreground ml-auto">
                                                                 {dayjs(comment.created_at).locale("fr").fromNow()}
                                                             </span>
                                                             {isOwn && (
                                                                 <button
                                                                     onClick={() => handleDeleteComment(comment.id)}
                                                                     disabled={isDeletingComment === comment.id}
-                                                                    className="opacity-0 group-hover/comment:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-500 text-slate-300 transition-all shrink-0"
+                                                                    className="opacity-0 group-hover/comment:opacity-100 p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-500 text-muted-foreground/30 transition-all shrink-0"
                                                                 >
                                                                     {isDeletingComment === comment.id
                                                                         ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -319,7 +322,7 @@ export function TaskSlideOver({
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <div className="bg-slate-50 rounded-xl rounded-tl-sm px-4 py-3 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words border border-slate-100/80">
+                                                        <div className="bg-muted rounded-xl rounded-tl-sm px-4 py-3 text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words border border-border/50">
                                                             {comment.content}
                                                         </div>
                                                     </div>
@@ -332,7 +335,7 @@ export function TaskSlideOver({
                                     {/* Comment composer */}
                                     <div className="flex gap-3 items-start">
                                         <div
-                                            className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-1 ring-2 ring-white"
+                                            className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-1 ring-2 ring-background"
                                             style={{ backgroundColor: "var(--brand-secondary,#6366F1)", color: "#fff" }}
                                         >
                                             {getInitials(
@@ -344,7 +347,7 @@ export function TaskSlideOver({
                                         <div className="flex-1 min-w-0">
                                             <div className={cn(
                                                 "border rounded-xl transition-all overflow-hidden",
-                                                commentText ? "border-slate-300 bg-white shadow-sm" : "border-slate-200 bg-slate-50"
+                                                commentText ? "border-border bg-card shadow-sm" : "border-border/50 bg-muted/50"
                                             )}>
                                                 <textarea
                                                     value={commentText}
@@ -357,11 +360,11 @@ export function TaskSlideOver({
                                                     }}
                                                     placeholder="Écrire un commentaire…"
                                                     rows={commentText ? 3 : 1}
-                                                    className="w-full bg-transparent px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none resize-none"
+                                                    className="w-full bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
                                                 />
                                                 {commentText.trim() && (
-                                                    <div className="flex items-center justify-between px-4 py-2 border-t border-slate-100">
-                                                        <span className="text-xs text-slate-400">⌘↵ pour envoyer</span>
+                                                    <div className="flex items-center justify-between px-4 py-2 border-t border-border/50">
+                                                        <span className="text-xs text-muted-foreground">⌘↵ pour envoyer</span>
                                                         <Button
                                                             size="sm"
                                                             onClick={handleSubmitComment}
@@ -384,11 +387,11 @@ export function TaskSlideOver({
                     </div>
 
                     {/* ── Right sidebar: properties ───────────────────────── */}
-                    <div className="w-72 shrink-0 border-l border-slate-100 bg-slate-50/40 overflow-y-auto">
+                    <div className="w-72 shrink-0 border-l border-border/50 bg-muted/30 overflow-y-auto">
 
                         {/* Assignee hero block */}
-                        <div className="px-5 py-5 border-b border-slate-100">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Assigné à</p>
+                        <div className="px-5 py-5 border-b border-border/50">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Assigné à</p>
                             <div className="flex items-center gap-3">
                                 {assigneeMember ? (
                                     <>
@@ -399,13 +402,13 @@ export function TaskSlideOver({
                                             {getInitials(assigneeMember.first_name ?? "", assigneeMember.last_name ?? "", assigneeMember.email ?? "")}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-slate-800 truncate">{assigneeName}</p>
-                                            <p className="text-xs text-slate-400 truncate">{assigneeMember.email}</p>
+                                            <p className="text-sm font-semibold text-foreground truncate">{assigneeName}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{assigneeMember.email}</p>
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex items-center gap-2 text-slate-400">
-                                        <div className="h-9 w-9 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center">
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <div className="h-9 w-9 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
                                             <UserRound className="w-4 h-4" />
                                         </div>
                                         <span className="text-sm">Non assigné</span>
@@ -417,11 +420,11 @@ export function TaskSlideOver({
                                 value={assigneeId ?? "unassigned"}
                                 onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}
                             >
-                                <SelectTrigger className="mt-3 h-8 text-xs border-slate-200 bg-white shadow-none text-slate-600 focus:ring-0">
+                                <SelectTrigger className="mt-3 h-8 text-xs border-border bg-card shadow-none text-muted-foreground focus:ring-0">
                                     <SelectValue placeholder="Changer l'assigné" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl min-w-[200px]">
-                                    <SelectItem value="unassigned" className="text-xs text-slate-400">
+                                    <SelectItem value="unassigned" className="text-xs text-muted-foreground">
                                         Non assigné
                                     </SelectItem>
                                     {members.map((m) => {
@@ -448,14 +451,14 @@ export function TaskSlideOver({
 
                         {/* Due date hero block */}
                         <div className={cn(
-                            "px-5 py-4 border-b border-slate-100",
-                            isOverdue ? "bg-red-50/50" : ""
+                            "px-5 py-4 border-b border-border/50",
+                            isOverdue ? "bg-red-50/50 dark:bg-red-950/20" : ""
                         )}>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Échéance</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Échéance</p>
                             {dueDate ? (
                                 <div className={cn(
                                     "flex items-center gap-2 mb-2",
-                                    isOverdue ? "text-red-600" : "text-slate-700"
+                                    isOverdue ? "text-red-600 dark:text-red-400" : "text-foreground"
                                 )}>
                                     <CalendarDays className="w-4 h-4 shrink-0" />
                                     <span className="text-sm font-semibold">
@@ -463,24 +466,24 @@ export function TaskSlideOver({
                                     </span>
                                 </div>
                             ) : (
-                                <p className="text-sm text-slate-400 mb-2">Aucune échéance</p>
+                                <p className="text-sm text-muted-foreground mb-2">Aucune échéance</p>
                             )}
                             <input
                                 type="date"
                                 value={dueDate}
                                 onChange={(e) => setDueDate(e.target.value)}
-                                className="w-full h-8 text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-3 outline-none focus:border-slate-400 cursor-pointer"
+                                className="w-full h-8 text-xs text-muted-foreground bg-card border border-border rounded-lg px-3 outline-none focus:border-border cursor-pointer"
                             />
                         </div>
 
                         {/* Properties grid */}
                         <div className="px-5 py-4 space-y-1">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Propriétés</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Propriétés</p>
 
                             {/* Status */}
                             <PropRow label="Statut" icon={<StatusIcon className={cn("w-4 h-4", STATUS_CONFIG[status]?.color)} />}>
                                 <Select value={status} onValueChange={setStatus}>
-                                    <SelectTrigger className="h-8 border-slate-200 bg-white shadow-none text-xs font-medium text-slate-700 focus:ring-0">
+                                    <SelectTrigger className="h-8 border-border bg-card shadow-none text-xs font-medium text-foreground focus:ring-0">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -494,7 +497,7 @@ export function TaskSlideOver({
                             {/* Priority */}
                             <PropRow label="Priorité" icon={<PriorityIcon className={cn("w-4 h-4", PRIORITY_CONFIG[priority]?.color)} />}>
                                 <Select value={priority} onValueChange={setPriority}>
-                                    <SelectTrigger className="h-8 border-slate-200 bg-white shadow-none text-xs font-medium text-slate-700 focus:ring-0">
+                                    <SelectTrigger className="h-8 border-border bg-card shadow-none text-xs font-medium text-foreground focus:ring-0">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -506,9 +509,9 @@ export function TaskSlideOver({
                             </PropRow>
 
                             {/* Type */}
-                            <PropRow label="Catégorie" icon={<TypeIcon className="w-4 h-4 text-slate-400" />}>
+                            <PropRow label="Catégorie" icon={<TypeIcon className="w-4 h-4 text-muted-foreground" />}>
                                 <Select value={type} onValueChange={setType}>
-                                    <SelectTrigger className="h-8 border-slate-200 bg-white shadow-none text-xs font-medium text-slate-700 focus:ring-0">
+                                    <SelectTrigger className="h-8 border-border bg-card shadow-none text-xs font-medium text-foreground focus:ring-0">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
@@ -522,19 +525,19 @@ export function TaskSlideOver({
 
                         {/* Meta */}
                         {task && (task.created_at || task.creator) && (
-                            <div className="px-5 py-4 border-t border-slate-100 space-y-3">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Info</p>
+                            <div className="px-5 py-4 border-t border-border/50 space-y-3">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Info</p>
                                 {task.created_at && (
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-400">Créé</span>
-                                        <span className="text-xs font-medium text-slate-600">
+                                        <span className="text-xs text-muted-foreground">Créé</span>
+                                        <span className="text-xs font-medium text-muted-foreground">
                                             {dayjs(task.created_at).locale("fr").fromNow()}
                                         </span>
                                     </div>
                                 )}
                                 {task.creator && (
                                     <div className="flex items-center justify-between gap-2">
-                                        <span className="text-xs text-slate-400 shrink-0">Par</span>
+                                        <span className="text-xs text-muted-foreground shrink-0">Par</span>
                                         <div className="flex items-center gap-1.5 min-w-0">
                                             <div
                                                 className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
@@ -542,7 +545,7 @@ export function TaskSlideOver({
                                             >
                                                 {getInitials(task.creator.first_name, task.creator.last_name, task.creator.email)}
                                             </div>
-                                            <p className="text-xs font-medium text-slate-600 truncate">
+                                            <p className="text-xs font-medium text-muted-foreground truncate">
                                                 {task.creator.first_name
                                                     ? `${task.creator.first_name} ${task.creator.last_name ?? ""}`.trim()
                                                     : task.creator.email}
@@ -562,7 +565,7 @@ export function TaskSlideOver({
 function PropRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
     return (
         <div className="space-y-1 pb-2">
-            <div className="flex items-center gap-1.5 text-slate-500">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
                 {icon}
                 <span className="text-xs font-semibold">{label}</span>
             </div>

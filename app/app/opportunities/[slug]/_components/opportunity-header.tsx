@@ -12,13 +12,13 @@ import {
 } from "@/lib/validators/oppotunities";
 
 const STATUS_STYLES: Record<OpportunityStatus, { bg: string; text: string; dot: string }> = {
-  to_do: { bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400" },
-  first_contact: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
-  second_contact: { bg: "bg-indigo-50", text: "text-indigo-700", dot: "bg-indigo-500" },
-  proposal_sent: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
-  negotiation: { bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-500" },
-  won: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
-  lost: { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400" },
+  to_do: { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-muted-foreground/40" },
+  first_contact: { bg: "bg-blue-50 dark:bg-blue-950/40", text: "text-blue-700 dark:text-blue-400", dot: "bg-blue-500" },
+  second_contact: { bg: "bg-indigo-50 dark:bg-indigo-950/40", text: "text-indigo-700 dark:text-indigo-400", dot: "bg-indigo-500" },
+  proposal_sent: { bg: "bg-amber-50 dark:bg-amber-950/40", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500" },
+  negotiation: { bg: "bg-violet-50 dark:bg-violet-950/40", text: "text-violet-700 dark:text-violet-400", dot: "bg-violet-500" },
+  won: { bg: "bg-emerald-50 dark:bg-emerald-950/40", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
+  lost: { bg: "bg-red-50 dark:bg-red-950/40", text: "text-red-600 dark:text-red-400", dot: "bg-red-400" },
 };
 
 export type OpportunityTabId = "overview" | "message" | "tracking" | "analytics" | "timeline";
@@ -47,12 +47,12 @@ export default function OpportunityHeader({ opportunity }: { opportunity: Opport
   }
 
   return (
-    <div className="bg-white border-b border-slate-200">
+    <div className="bg-background border-b border-border">
       {/* TOP BAR : Breadcrumb & Links */}
       <div className="max-w-[1400px] mx-auto px-6 pt-6 pb-4">
         <Link
           href="/app/opportunities"
-          className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors mb-6 group"
+          className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-foreground transition-colors mb-6 group"
         >
           <ArrowLeft className="w-3.5 h-3.5 mr-1.5 group-hover:-translate-x-1 transition-transform" />
           Toutes les opportunités
@@ -68,15 +68,15 @@ export default function OpportunityHeader({ opportunity }: { opportunity: Opport
               {companyInitial}
             </div>
             <div>
-              <h1 className="text-2xl font-regular text-slate-900">
+              <h1 className="text-2xl font-regular text-foreground">
                 {opportunity.name}
               </h1>
-              <div className="flex items-center gap-1.5 text-sm font-medium text-slate-500 mt-0.5">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground mt-0.5">
                 <Building2 className="w-3.5 h-3.5 shrink-0" />
-                <span className="text-slate-700">{opportunity.company?.name ?? "—"}</span>
+                <span className="text-foreground/80">{opportunity.company?.name ?? "—"}</span>
                 {opportunity.company?.business_sector && (
                   <>
-                    <span className="text-slate-300">·</span>
+                    <span className="text-muted-foreground/30">·</span>
                     <span>{opportunity.company.business_sector}</span>
                   </>
                 )}
@@ -87,11 +87,8 @@ export default function OpportunityHeader({ opportunity }: { opportunity: Opport
           {/* Status Badge */}
           <div className="flex items-center">
             <span className={cn(
-              "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-bold border",
-              bg, text,
-              status === "won" ? "border-emerald-200" :
-              status === "lost" ? "border-red-200" :
-              "border-transparent"
+              "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-bold border border-transparent",
+              bg, text
             )}>
               <span className={cn("w-2 h-2 rounded-full shrink-0", dot)} />
               {mapOpportunityStatusLabel[status]}
@@ -113,7 +110,7 @@ export default function OpportunityHeader({ opportunity }: { opportunity: Opport
                 href={getTabHref(tab.id)}
                 className={cn(
                   "relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap shrink-0",
-                  isActive ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
+                  isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon

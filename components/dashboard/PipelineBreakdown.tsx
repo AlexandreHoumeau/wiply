@@ -8,7 +8,7 @@ import { Activity, ArrowRight, Briefcase } from "lucide-react";
 import type { PipelineRow } from "@/actions/dashboard.server";
 
 const STATUS_BAR_COLORS: Record<OpportunityStatus, string> = {
-  to_do: "bg-slate-400",
+  to_do: "bg-muted-foreground/50",
   first_contact: "bg-blue-500",
   second_contact: "bg-indigo-500",
   proposal_sent: "bg-amber-500",
@@ -25,7 +25,7 @@ export function PipelineBreakdown({
   total: number;
 }) {
   return (
-    <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+    <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-blue-600" />
@@ -33,14 +33,14 @@ export function PipelineBreakdown({
         </div>
         <Link
           href="/app/opportunities"
-          className="text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors flex items-center gap-1"
+          className="text-xs font-bold text-muted-foreground hover:text-blue-600 transition-colors flex items-center gap-1"
         >
           Voir tout <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <Briefcase className="w-8 h-8 mb-3 opacity-30" />
           <p className="text-sm font-medium">Aucune opportunité en cours</p>
           <Link
@@ -55,14 +55,14 @@ export function PipelineBreakdown({
           {rows.map(({ status, count }) => (
             <div key={status} className="space-y-1.5">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-slate-700">
+                <span className="text-foreground">
                   {mapOpportunityStatusLabel[status]}
                 </span>
-                <span className="text-slate-400">
+                <span className="text-muted-foreground">
                   {count} {count === 1 ? "opportunité" : "opportunités"}
                 </span>
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
@@ -73,9 +73,9 @@ export function PipelineBreakdown({
               </div>
             </div>
           ))}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
+          <div className="pt-3 border-t border-border flex items-center justify-between text-xs font-bold text-muted-foreground">
             <span>Total en cours</span>
-            <span className="text-slate-900">{total}</span>
+            <span className="text-foreground">{total}</span>
           </div>
         </div>
       )}

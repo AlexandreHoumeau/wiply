@@ -150,17 +150,17 @@ export default async function AgencyOverviewPage() {
             <AgencyAICard ai={ai} />
 
             {/* Facturation */}
-            <div className="group overflow-hidden rounded-2xl border bg-white transition-all duration-300">
-              <div className="flex items-center justify-between border-b border-slate-100/80 px-7 py-5 bg-slate-50/50">
+            <div className="group overflow-hidden rounded-2xl border bg-card transition-all duration-300">
+              <div className="flex items-center justify-between border-b border-border/50 px-7 py-5 bg-muted/30">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-xl bg-slate-100 p-2 text-slate-600 border border-slate-200/50 shadow-sm">
+                  <div className="rounded-xl bg-muted p-2 text-muted-foreground border border-border shadow-sm">
                     <CreditCard className="h-4 w-4" />
                   </div>
                   <h2 className="card-title">Abonnement & Facturation</h2>
                 </div>
                 <Link
                   href="/app/settings/billing"
-                  className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Gérer <ArrowRight className="h-3.5 w-3.5" />
                 </Link>

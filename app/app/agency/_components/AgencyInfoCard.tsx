@@ -45,10 +45,10 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
   ];
 
   return (
-    <div className="group overflow-hidden rounded-2xl border bg-white transition-all duration-300">
-      <div className="flex items-center justify-between border-b border-slate-100/80 px-7 py-5 bg-slate-50/50">
+    <div className="group overflow-hidden rounded-2xl border bg-card transition-all duration-300">
+      <div className="flex items-center justify-between border-b border-border/80 px-7 py-5 bg-muted/50">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-white p-2 text-slate-600 border border-slate-200/50 shadow-sm">
+          <div className="rounded-xl bg-card p-2 text-foreground/70 border border-border/50 shadow-sm">
             <Building2 className="h-4 w-4" />
           </div>
           <h2 className="card-title">Identité & Coordonnées</h2>
@@ -56,14 +56,14 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
         {isEditing ? (
           <button
             onClick={() => setIsEditing(false)}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-3.5 w-3.5" /> Annuler
           </button>
         ) : (
           <button
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <Pencil className="h-3.5 w-3.5" /> Éditer
           </button>
@@ -74,7 +74,7 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
         <form action={formAction} className="space-y-5 p-7">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              <Label htmlFor="name" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Nom commercial
               </Label>
               <Input
@@ -82,7 +82,7 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
                 name="name"
                 defaultValue={agency.name}
                 disabled={isPending}
-                className="h-10 text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:border-slate-900 focus:ring-slate-900 transition-all shadow-sm"
+                className="h-10 text-sm border-border bg-muted/50 focus:bg-card focus:border-foreground focus:ring-foreground transition-all shadow-sm"
               />
               {state?.errors?.name && (
                 <p className="text-xs text-red-500 font-medium">{state.errors.name[0]}</p>
@@ -90,7 +90,7 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="website" className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              <Label htmlFor="website" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Site internet
               </Label>
               <Input
@@ -100,12 +100,12 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
                 placeholder="https://"
                 defaultValue={agency.website ?? ""}
                 disabled={isPending}
-                className="h-10 text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:border-slate-900 focus:ring-slate-900 transition-all shadow-sm"
+                className="h-10 text-sm border-border bg-muted/50 focus:bg-card focus:border-foreground focus:ring-foreground transition-all shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              <Label htmlFor="email" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Email de contact
               </Label>
               <Input
@@ -114,12 +114,12 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
                 type="email"
                 defaultValue={agency.email ?? ""}
                 disabled={isPending}
-                className="h-10 text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:border-slate-900 focus:ring-slate-900 transition-all shadow-sm"
+                className="h-10 text-sm border-border bg-muted/50 focus:bg-card focus:border-foreground focus:ring-foreground transition-all shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              <Label htmlFor="phone" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Téléphone
               </Label>
               <Input
@@ -127,12 +127,12 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
                 name="phone"
                 defaultValue={agency.phone ?? ""}
                 disabled={isPending}
-                className="h-10 text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:border-slate-900 focus:ring-slate-900 transition-all shadow-sm"
+                className="h-10 text-sm border-border bg-muted/50 focus:bg-card focus:border-foreground focus:ring-foreground transition-all shadow-sm"
               />
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="address" className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+              <Label htmlFor="address" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Siège social
               </Label>
               <Input
@@ -140,19 +140,19 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
                 name="address"
                 defaultValue={agency.address ?? ""}
                 disabled={isPending}
-                className="h-10 text-sm border-slate-200 bg-slate-50/50 focus:bg-white focus:border-slate-900 focus:ring-slate-900 transition-all shadow-sm"
+                className="h-10 text-sm border-border bg-muted/50 focus:bg-card focus:border-foreground focus:ring-foreground transition-all shadow-sm"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-5 mt-2">
+          <div className="flex items-center justify-end gap-3 border-t border-border pt-5 mt-2">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setIsEditing(false)}
               disabled={isPending}
-              className="text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               Annuler
             </Button>
@@ -175,11 +175,11 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
         <div className="grid grid-cols-1 gap-6 p-7 sm:grid-cols-2">
           {fields.map(({ icon: Icon, label, value, isLink }) => (
             <div key={label} className="flex items-start gap-3.5">
-              <div className="shrink-0 rounded-lg bg-slate-50 border border-slate-100 p-2 text-slate-400">
+              <div className="shrink-0 rounded-lg bg-muted border border-border p-2 text-muted-foreground">
                 <Icon className="h-4 w-4" />
               </div>
               <div className="min-w-0 pt-0.5">
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                   {label}
                 </p>
                 {value ? (
@@ -188,15 +188,15 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
                       href={value}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group/link flex items-center gap-1.5 truncate text-sm font-medium text-slate-800 hover:text-blue-600 transition-colors"
+                      className="group/link flex items-center gap-1.5 truncate text-sm font-medium text-foreground hover:text-blue-600 transition-colors"
                     >
                       {value} <ExternalLink className="h-3 w-3 shrink-0 opacity-0 -translate-x-1 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all" />
                     </a>
                   ) : (
-                    <p className="truncate text-sm font-medium text-slate-800">{value}</p>
+                    <p className="truncate text-sm font-medium text-foreground">{value}</p>
                   )
                 ) : (
-                  <p className="text-sm italic text-slate-400">Non renseigné</p>
+                  <p className="text-sm italic text-muted-foreground">Non renseigné</p>
                 )}
               </div>
             </div>

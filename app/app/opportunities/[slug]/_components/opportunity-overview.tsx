@@ -72,40 +72,40 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 // --- Recommendation level styles ---
 const LEVEL_STYLES: Record<RecommendationLevel, { card: string; icon: string; primaryCta: string; secondaryCta: string }> = {
     hot: {
-        card: "border-orange-200 bg-orange-50",
-        icon: "bg-orange-100 text-orange-600",
+        card: "border-orange-200 dark:border-orange-800/60 bg-orange-50 dark:bg-orange-950/40",
+        icon: "bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400",
         primaryCta: "bg-orange-600 hover:bg-orange-700 text-white",
-        secondaryCta: "border border-orange-300 text-orange-700 hover:bg-orange-100",
+        secondaryCta: "border border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-950/60",
     },
     warning: {
-        card: "border-amber-200 bg-amber-50",
-        icon: "bg-amber-100 text-amber-600",
+        card: "border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40",
+        icon: "bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400",
         primaryCta: "bg-amber-600 hover:bg-amber-700 text-white",
-        secondaryCta: "border border-amber-300 text-amber-700 hover:bg-amber-100",
+        secondaryCta: "border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60",
     },
     action: {
-        card: "border-indigo-200 bg-indigo-50",
-        icon: "bg-indigo-100 text-indigo-600",
+        card: "border-indigo-200 dark:border-indigo-800/60 bg-indigo-50 dark:bg-indigo-950/40",
+        icon: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400",
         primaryCta: "bg-indigo-600 hover:bg-indigo-700 text-white",
-        secondaryCta: "border border-indigo-300 text-indigo-700 hover:bg-indigo-100",
+        secondaryCta: "border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-950/60",
     },
     success: {
-        card: "border-emerald-200 bg-emerald-50",
-        icon: "bg-emerald-100 text-emerald-600",
+        card: "border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40",
+        icon: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400",
         primaryCta: "bg-emerald-600 hover:bg-emerald-700 text-white",
-        secondaryCta: "border border-emerald-300 text-emerald-700 hover:bg-emerald-100",
+        secondaryCta: "border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60",
     },
     info: {
-        card: "border-slate-200 bg-slate-50",
-        icon: "bg-slate-100 text-slate-600",
-        primaryCta: "bg-slate-700 hover:bg-slate-800 text-white",
-        secondaryCta: "border border-slate-300 text-slate-700 hover:bg-slate-100",
+        card: "border-border bg-muted",
+        icon: "bg-muted text-muted-foreground",
+        primaryCta: "bg-foreground hover:bg-foreground/90 text-background",
+        secondaryCta: "border border-border text-foreground hover:bg-muted",
     },
     neutral: {
-        card: "border-slate-200 bg-white",
-        icon: "bg-slate-100 text-slate-500",
-        primaryCta: "bg-slate-700 hover:bg-slate-800 text-white",
-        secondaryCta: "border border-slate-300 text-slate-600 hover:bg-slate-100",
+        card: "border-border bg-card",
+        icon: "bg-muted text-muted-foreground",
+        primaryCta: "bg-foreground hover:bg-foreground/90 text-background",
+        secondaryCta: "border border-border text-muted-foreground hover:bg-muted",
     },
 };
 
@@ -116,33 +116,33 @@ const MINI_EVENT_CONFIG: Record<
 > = {
     created: {
         icon: <Sparkles className="w-3.5 h-3.5" />,
-        color: "bg-violet-100 text-violet-600",
+        color: "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400",
         label: () => "Opportunité créée",
     },
     status_changed: {
         icon: <ArrowRight className="w-3.5 h-3.5" />,
-        color: "bg-blue-100 text-blue-600",
+        color: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400",
         label: (m) =>
             m.to ? `Statut → ${mapOpportunityStatusLabel[m.to as OpportunityStatus] ?? m.to}` : "Statut modifié",
     },
     info_updated: {
         icon: <Pencil className="w-3.5 h-3.5" />,
-        color: "bg-amber-100 text-amber-600",
+        color: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400",
         label: () => "Informations mises à jour",
     },
     note_added: {
         icon: <MessageSquare className="w-3.5 h-3.5" />,
-        color: "bg-slate-100 text-slate-600",
+        color: "bg-muted text-muted-foreground",
         label: () => "Note ajoutée",
     },
     ai_message_generated: {
         icon: <Wand2 className="w-3.5 h-3.5" />,
-        color: "bg-emerald-100 text-emerald-600",
+        color: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
         label: (m) => `Message IA généré${m.channel ? ` (${m.channel})` : ""}`,
     },
     tracking_link_created: {
         icon: <LinkIcon className="w-3.5 h-3.5" />,
-        color: "bg-cyan-100 text-cyan-600",
+        color: "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400",
         label: () => "Lien de tracking créé",
     },
 };
@@ -172,21 +172,21 @@ function StatusPipeline({ status }: { status: OpportunityStatus }) {
     const currentIndex = PIPELINE_STAGES.findIndex((s) => s.id === status);
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Progression
                 </span>
             </div>
 
             {isLost ? (
                 <div className="flex items-center gap-3 py-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-50 dark:bg-red-950/40">
                         <XCircle className="w-5 h-5 text-red-500" />
                     </div>
                     <div>
-                        <p className="text-sm font-semibold text-red-600">Opportunité perdue</p>
-                        <p className="text-xs text-slate-400">Cette opportunité a été marquée comme perdue</p>
+                        <p className="text-sm font-semibold text-red-600 dark:text-red-400">Opportunité perdue</p>
+                        <p className="text-xs text-muted-foreground">Cette opportunité a été marquée comme perdue</p>
                     </div>
                 </div>
             ) : (
@@ -204,7 +204,7 @@ function StatusPipeline({ status }: { status: OpportunityStatus }) {
                                             "w-7 h-7 rounded-full flex items-center justify-center transition-all",
                                             isPast && "bg-emerald-500",
                                             isCurrent && "ring-2 ring-offset-2 shadow-sm",
-                                            isFuture && "bg-slate-100"
+                                            isFuture && "bg-muted"
                                         )}
                                         style={
                                             isCurrent
@@ -214,14 +214,14 @@ function StatusPipeline({ status }: { status: OpportunityStatus }) {
                                     >
                                         {isPast && <CheckCircle2 className="w-4 h-4 text-white" />}
                                         {isCurrent && <Circle className="w-3 h-3 text-white fill-white" />}
-                                        {isFuture && <Circle className="w-3 h-3 text-slate-300" />}
+                                        {isFuture && <Circle className="w-3 h-3 text-muted-foreground/40" />}
                                     </div>
                                     <span
                                         className={cn(
                                             "text-[10px] font-medium text-center leading-tight whitespace-nowrap",
-                                            isPast && "text-emerald-600",
-                                            isCurrent && "text-slate-900 font-bold",
-                                            isFuture && "text-slate-400"
+                                            isPast && "text-emerald-600 dark:text-emerald-400",
+                                            isCurrent && "text-foreground font-bold",
+                                            isFuture && "text-muted-foreground"
                                         )}
                                     >
                                         {stage.label}
@@ -232,7 +232,7 @@ function StatusPipeline({ status }: { status: OpportunityStatus }) {
                                     <div
                                         className={cn(
                                             "h-0.5 w-6 mx-0.5 mb-4 shrink-0 rounded-full",
-                                            index < currentIndex ? "bg-emerald-400" : "bg-slate-200"
+                                            index < currentIndex ? "bg-emerald-400" : "bg-border"
                                         )}
                                     />
                                 )}
@@ -325,8 +325,8 @@ function RecommendationCard({
                     {icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900 mb-1">{recommendation.title}</p>
-                    <p className="text-sm text-slate-600 leading-relaxed">{recommendation.description}</p>
+                    <p className="text-sm font-bold text-foreground mb-1">{recommendation.title}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{recommendation.description}</p>
 
                     {(recommendation.primaryCta || recommendation.secondaryCta) && (
                         <div className="flex items-center flex-wrap gap-2 mt-3">
@@ -379,7 +379,7 @@ function QuickStats({
             label: activeLinksCount === 1 ? "lien actif" : "liens actifs",
         },
         {
-            icon: <Calendar className="w-4 h-4 text-slate-400" />,
+            icon: <Calendar className="w-4 h-4 text-muted-foreground" />,
             value: daysSinceLastActivity,
             label: daysSinceLastActivity === 1 ? "jour sans activité" : "jours sans activité",
         },
@@ -388,10 +388,10 @@ function QuickStats({
     return (
         <div className="grid grid-cols-3 gap-3">
             {stats.map((stat, i) => (
-                <div key={i} className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm text-center">
+                <div key={i} className="bg-card rounded-2xl border border-border p-4 shadow-sm text-center">
                     <div className="flex justify-center mb-2">{stat.icon}</div>
-                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{stat.label}</p>
+                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
                 </div>
             ))}
         </div>
@@ -403,18 +403,18 @@ function MiniTimeline({ events, slug }: { events: OpportunityEvent[]; slug: stri
 
     if (recent.length === 0) {
         return (
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
                     Activité récente
                 </p>
-                <p className="text-sm text-slate-400 text-center py-4">Aucune activité pour l'instant</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Aucune activité pour l'instant</p>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
                 Activité récente
             </p>
             <div className="space-y-3">
@@ -428,14 +428,14 @@ function MiniTimeline({ events, slug }: { events: OpportunityEvent[]; slug: stri
                                 {config.icon}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm text-slate-700 leading-snug">
+                                <p className="text-sm text-foreground/80 leading-snug">
                                     {config.label(event.metadata ?? {})}
                                 </p>
                                 {event.event_type === "note_added" && event.metadata?.content && (
-                                    <p className="text-xs text-slate-500 mt-0.5 truncate">{event.metadata.content}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{event.metadata.content}</p>
                                 )}
                             </div>
-                            <span className="text-xs text-slate-400 shrink-0 mt-0.5">
+                            <span className="text-xs text-muted-foreground shrink-0 mt-0.5">
                                 {formatRelativeDate(event.created_at)}
                             </span>
                         </div>
@@ -445,7 +445,7 @@ function MiniTimeline({ events, slug }: { events: OpportunityEvent[]; slug: stri
 
             <Link
                 href={`/app/opportunities/${slug}/timeline`}
-                className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+                className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
                 <BarChart3 className="w-3.5 h-3.5" />
                 Voir toute la timeline
@@ -491,7 +491,6 @@ export default function OpportunityOverview({
     const aiMessageCount = aiMessages.length;
     const activeLinksCount = trackingLinks.filter((l) => l.is_active).length;
 
-    // Most recent click across all tracking links
     const lastClickedAt = trackingLinks
         .map((l) => l.last_clicked_at)
         .filter(Boolean)
@@ -499,7 +498,6 @@ export default function OpportunityOverview({
         .at(-1) ?? null;
     const daysSinceLastClick = lastClickedAt ? getDaysSince(lastClickedAt) : null;
 
-    // Days since last relevant activity
     const relevantEvents = initialEvents.filter((e) =>
         ["status_changed", "note_added", "ai_message_generated", "created"].includes(e.event_type)
     );
