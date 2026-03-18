@@ -9,4 +9,5 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
   defaults: "2026-01-30",
   capture_exceptions: true,
   debug: false,
+  opt_out_capturing_by_default: true,
 });

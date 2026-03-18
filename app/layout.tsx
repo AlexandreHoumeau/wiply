@@ -1,3 +1,4 @@
+import { CookieConsent } from "@/components/cookie-consent";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { UpgradeDialogProvider } from "@/providers/UpgradeDialogProvider";
 import type { Metadata } from "next";
@@ -66,6 +67,7 @@ export default function RootLayout({
           </UpgradeDialogProvider>
         </ReactQueryProvider>
         <Toaster />
+        <CookieConsent />
       </body>
     </html>
   );
