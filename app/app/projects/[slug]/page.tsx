@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useProject } from "@/providers/project-provider";
 import { getProjectOverviewStats } from "@/actions/project.server";
 import { CheckCircle2, ListChecks, KanbanSquare, Clock, AlignLeft, Building2, CalendarDays, Figma, Globe, ExternalLink } from "lucide-react";
+import { RichTextViewer } from "@/components/ui/rich-text-viewer";
 
 export default function ProjectOverviewPage() {
     const project = useProject();
@@ -80,7 +81,7 @@ export default function ProjectOverviewPage() {
                         </div>
                         <div className="prose prose-slate max-w-none text-muted-foreground">
                             {project.description ? (
-                                <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{project.description}</p>
+                                <RichTextViewer content={project.description} className="text-[15px]" />
                             ) : (
                                 <div className="text-center py-10 text-muted-foreground italic bg-muted rounded-2xl border border-dashed border-border">
                                     Aucune description ou brief fourni pour ce projet.

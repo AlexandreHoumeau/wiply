@@ -15,7 +15,16 @@ import type {
   TaskData,
 } from "@/lib/validators/project";
 
-// ─── Slug utility ──────────────────────────────────────────────────────────
+// ─── Slug & prefix utilities ───────────────────────────────────────────────
+
+function generateTaskPrefix(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const raw =
+    words.length === 1
+      ? words[0].substring(0, 3)
+      : words.map((w) => w[0]).join("").substring(0, 4);
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, "") || "TCK";
+}
 
 function slugify(text: string): string {
   return text
@@ -74,6 +83,7 @@ export async function createProjectFromOpportunity(
         name: projectData.name,
         description: opportunity.description,
         slug,
+        task_prefix: generateTaskPrefix(projectData.name),
         status: "active",
         start_date:
           projectData.start_date ?? new Date().toISOString().split("T")[0],
@@ -160,6 +170,7 @@ export async function createProject(
         company_id: companyId,
         agency_id: agencyId,
         slug,
+        task_prefix: generateTaskPrefix(data.name),
         status: "active",
       })
       .select("id, slug")
@@ -273,6 +284,7 @@ export async function updateProjectSettings(
       .update({
         name: data.name,
         description: data.description,
+        task_prefix: data.task_prefix,
         start_date: data.start_date,
         figma_url: data.figma_url,
         github_url: data.github_url,
@@ -349,6 +361,16 @@ export async function createTask(
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Compute next sequential task number for this project
+    const { data: maxRow } = await supabase
+      .from("tasks")
+      .select("task_number")
+      .eq("project_id", projectId)
+      .order("task_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextNumber = (maxRow?.task_number ?? 0) + 1;
+
     const { data: newTask, error } = await supabase
       .from("tasks")
       .insert({
@@ -361,6 +383,9 @@ export async function createTask(
         priority: data.priority ?? "medium",
         assignee_id: data.assignee_id ?? null,
         due_date: data.due_date ?? null,
+        parent_id: data.parent_id ?? null,
+        version_id: data.version_id ?? null,
+        task_number: nextNumber,
       })
       .select()
       .single();
@@ -412,6 +437,8 @@ export async function updateTaskDetails(
         priority: data.priority,
         assignee_id: data.assignee_id ?? null,
         due_date: data.due_date ?? null,
+        parent_id: data.parent_id ?? null,
+        version_id: data.version_id ?? null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", taskId);
@@ -435,6 +462,25 @@ export async function updateTaskDetails(
         body: `Vous avez été assigné à "${data.title}"`,
         metadata: { task_id: taskId },
       });
+    }
+
+    // Notify @mentioned users in description
+    if (currentTask && data.description && user) {
+      const mentionedIds = [...data.description.matchAll(/data-id="([^"]+)"/g)].map((m) => m[1]);
+      const alreadyNotified = new Set<string>([user.id]);
+      for (const mentionedId of mentionedIds) {
+        if (!alreadyNotified.has(mentionedId)) {
+          alreadyNotified.add(mentionedId);
+          await createNotification({
+            agencyId: currentTask.agency_id,
+            userId: mentionedId,
+            type: "task_mention",
+            title: "Vous avez été mentionné",
+            body: `Vous avez été mentionné dans la description de "${data.title}"`,
+            metadata: { task_id: taskId },
+          });
+        }
+      }
     }
 
     return { success: true, data: undefined };
@@ -549,6 +595,7 @@ export async function getOrCreateInternalProject(
         agency_id: agencyId,
         company_id: null,
         slug,
+        task_prefix: generateTaskPrefix(projectName),
         status: "active",
         is_internal: true,
       })

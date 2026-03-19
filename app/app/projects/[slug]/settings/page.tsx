@@ -5,11 +5,11 @@ import { useProject } from "@/providers/project-provider";
 import { updateProjectSettings, generateProjectMagicLink, togglePortalStatus } from "@/actions/project.server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
-import { Loader2, LinkIcon, Copy, Save, Sparkles, PlayCircle, PauseCircle, LayoutTemplate } from "lucide-react";
+import { Loader2, LinkIcon, Copy, Save, Sparkles, PlayCircle, PauseCircle, LayoutTemplate, Tag } from "lucide-react";
 
 export default function ProjectSettingsPage() {
     const project = useProject();
@@ -18,14 +18,15 @@ export default function ProjectSettingsPage() {
     const [isGeneratingToken, setIsGeneratingToken] = useState(false);
 
     const [formData, setFormData] = useState({
-        name: project?.name || "",
-        description: project?.description || "",
-        start_date: project?.start_date || "",
-        figma_url: project?.figma_url || "",
-        github_url: project?.github_url || "",
-        deployment_url: project?.deployment_url || "",
-        portal_message: project?.portal_message || "",
-        portal_show_progress: project?.portal_show_progress ?? true,
+        name: (project as any)?.name || "",
+        description: (project as any)?.description || "",
+        task_prefix: (project as any)?.task_prefix || "",
+        start_date: (project as any)?.start_date || "",
+        figma_url: (project as any)?.figma_url || "",
+        github_url: (project as any)?.github_url || "",
+        deployment_url: (project as any)?.deployment_url || "",
+        portal_message: (project as any)?.portal_message || "",
+        portal_show_progress: (project as any)?.portal_show_progress ?? true,
     });
 
     if (!project) return null;
@@ -163,13 +164,32 @@ export default function ProjectSettingsPage() {
                         />
                     </div>
 
+                    <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                            <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                            Préfixe des tickets
+                        </Label>
+                        <Input
+                            value={formData.task_prefix}
+                            onChange={(e) => setFormData({ ...formData, task_prefix: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) })}
+                            placeholder="ex: WIP, PROJ, DEV"
+                            maxLength={6}
+                            className={inputClasses}
+                        />
+                        <p className="text-xs text-muted-foreground">Identifiant court affiché avant le numéro de ticket (ex: WIP-1, WIP-2).</p>
+                    </div>
+
                     <div className="space-y-2 md:col-span-2">
                         <Label className="text-sm font-semibold text-foreground">Description / Brief</Label>
-                        <Textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="min-h-[120px] rounded-xl bg-muted/50 border-border focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none resize-none"
-                        />
+                        <div className="rounded-xl bg-muted/50 border border-border px-4 py-3 min-h-[120px]">
+                            <RichTextEditor
+                                key="project-description"
+                                content={formData.description}
+                                onChange={(html) => setFormData({ ...formData, description: html })}
+                                placeholder="Contexte, objectifs, brief client…"
+                                minHeight="80px"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -242,11 +262,12 @@ export default function ProjectSettingsPage() {
                         {/* Custom message */}
                         <div className="space-y-2">
                             <Label className="text-sm font-semibold text-foreground">Message pour le client</Label>
-                            <Textarea
+                            <textarea
                                 placeholder="Ex: Bonjour ! Voici votre espace de suivi. N'hésitez pas à nous contacter si vous avez des questions…"
                                 value={formData.portal_message}
-                                onChange={(e) => setFormData({ ...formData, portal_message: e.target.value })}
-                                className="min-h-[100px] rounded-xl bg-muted/50 border-border focus-visible:ring-indigo-500 focus-visible:border-indigo-500 shadow-none resize-none"
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, portal_message: e.target.value })}
+                                rows={4}
+                                className="w-full min-h-[100px] rounded-xl bg-muted/50 border border-border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
                             />
                             <p className="text-xs text-muted-foreground">Affiché en haut du portail client, sous le titre de bienvenue.</p>
                         </div>

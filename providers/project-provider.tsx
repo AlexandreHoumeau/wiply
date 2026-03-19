@@ -13,9 +13,5 @@ export function ProjectProvider({ project, children }: { project: any, children:
 }
 
 export function useProject() {
-    const context = useContext(ProjectContext);
-    if (!context) {
-        throw new Error("useProject doit être utilisé dans un ProjectProvider");
-    }
-    return context;
+    return useContext(ProjectContext);
 }

@@ -13,7 +13,8 @@ export async function getProjectTasks(projectId: string) {
                 *,
                 assignee:profiles!tasks_assignee_id_fkey(*),
                 creator:profiles!tasks_created_by_fkey(*),
-                task_comments(count)
+                task_comments(count),
+                version:project_versions(id, name, status)
                 `)
             .eq("project_id", projectId)
             .order("position", { ascending: true });
@@ -123,12 +124,15 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
             .single();
 
         if (task) {
-            const recipients = [task.created_by, task.assignee_id]
+            // Extract @mention user IDs from HTML content (data-id attributes)
+            const mentionedIds = [...content.matchAll(/data-id="([^"]+)"/g)].map((m) => m[1]);
+
+            const commentRecipients = [task.created_by, task.assignee_id]
                 .filter(Boolean)
                 .filter((id, i, arr) => arr.indexOf(id) === i)
                 .filter((id) => id !== user.id);
 
-            for (const recipientId of recipients) {
+            for (const recipientId of commentRecipients) {
                 await createNotification({
                     agencyId: task.agency_id,
                     userId: recipientId,
@@ -137,6 +141,22 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
                     body: `Commentaire sur la tâche "${task.title}"`,
                     metadata: { task_id: taskId },
                 });
+            }
+
+            // Notify mentioned users (excluding those already notified above, and the commenter)
+            const alreadyNotified = new Set([user.id, ...commentRecipients]);
+            for (const mentionedId of mentionedIds) {
+                if (!alreadyNotified.has(mentionedId)) {
+                    alreadyNotified.add(mentionedId);
+                    await createNotification({
+                        agencyId: task.agency_id,
+                        userId: mentionedId,
+                        type: "task_comment",
+                        title: "Vous avez été mentionné",
+                        body: `Vous avez été mentionné dans un commentaire sur "${task.title}"`,
+                        metadata: { task_id: taskId },
+                    });
+                }
             }
         }
 

@@ -22,7 +22,7 @@ export default async function WorkspacePage() {
     // Fetch internal project details
     const { data: internalProject } = await supabase
         .from("projects")
-        .select("id, name")
+        .select("id, name, task_prefix")
         .eq("slug", internalSlug)
         .single();
 
@@ -60,7 +60,7 @@ export default async function WorkspacePage() {
 
             {/* Kanban board */}
             <div className="flex-1 overflow-hidden">
-                <BoardContainer projectId={internalProject.id} initialTasks={tasks} />
+                <BoardContainer projectId={internalProject.id} initialTasks={tasks} taskPrefix={internalProject.task_prefix ?? "TCK"} />
             </div>
         </div>
     );

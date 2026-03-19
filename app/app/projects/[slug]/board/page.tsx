@@ -18,7 +18,7 @@ export default async function ProjectBoardPage({ params }: { params: Promise<{ s
     return (
         <div className="h-full flex flex-col">
             <div className="flex-1 overflow-hidden">
-                <BoardContainer projectId={project.id} initialTasks={initialTasks || []} />
+                <BoardContainer projectId={project.id} initialTasks={initialTasks || []} taskPrefix={project.task_prefix ?? "TCK"} />
             </div>
         </div>
     );
