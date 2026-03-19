@@ -32,7 +32,7 @@ export async function subscribeToNewsletter(
         await sendEmail({
             to: parsed.data,
             subject: "Bienvenue dans la communauté Wiply",
-            template: React.createElement(NewsletterWelcomeEmail),
+            template: React.createElement(NewsletterWelcomeEmail, { email: parsed.data }),
         });
     } catch {
         // Don't block success if email fails
@@ -45,6 +45,26 @@ export async function subscribeToNewsletter(
         properties: { email: parsed.data },
     });
     await posthog?.shutdown();
+
+    return { success: true };
+}
+
+export async function unsubscribeFromNewsletter(
+    email: string
+): Promise<{ success: true } | { error: string }> {
+    const parsed = emailSchema.safeParse(email);
+    if (!parsed.success) {
+        return { error: "Adresse email invalide." };
+    }
+
+    const { error } = await supabaseAdmin
+        .from("newsletter_subscribers")
+        .delete()
+        .eq("email", parsed.data);
+
+    if (error) {
+        return { error: "Une erreur est survenue. Réessayez." };
+    }
 
     return { success: true };
 }

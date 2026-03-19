@@ -5,13 +5,18 @@ import {
     Heading,
     Hr,
     Html,
+    Link,
     Preview,
     Section,
     Text,
 } from "@react-email/components";
 import * as React from "react";
 
-export const NewsletterWelcomeEmail = () => (
+interface NewsletterWelcomeEmailProps {
+    email?: string;
+}
+
+export const NewsletterWelcomeEmail = ({ email }: NewsletterWelcomeEmailProps) => (
     <Html>
         <Head />
         <Preview>Bienvenue dans la communauté Wiply</Preview>
@@ -32,7 +37,18 @@ export const NewsletterWelcomeEmail = () => (
                 </Text>
                 <Hr style={hr} />
                 <Text style={footer}>
-                    © {new Date().getFullYear()} Wiply — Le CRM pensé pour l'efficacité.
+                    © {new Date().getFullYear()} Wiply — Le CRM pensé pour l'efficacité.{" "}
+                    {email && (
+                        <>
+                            {" · "}
+                            <Link
+                                href={`https://wiply.fr/unsubscribe?email=${encodeURIComponent(email)}`}
+                                style={unsubscribeLink}
+                            >
+                                Se désabonner
+                            </Link>
+                        </>
+                    )}
                 </Text>
             </Container>
         </Body>
@@ -95,5 +111,10 @@ const hr = {
 const footer = {
     color: "#9ca3af",
     fontSize: "12px",
-    textAlign: "center" as const
+    textAlign: "center" as const,
+};
+
+const unsubscribeLink = {
+    color: "#9ca3af",
+    textDecoration: "underline",
 };

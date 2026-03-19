@@ -17,7 +17,7 @@ export default function GeneralAgencySettings(GenralAgencySettingsProps: General
 	return (
 		<TabsContent value="general" className="space-y-6">
 			<form action={agencyFormAction}>
-				<Card className="border-border shadow-sm overflow-hidden">
+				<Card className="border-border shadow-sm overflow-hidden pb-0">
 					<CardHeader className="bg-card border-b border-border pb-6">
 						<div className="flex items-center gap-3">
 							<div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
