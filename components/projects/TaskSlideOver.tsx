@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { toast } from "sonner";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProject } from "@/providers/project-provider";
@@ -178,6 +179,7 @@ export function TaskSlideOver({
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="sm:max-w-[940px] w-full p-0 flex flex-col bg-background border-l border-border shadow-2xl [&>button:first-of-type]:hidden overflow-hidden">
+                <VisuallyHidden><SheetTitle>{title || "Ticket"}</SheetTitle></VisuallyHidden>
 
                 <TaskHeader
                     task={task}
@@ -210,7 +212,7 @@ export function TaskSlideOver({
 
                         {/* Description */}
                         <div className="px-10 pb-8">
-                            <div className="rounded-lg border border-transparent hover:border-border/40 focus-within:border-border/60 focus-within:bg-muted/20 transition-all px-3 py-2 -mx-3 cursor-text">
+                            <div className="rounded-lg border border-border/30 bg-muted/20 hover:border-border/50 focus-within:border-border/70 focus-within:bg-muted/30 transition-all px-3 py-2 -mx-3 cursor-text">
                                 <RichTextEditor
                                     key={task?.id ?? "new"}
                                     content={description}
