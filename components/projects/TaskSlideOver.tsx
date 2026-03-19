@@ -212,7 +212,7 @@ export function TaskSlideOver({
 
                         {/* Description */}
                         <div className="px-10 pb-8">
-                            <div className="rounded-lg border border-border/30 bg-muted/20 hover:border-border/50 focus-within:border-border/70 focus-within:bg-muted/30 transition-all px-3 py-2 -mx-3 cursor-text">
+                            <div className="rounded-lg border border-border/40 bg-muted/20 shadow-sm hover:border-border/60 hover:shadow-md focus-within:border-border/80 focus-within:bg-muted/30 focus-within:shadow-md transition-all px-3 py-2 -mx-3 cursor-text">
                                 <RichTextEditor
                                     key={task?.id ?? "new"}
                                     content={description}
