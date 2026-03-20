@@ -8,7 +8,6 @@ import {
   CreateQuoteInput,
   UpdateQuoteInput,
   CreateQuoteItemInput,
-  UpdateQuoteItemSchema,
   ALLOWED_TRANSITIONS,
   QuoteStatus,
 } from "@/lib/validators/quotes"
@@ -299,7 +298,12 @@ export async function listOpportunitiesForSelect() {
     .eq("agency_id", agencyId)
     .order("created_at", { ascending: false })
     .limit(200)
-  return (data ?? []) as Array<{ id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }>
+  return (data ?? []).map(o => ({
+    id: o.id as string,
+    name: o.name as string,
+    company_id: o.company_id as string | null,
+    company: Array.isArray(o.company) ? (o.company[0] ?? null) : (o.company as any ?? null),
+  })) as Array<{ id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }>
 }
 
 export async function generateQuoteWithAI({
