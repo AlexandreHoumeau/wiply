@@ -39,7 +39,7 @@ export async function getQuotes(filters?: {
 
   let query = supabase
     .from("quotes")
-    .select("*, company:companies(id, name), opportunity:opportunities(id, title)")
+    .select("*, company:companies(id, name), opportunity:opportunities(id, name)")
     .eq("agency_id", agencyId)
     .order("created_at", { ascending: false })
 
@@ -64,7 +64,7 @@ export async function getQuote(id: string) {
 
   const { data, error } = await supabase
     .from("quotes")
-    .select("*, items:quote_items(*), company:companies(id, name), opportunity:opportunities(id, title)")
+    .select("*, items:quote_items(*), company:companies(id, name), opportunity:opportunities(id, name)")
     .eq("id", id)
     .eq("agency_id", agencyId)
     .single()
