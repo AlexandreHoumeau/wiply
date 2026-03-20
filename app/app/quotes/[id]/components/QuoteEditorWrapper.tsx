@@ -3,6 +3,7 @@
 import { useQuote } from "@/hooks/use-quotes"
 import { QuoteEditor } from "./QuoteEditor"
 import { useAgency } from "@/providers/agency-provider"
+import { isProPlan } from "@/lib/validators/agency"
 import { Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
@@ -12,7 +13,7 @@ export default function QuoteEditorWrapper({ id }: { id: string }) {
   const { agency } = useAgency()
   const { data: quote, isLoading, error } = useQuote(id)
 
-  if (agency?.plan !== "PRO") {
+  if (!agency || !isProPlan(agency)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8 text-center">
         <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100">

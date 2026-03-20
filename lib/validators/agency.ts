@@ -166,4 +166,11 @@ export type Agency = {
     secondary_color: string | null;
     logo_url: string | null;
     demo_ends_at: string | null;
+    plan: string | null;
+}
+
+/** Returns true if the agency has an effective PRO plan (paid or active demo) */
+export function isProPlan(agency: Pick<Agency, 'plan' | 'demo_ends_at'>): boolean {
+    if (agency.demo_ends_at && new Date(agency.demo_ends_at) > new Date()) return true
+    return agency.plan === 'PRO'
 }

@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useAgency } from "@/providers/agency-provider"
+import { isProPlan } from "@/lib/validators/agency"
 import { signOut } from "@/actions/auth.actions"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
@@ -111,7 +112,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                             <p className="px-3 text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-[0.2em] mb-3 mt-2">Plateforme</p>
                         ) : <div className="h-4" />}
                         {mainNav.map((item) => (
-                            <NavItem key={item.href} item={item} active={isLinkActive(item.href)} isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} locked={(item as any).proOnly && agency?.plan !== 'PRO'} />
+                            <NavItem key={item.href} item={item} active={isLinkActive(item.href)} isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} locked={(item as any).proOnly && (!agency || !isProPlan(agency))} />
                         ))}
                     </div>
 

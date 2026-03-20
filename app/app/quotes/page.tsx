@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useAgency } from "@/providers/agency-provider"
 import { useQuotes, useDeleteQuote } from "@/hooks/use-quotes"
 import { computeQuoteTotals } from "@/lib/validators/quotes"
+import { isProPlan } from "@/lib/validators/agency"
 import { toast } from "sonner"
 
 const STATUS_LABELS: Record<string, string> = {
@@ -56,7 +57,7 @@ export default function QuotesPage() {
     activeTab !== "all" ? { status: activeTab } : undefined
   )
 
-  if (agency?.plan !== "PRO") {
+  if (!agency || !isProPlan(agency)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8 text-center">
         <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100">

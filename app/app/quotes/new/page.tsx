@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAgency } from "@/providers/agency-provider"
+import { isProPlan } from "@/lib/validators/agency"
 import { createQuote } from "@/actions/quotes.server"
 import { toast } from "sonner"
 
@@ -20,7 +21,7 @@ export default function NewQuotePage() {
   const opportunityId = searchParams.get("opportunityId")
   const companyId = searchParams.get("companyId")
 
-  if (agency?.plan !== "PRO") {
+  if (!agency || !isProPlan(agency)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8 text-center">
         <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100">
