@@ -7,8 +7,17 @@ import Mention from "@tiptap/extension-mention";
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { Bold, Italic, Link2 } from "lucide-react";
+import { Bold, Italic, Link2, ExternalLink, Trash2 } from "lucide-react";
 import type { AgencyMember } from "@/actions/agency.server";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 // ─── Mention suggestion list ────────────────────────────────────────────────
 
@@ -87,6 +96,83 @@ const MentionList = forwardRef<MentionListHandle, MentionListProps>(function Men
     );
 });
 
+// ─── Link dialog ────────────────────────────────────────────────────────────
+
+interface LinkDialogProps {
+    open: boolean;
+    initialUrl: string;
+    onConfirm: (url: string) => void;
+    onRemove: () => void;
+    onClose: () => void;
+}
+
+function LinkDialog({ open, initialUrl, onConfirm, onRemove, onClose }: LinkDialogProps) {
+    const [url, setUrl] = useState(initialUrl);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (open) {
+            setUrl(initialUrl);
+            setTimeout(() => inputRef.current?.select(), 50);
+        }
+    }, [open, initialUrl]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onConfirm(url.trim());
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <ExternalLink className="w-4 h-4 text-primary" />
+                        {initialUrl ? "Modifier le lien" : "Insérer un lien"}
+                    </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="py-2">
+                        <Input
+                            ref={inputRef}
+                            type="url"
+                            placeholder="https://exemple.com"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            className="w-full"
+                            autoComplete="off"
+                        />
+                    </div>
+                    <DialogFooter className="flex-row justify-between sm:justify-between gap-2 pt-2">
+                        {initialUrl ? (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+                                onClick={onRemove}
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Supprimer
+                            </Button>
+                        ) : (
+                            <span />
+                        )}
+                        <div className="flex gap-2">
+                            <Button type="button" variant="outline" size="sm" onClick={onClose}>
+                                Annuler
+                            </Button>
+                            <Button type="submit" size="sm" disabled={!url.trim()}>
+                                {initialUrl ? "Mettre à jour" : "Insérer"}
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 // ─── Main editor ────────────────────────────────────────────────────────────
 
 interface RichTextEditorProps {
@@ -116,6 +202,9 @@ export function RichTextEditor({
     const mentionListRef = useRef<MentionListHandle>(null);
     const onSubmitRef = useRef(onSubmit);
     useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
+
+    const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+    const [linkInitialUrl, setLinkInitialUrl] = useState("");
 
     const editor = useEditor({
         extensions: [
@@ -210,20 +299,31 @@ export function RichTextEditor({
         if (prevContentRef.current === content) return;
         prevContentRef.current = content;
         if (!editor.isFocused) {
-            editor.commands.setContent(content || "", false);
+            editor.commands.setContent(content || "");
         }
     }, [content, editor]);
 
     const setLink = useCallback(() => {
         if (!editor) return;
         const prev = editor.getAttributes("link").href as string | undefined;
-        const url = window.prompt("URL du lien", prev ?? "https://");
-        if (url === null) return;
-        if (url === "") {
-            editor.chain().focus().extendMarkToLink().unsetLink().run();
+        setLinkInitialUrl(prev ?? "");
+        setLinkDialogOpen(true);
+    }, [editor]);
+
+    const handleLinkConfirm = useCallback((url: string) => {
+        if (!editor) return;
+        setLinkDialogOpen(false);
+        if (!url) {
+            editor.chain().focus().unsetLink().run();
             return;
         }
-        editor.chain().focus().extendMarkToLink().setLink({ href: url }).run();
+        editor.chain().focus().setLink({ href: url }).run();
+    }, [editor]);
+
+    const handleLinkRemove = useCallback(() => {
+        if (!editor) return;
+        setLinkDialogOpen(false);
+        editor.chain().focus().unsetLink().run();
     }, [editor]);
 
     if (!editor) return null;
@@ -292,6 +392,15 @@ export function RichTextEditor({
                     document.body
                 )
             }
+
+            {/* Link dialog */}
+            <LinkDialog
+                open={linkDialogOpen}
+                initialUrl={linkInitialUrl}
+                onConfirm={handleLinkConfirm}
+                onRemove={handleLinkRemove}
+                onClose={() => setLinkDialogOpen(false)}
+            />
         </div>
     );
 }
