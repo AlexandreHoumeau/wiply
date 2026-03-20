@@ -83,6 +83,7 @@ export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: Us
         page,
         starredOnly,
         statusCounts: statusCounts || {
+            inbound: 0,
             to_do: 0,
             first_contact: 0,
             second_contact: 0,

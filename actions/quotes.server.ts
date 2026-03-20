@@ -290,14 +290,24 @@ export async function reorderQuoteItems(quoteId: string, orderedIds: string[]) {
   return { success: true }
 }
 
+export async function listOpportunitiesForSelect() {
+  const supabase = await createClient()
+  const agencyId = await getAgencyId()
+  const { data } = await supabase
+    .from("opportunities")
+    .select("id, name, company_id, company:companies(id, name)")
+    .eq("agency_id", agencyId)
+    .order("created_at", { ascending: false })
+    .limit(200)
+  return (data ?? []) as Array<{ id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }>
+}
+
 export async function generateQuoteWithAI({
   quoteId,
   prompt,
-  clientName,
 }: {
   quoteId: string
   prompt: string
-  clientName?: string
 }): Promise<{
   error?: string
   data?: {
@@ -317,26 +327,38 @@ export async function generateQuoteWithAI({
   const check = await checkQuoteEnabled(agencyId)
   if (!check.allowed) return { error: check.reason }
 
-  // Verify quote ownership
+  // Fetch quote with opportunity and company context
   const { data: quote } = await supabase
     .from("quotes")
-    .select("id")
+    .select("id, title, opportunity:opportunities(id, name, description, status), company:companies(id, name, business_sector, website, address)")
     .eq("id", quoteId)
     .eq("agency_id", agencyId)
     .single()
   if (!quote) return { error: "Devis introuvable" }
 
+  const opportunity = quote.opportunity as any
+  const company = quote.company as any
+
+  // Build rich context
+  const contextParts: string[] = []
+  if (company?.name) contextParts.push(`Client : ${company.name}${company.business_sector ? ` (secteur : ${company.business_sector})` : ""}${company.website ? ` — ${company.website}` : ""}`)
+  if (opportunity?.name) contextParts.push(`Opportunité : ${opportunity.name}`)
+  if (opportunity?.description) contextParts.push(`Description de l'opportunité : ${opportunity.description}`)
+  if (quote.title) contextParts.push(`Titre du devis : ${quote.title}`)
+
+  const context = contextParts.length > 0 ? `\n\nContexte disponible :\n${contextParts.join("\n")}` : ""
+
   const { Mistral } = await import("@mistralai/mistralai")
   const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY! })
 
-  const systemPrompt = `Tu es un expert en rédaction de devis commerciaux pour agences digitales françaises. Tu génères des propositions commerciales professionnelles, précises et convaincantes. Réponds UNIQUEMENT avec du JSON valide, sans markdown, sans backticks.`
+  const systemPrompt = `Tu es un expert en rédaction de devis commerciaux pour agences digitales françaises. Tu génères des propositions commerciales professionnelles, précises et convaincantes. Utilise le contexte fourni pour personnaliser le devis. Réponds UNIQUEMENT avec du JSON valide, sans markdown, sans backticks.`
 
-  const userPrompt = `Génère un devis professionnel pour le projet suivant :
-"${prompt}"${clientName ? `\nClient : ${clientName}` : ""}
+  const userPrompt = `Génère un devis professionnel basé sur la demande suivante :
+"${prompt}"${context}
 
 Retourne un objet JSON avec exactement cette structure :
 {
-  "description": "Introduction professionnelle du devis (2-3 phrases convaincantes en français)",
+  "description": "Introduction professionnelle du devis (2-3 phrases convaincantes en français, personnalisée selon le contexte)",
   "items": [
     {
       "type": "fixed",
@@ -353,7 +375,8 @@ Règles :
 - Types possibles : "fixed" (forfait), "hourly" (tarif horaire), "expense" (frais)
 - unit_price en euros, sans symbole
 - quantity : nombre de jours/heures pour hourly, 1 pour forfait
-- Sois précis et professionnel dans les libellés`
+- Sois précis et professionnel dans les libellés
+- Personnalise selon le secteur d'activité du client si disponible`
 
   const response = await client.chat.complete({
     model: "mistral-small-latest",

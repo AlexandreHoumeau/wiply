@@ -1,15 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Lock } from "lucide-react"
+import { ArrowLeft, Lock, ChevronsUpDown, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAgency } from "@/providers/agency-provider"
 import { isProPlan } from "@/lib/validators/agency"
-import { createQuote } from "@/actions/quotes.server"
+import { createQuote, listOpportunitiesForSelect } from "@/actions/quotes.server"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+
+type OpportunityOption = { id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }
 
 export default function NewQuotePage() {
   const router = useRouter()
@@ -17,9 +20,24 @@ export default function NewQuotePage() {
   const { agency } = useAgency()
   const [title, setTitle] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [opportunities, setOpportunities] = useState<OpportunityOption[]>([])
+  const [search, setSearch] = useState("")
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [selectedOpp, setSelectedOpp] = useState<OpportunityOption | null>(null)
+  const [companyId, setCompanyId] = useState<string | null>(searchParams.get("companyId"))
+  const [opportunityId, setOpportunityId] = useState<string | null>(searchParams.get("opportunityId"))
 
-  const opportunityId = searchParams.get("opportunityId")
-  const companyId = searchParams.get("companyId")
+  useEffect(() => {
+    listOpportunitiesForSelect().then(setOpportunities)
+  }, [])
+
+  // Pre-select opportunity from URL param
+  useEffect(() => {
+    if (opportunityId && opportunities.length > 0) {
+      const found = opportunities.find(o => o.id === opportunityId)
+      if (found) setSelectedOpp(found)
+    }
+  }, [opportunityId, opportunities])
 
   if (!agency || !isProPlan(agency)) {
     return (
@@ -38,6 +56,27 @@ export default function NewQuotePage() {
         </Button>
       </div>
     )
+  }
+
+  const filtered = opportunities.filter(o =>
+    o.name.toLowerCase().includes(search.toLowerCase()) ||
+    (o.company?.name ?? "").toLowerCase().includes(search.toLowerCase())
+  )
+
+  const handleSelectOpp = (opp: OpportunityOption) => {
+    setSelectedOpp(opp)
+    setOpportunityId(opp.id)
+    setCompanyId(opp.company_id)
+    setDropdownOpen(false)
+    setSearch("")
+  }
+
+  const handleClearOpp = () => {
+    setSelectedOpp(null)
+    setOpportunityId(null)
+    // Only clear company if it came from the opp selection
+    if (!searchParams.get("companyId")) setCompanyId(null)
+    setSearch("")
   }
 
   const handleCreate = async () => {
@@ -91,11 +130,66 @@ export default function NewQuotePage() {
           />
         </div>
 
-        {opportunityId && (
-          <p className="text-sm text-muted-foreground">
-            Ce devis sera lié à l'opportunité sélectionnée.
-          </p>
-        )}
+        {/* Opportunity picker */}
+        <div className="space-y-2">
+          <Label>Opportunité liée <span className="text-muted-foreground font-normal">(optionnel)</span></Label>
+          {selectedOpp ? (
+            <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-border bg-muted/30 text-sm">
+              <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span className="flex-1 truncate font-medium">{selectedOpp.name}</span>
+              {selectedOpp.company && (
+                <span className="text-muted-foreground text-xs truncate">{selectedOpp.company.name}</span>
+              )}
+              <button
+                onClick={handleClearOpp}
+                className="text-muted-foreground hover:text-foreground transition-colors text-xs shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-full flex items-center justify-between h-9 px-3 rounded-md border border-input bg-background text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span>Sélectionner une opportunité</span>
+                <ChevronsUpDown className="w-3.5 h-3.5 opacity-50 shrink-0" />
+              </button>
+              {dropdownOpen && (
+                <div className="absolute z-50 top-10 left-0 right-0 rounded-md border border-border bg-popover shadow-lg overflow-hidden">
+                  <div className="p-2 border-b border-border">
+                    <Input
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Rechercher..."
+                      className="h-7 text-sm"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-52 overflow-y-auto">
+                    {filtered.length === 0 ? (
+                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">Aucun résultat</p>
+                    ) : filtered.map(opp => (
+                      <button
+                        key={opp.id}
+                        type="button"
+                        onClick={() => handleSelectOpp(opp)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{opp.name}</p>
+                          {opp.company && <p className="text-xs text-muted-foreground truncate">{opp.company.name}</p>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-3">

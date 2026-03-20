@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft, Copy, ExternalLink, Plus, Trash2, GripVertical, Save,
-  Sparkles, ChevronRight, Check, X, Loader2, RotateCcw
+  Sparkles, ChevronRight, Check, X, Loader2, RotateCcw, Link2, ChevronsUpDown
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,9 +13,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUpdateQuote, useUpdateQuoteStatus, useAddQuoteItem, useUpdateQuoteItem, useDeleteQuoteItem } from "@/hooks/use-quotes"
 import { computeQuoteTotals, ALLOWED_TRANSITIONS, QuoteStatus } from "@/lib/validators/quotes"
-import { generateQuoteWithAI } from "@/actions/quotes.server"
+import { generateQuoteWithAI, listOpportunitiesForSelect } from "@/actions/quotes.server"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+
+type OpportunityOption = { id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Brouillon", sent: "Envoyé", accepted: "Accepté", rejected: "Refusé", expired: "Expiré",
@@ -59,6 +61,16 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   const [taxRate, setTaxRate] = useState<string>(quote.tax_rate?.toString() ?? "")
   const [isSaving, setIsSaving] = useState(false)
 
+  // Opportunity linking
+  const [opportunities, setOpportunities] = useState<OpportunityOption[]>([])
+  const [selectedOpp, setSelectedOpp] = useState<OpportunityOption | null>(
+    quote.opportunity ? { id: (quote.opportunity as any).id, name: (quote.opportunity as any).name, company_id: quote.company_id, company: quote.company as any } : null
+  )
+  const [oppDropdownOpen, setOppDropdownOpen] = useState(false)
+  const [oppSearch, setOppSearch] = useState("")
+
+  useEffect(() => { listOpportunitiesForSelect().then(setOpportunities) }, [])
+
   // AI panel state
   const [aiOpen, setAiOpen] = useState(false)
   const [aiPrompt, setAiPrompt] = useState("")
@@ -89,10 +101,22 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
       discount_type: discountType !== "none" ? (discountType as any) : null,
       discount_value: discountType !== "none" && discountValue ? parseFloat(discountValue) : null,
       tax_rate: taxRate ? parseFloat(taxRate) : null,
+      opportunity_id: selectedOpp?.id ?? null,
+      company_id: selectedOpp?.company_id ?? null,
     })
     setIsSaving(false)
     if ("error" in result && result.error) toast.error(result.error)
     else toast.success("Devis sauvegardé")
+  }
+
+  const handleSelectOpp = async (opp: OpportunityOption) => {
+    setSelectedOpp(opp)
+    setOppDropdownOpen(false)
+    setOppSearch("")
+  }
+
+  const handleClearOpp = () => {
+    setSelectedOpp(null)
   }
 
   const handleStatusChange = async (status: string) => {
@@ -122,10 +146,16 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
     if (!aiPrompt.trim()) return toast.error("Décrivez votre projet")
     setIsGenerating(true)
     setAiPreview(null)
+    // Save opportunity/company link first so AI can fetch them
+    if (selectedOpp?.id !== (quote.opportunity as any)?.id) {
+      await updateQuote.mutateAsync({
+        opportunity_id: selectedOpp?.id ?? null,
+        company_id: selectedOpp?.company_id ?? null,
+      })
+    }
     const result = await generateQuoteWithAI({
       quoteId: quote.id,
       prompt: aiPrompt,
-      clientName: (quote.company as any)?.name,
     })
     setIsGenerating(false)
     if (result.error) { toast.error(result.error); return }
@@ -226,7 +256,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
       {/* Body */}
       <div className="flex flex-1 min-h-0">
         {/* Main content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-3xl">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
           {/* Meta fields */}
           <div className="grid grid-cols-2 gap-4">
@@ -243,6 +273,54 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Opportunity link */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Link2 className="w-3 h-3" /> Opportunité liée
+            </Label>
+            {selectedOpp ? (
+              <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-border bg-muted/30 text-sm">
+                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span className="flex-1 truncate font-medium">{selectedOpp.name}</span>
+                {selectedOpp.company && <span className="text-muted-foreground text-xs truncate">{selectedOpp.company.name}</span>}
+                <button onClick={handleClearOpp} className="text-muted-foreground hover:text-foreground transition-colors text-xs shrink-0">✕</button>
+              </div>
+            ) : (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOppDropdownOpen(!oppDropdownOpen)}
+                  className="w-full flex items-center justify-between h-9 px-3 rounded-md border border-input bg-background text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <span>Lier à une opportunité</span>
+                  <ChevronsUpDown className="w-3.5 h-3.5 opacity-50 shrink-0" />
+                </button>
+                {oppDropdownOpen && (
+                  <div className="absolute z-50 top-10 left-0 right-0 rounded-md border border-border bg-popover shadow-lg overflow-hidden">
+                    <div className="p-2 border-b border-border">
+                      <Input value={oppSearch} onChange={e => setOppSearch(e.target.value)} placeholder="Rechercher..." className="h-7 text-sm" autoFocus />
+                    </div>
+                    <div className="max-h-52 overflow-y-auto">
+                      {opportunities.filter(o =>
+                        o.name.toLowerCase().includes(oppSearch.toLowerCase()) ||
+                        (o.company?.name ?? "").toLowerCase().includes(oppSearch.toLowerCase())
+                      ).map(opp => (
+                        <button key={opp.id} type="button" onClick={() => handleSelectOpp(opp)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{opp.name}</p>
+                            {opp.company && <p className="text-xs text-muted-foreground truncate">{opp.company.name}</p>}
+                          </div>
+                        </button>
+                      ))}
+                      {opportunities.length === 0 && <p className="px-3 py-4 text-sm text-muted-foreground text-center">Aucune opportunité</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Introduction */}
