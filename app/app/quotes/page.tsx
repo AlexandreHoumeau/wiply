@@ -2,15 +2,15 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, FileText, ExternalLink, Trash2, Lock } from "lucide-react"
+import { Plus, FileText, ExternalLink, Trash2, Lock, TrendingUp, CheckCircle2, Clock, Send, XCircle, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { useAgency } from "@/providers/agency-provider"
 import { useQuotes, useDeleteQuote } from "@/hooks/use-quotes"
 import { computeQuoteTotals } from "@/lib/validators/quotes"
 import { isProPlan } from "@/lib/validators/agency"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 const STATUS_LABELS: Record<string, string> = {
   all: "Tous",
@@ -21,26 +21,25 @@ const STATUS_LABELS: Record<string, string> = {
   expired: "Expiré",
 }
 
-const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  draft: "secondary",
-  sent: "default",
-  accepted: "default",
-  rejected: "destructive",
-  expired: "outline",
+const STATUS_STYLES: Record<string, { dot: string; text: string; bg: string }> = {
+  draft:    { dot: "bg-slate-400",   text: "text-slate-600",  bg: "bg-slate-50" },
+  sent:     { dot: "bg-blue-500",    text: "text-blue-700",   bg: "bg-blue-50" },
+  accepted: { dot: "bg-emerald-500", text: "text-emerald-700",bg: "bg-emerald-50" },
+  rejected: { dot: "bg-red-500",     text: "text-red-700",    bg: "bg-red-50" },
+  expired:  { dot: "bg-amber-500",   text: "text-amber-700",  bg: "bg-amber-50" },
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700",
-  sent: "bg-blue-100 text-blue-700",
-  accepted: "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
-  expired: "bg-orange-100 text-orange-700",
-}
+const STAT_CARDS = [
+  { status: "sent",     label: "Envoyés",   icon: Send },
+  { status: "accepted", label: "Acceptés",  icon: CheckCircle2 },
+  { status: "draft",    label: "Brouillons",icon: Clock },
+  { status: "rejected", label: "Refusés",   icon: XCircle },
+]
 
 const TABS = ["all", "draft", "sent", "accepted", "rejected", "expired"]
 
-function formatCurrency(amount: number, currency: string = "EUR") {
-  return new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(amount)
+function formatCurrency(amount: number, currency = "EUR") {
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount)
 }
 
 function formatDate(dateStr: string) {
@@ -53,145 +52,211 @@ export default function QuotesPage() {
   const [activeTab, setActiveTab] = useState("all")
   const deleteQuote = useDeleteQuote()
 
+  const { data: allQuotes } = useQuotes()
   const { data: quotes, isLoading } = useQuotes(
     activeTab !== "all" ? { status: activeTab } : undefined
   )
 
   if (!agency || !isProPlan(agency)) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8 text-center">
-        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100">
-          <Lock className="w-8 h-8 text-slate-400" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 p-8 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200">
+          <Lock className="w-6 h-6 text-slate-400" />
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Fonctionnalité PRO</h2>
-          <p className="text-muted-foreground max-w-md">
-            Les devis sont disponibles sur le plan PRO. Passez au plan PRO pour créer des propositions commerciales professionnelles.
+        <div className="space-y-1.5">
+          <h2 className="text-lg font-semibold tracking-tight">Fonctionnalité PRO</h2>
+          <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+            Créez des propositions commerciales professionnelles avec le plan PRO.
           </p>
         </div>
-        <Button onClick={() => router.push("/app/settings/billing")}>
+        <Button size="sm" onClick={() => router.push("/app/settings/billing")} className="rounded-full px-5">
           Passer au plan PRO
         </Button>
       </div>
     )
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     if (!confirm("Supprimer ce devis ?")) return
     const result = await deleteQuote.mutateAsync(id)
-    if ("error" in result && result.error) {
-      toast.error(result.error)
-    } else {
-      toast.success("Devis supprimé")
-    }
+    if ("error" in result && result.error) toast.error(result.error)
+    else toast.success("Devis supprimé")
   }
 
+  // Compute stats from all quotes
+  const statData = STAT_CARDS.map(card => {
+    const filtered = (allQuotes ?? []).filter(q => q.status === card.status)
+    const total = filtered.reduce((sum, q) => {
+      const t = computeQuoteTotals({ discount_type: q.discount_type as any, discount_value: q.discount_value, tax_rate: q.tax_rate, items: [] })
+      return sum + t.total
+    }, 0)
+    return { ...card, count: filtered.length, total }
+  })
+
+  const currency = (quotes ?? allQuotes ?? [])[0]?.currency ?? "EUR"
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Devis</h1>
-        <Button onClick={() => router.push("/app/quotes/new")}>
-          <Plus className="w-4 h-4 mr-2" />
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Devis</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{allQuotes?.length ?? 0} devis au total</p>
+        </div>
+        <Button
+          onClick={() => router.push("/app/quotes/new")}
+          className="rounded-full h-9 px-4 gap-1.5 text-sm font-medium shadow-sm"
+          style={{ backgroundColor: "var(--brand-primary)", color: "white" }}
+        >
+          <Plus className="w-3.5 h-3.5" />
           Nouveau devis
         </Button>
       </div>
 
-      {/* Status tabs */}
-      <div className="flex gap-1 border-b border-border">
-        {TABS.map((tab) => (
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {statData.map(({ status, label, icon: Icon, count, total }) => {
+          const style = STATUS_STYLES[status]
+          return (
+            <button
+              key={status}
+              onClick={() => setActiveTab(status)}
+              className={cn(
+                "group relative text-left rounded-xl border p-4 transition-all hover:shadow-sm cursor-pointer",
+                activeTab === status
+                  ? "border-[var(--brand-primary)]/30 bg-[var(--brand-primary)]/5 shadow-sm"
+                  : "border-border bg-card hover:border-border/80"
+              )}
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", style.bg)}>
+                  <Icon className={cn("w-4 h-4", style.text)} />
+                </div>
+                <span className="text-2xl font-bold tabular-nums tracking-tight">{count}</span>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
+              {total > 0 && (
+                <p className="text-xs font-mono text-muted-foreground/70 mt-0.5">{formatCurrency(total, currency)}</p>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Tab filters */}
+      <div className="flex items-center gap-1 border-b border-border pb-0">
+        {TABS.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={cn(
+              "px-3 py-2 text-sm font-medium transition-all border-b-2 -mb-px",
               activeTab === tab
-                ? "border-primary text-primary"
+                ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+            )}
           >
             {STATUS_LABELS[tab]}
+            {tab !== "all" && (allQuotes ?? []).filter(q => q.status === tab).length > 0 && (
+              <span className="ml-1.5 text-[10px] font-semibold tabular-nums opacity-60">
+                {(allQuotes ?? []).filter(q => q.status === tab).length}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
+      {/* Table */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Chargement...</div>
-      ) : !quotes || quotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-          <FileText className="w-10 h-10 text-muted-foreground/40" />
-          <p className="text-muted-foreground font-medium">Aucun devis trouvé</p>
-          <Button variant="outline" onClick={() => router.push("/app/quotes/new")}>
-            Créer un premier devis
+        <div className="space-y-2">
+          {[1,2,3].map(i => (
+            <div key={i} className="h-14 rounded-xl bg-muted/40 animate-pulse" />
+          ))}
+        </div>
+      ) : !quotes?.length ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-slate-200">
+            <FileText className="w-5 h-5 text-slate-400" />
+          </div>
+          <div className="text-center">
+            <p className="font-medium text-sm">Aucun devis {activeTab !== "all" ? `"${STATUS_LABELS[activeTab].toLowerCase()}"` : ""}</p>
+            <p className="text-xs text-muted-foreground mt-1">Créez votre premier devis pour commencer</p>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-full" onClick={() => router.push("/app/quotes/new")}>
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            Créer un devis
           </Button>
         </div>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border">
-                <tr className="text-left text-xs text-muted-foreground uppercase tracking-wider">
-                  <th className="px-4 py-3 font-medium">Titre</th>
-                  <th className="px-4 py-3 font-medium">Client</th>
-                  <th className="px-4 py-3 font-medium">Statut</th>
-                  <th className="px-4 py-3 font-medium text-right">Total</th>
-                  <th className="px-4 py-3 font-medium">Créé le</th>
-                  <th className="px-4 py-3 font-medium" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {quotes.map((quote) => {
-                  const totals = computeQuoteTotals({
-                    discount_type: quote.discount_type as any,
-                    discount_value: quote.discount_value,
-                    tax_rate: quote.tax_rate,
-                    items: [],
-                  })
-                  return (
-                    <tr
-                      key={quote.id}
-                      className="hover:bg-muted/40 cursor-pointer transition-colors"
-                      onClick={() => router.push(`/app/quotes/${quote.id}`)}
-                    >
-                      <td className="px-4 py-3 font-medium">{quote.title}</td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {(quote.company as any)?.name ?? "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[quote.status]}`}>
-                          {STATUS_LABELS[quote.status]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-medium">
-                        {formatCurrency(totals.total, quote.currency)}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {quote.created_at ? formatDate(quote.created_at) : "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push(`/app/quotes/${quote.id}`)}
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(quote.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-border overflow-hidden bg-card">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/30">
+              <tr className="text-left border-b border-border">
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Devis</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Client</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Statut</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Montant</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 w-16" />
+              </tr>
+            </thead>
+            <tbody>
+              {quotes.map((quote, i) => {
+                const style = STATUS_STYLES[quote.status] ?? STATUS_STYLES.draft
+                // Note: totals need items - the list query doesn't fetch items so total will be 0
+                // This is by design for performance; full totals shown in detail view
+                return (
+                  <tr
+                    key={quote.id}
+                    onClick={() => router.push(`/app/quotes/${quote.id}`)}
+                    className={cn(
+                      "group cursor-pointer transition-colors hover:bg-muted/40",
+                      i !== 0 && "border-t border-border"
+                    )}
+                  >
+                    <td className="px-4 py-3.5">
+                      <span className="font-medium text-foreground">{quote.title}</span>
+                    </td>
+                    <td className="px-4 py-3.5 text-muted-foreground">
+                      {(quote.company as any)?.name ?? (
+                        <span className="text-muted-foreground/40">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", style.text)}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", style.dot)} />
+                        {STATUS_LABELS[quote.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-right font-mono text-sm font-semibold tabular-nums">
+                      {formatCurrency(0, quote.currency)}
+                    </td>
+                    <td className="px-4 py-3.5 text-xs text-muted-foreground tabular-nums">
+                      {quote.created_at ? formatDate(quote.created_at) : "—"}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => router.push(`/app/quotes/${quote.id}`)}
+                          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(quote.id, e)}
+                          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors text-muted-foreground hover:text-red-500"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )

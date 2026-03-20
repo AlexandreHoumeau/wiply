@@ -289,3 +289,88 @@ export async function reorderQuoteItems(quoteId: string, orderedIds: string[]) {
   revalidatePath(`/app/quotes/${quoteId}`)
   return { success: true }
 }
+
+export async function generateQuoteWithAI({
+  quoteId,
+  prompt,
+  clientName,
+}: {
+  quoteId: string
+  prompt: string
+  clientName?: string
+}): Promise<{
+  error?: string
+  data?: {
+    description: string
+    items: Array<{
+      type: "fixed" | "hourly" | "expense"
+      label: string
+      description?: string
+      quantity: number
+      unit_price: number
+    }>
+  }
+}> {
+  const supabase = await createClient()
+  const agencyId = await getAgencyId()
+
+  const check = await checkQuoteEnabled(agencyId)
+  if (!check.allowed) return { error: check.reason }
+
+  // Verify quote ownership
+  const { data: quote } = await supabase
+    .from("quotes")
+    .select("id")
+    .eq("id", quoteId)
+    .eq("agency_id", agencyId)
+    .single()
+  if (!quote) return { error: "Devis introuvable" }
+
+  const { Mistral } = await import("@mistralai/mistralai")
+  const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY! })
+
+  const systemPrompt = `Tu es un expert en rédaction de devis commerciaux pour agences digitales françaises. Tu génères des propositions commerciales professionnelles, précises et convaincantes. Réponds UNIQUEMENT avec du JSON valide, sans markdown, sans backticks.`
+
+  const userPrompt = `Génère un devis professionnel pour le projet suivant :
+"${prompt}"${clientName ? `\nClient : ${clientName}` : ""}
+
+Retourne un objet JSON avec exactement cette structure :
+{
+  "description": "Introduction professionnelle du devis (2-3 phrases convaincantes en français)",
+  "items": [
+    {
+      "type": "fixed",
+      "label": "Libellé concis",
+      "description": "Détail optionnel",
+      "quantity": 1,
+      "unit_price": 1500
+    }
+  ]
+}
+
+Règles :
+- 3 à 7 lignes de devis maximum
+- Types possibles : "fixed" (forfait), "hourly" (tarif horaire), "expense" (frais)
+- unit_price en euros, sans symbole
+- quantity : nombre de jours/heures pour hourly, 1 pour forfait
+- Sois précis et professionnel dans les libellés`
+
+  const response = await client.chat.complete({
+    model: "mistral-small-latest",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    responseFormat: { type: "json_object" },
+  })
+
+  const text = response.choices?.[0]?.message?.content as string
+  if (!text) return { error: "Réponse IA vide" }
+
+  try {
+    const parsed = JSON.parse(text)
+    return { data: parsed }
+  } catch {
+    return { error: "Réponse IA invalide" }
+  }
+}
