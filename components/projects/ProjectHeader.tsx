@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Figma, Github, Globe, Layout, KanbanSquare, Settings, ArrowLeft, ListChecks } from "lucide-react";
+import { Figma, Github, Globe, Layout, KanbanSquare, Settings, ArrowLeft, ListChecks, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ProjectHeader({ project }: { project: any }) {
@@ -13,6 +13,7 @@ export function ProjectHeader({ project }: { project: any }) {
     const allTabs = [
         { name: "Vue d'ensemble", path: baseUrl, icon: Layout },
         { name: "Board Kanban", path: `${baseUrl}/board`, icon: KanbanSquare },
+        { name: "Versions", path: `${baseUrl}/versions`, icon: Tag },
         ...(!project.is_internal ? [{ name: "Contenus attendus", path: `${baseUrl}/checklist`, icon: ListChecks }] : []),
         { name: "Paramètres", path: `${baseUrl}/settings`, icon: Settings },
     ];

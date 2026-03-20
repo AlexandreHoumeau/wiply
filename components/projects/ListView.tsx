@@ -5,11 +5,10 @@ import {
     AlignLeft, Bug, LayoutTemplate, PenTool, Settings,
     ArrowUp, ArrowDown, Equal, AlertOctagon,
     Inbox, PlayCircle, Clock, CheckCircle2,
-    ChevronUp, ChevronDown,
+    ChevronUp, ChevronDown, GitBranch,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
-import { TaskSlideOver } from "./TaskSlideOver";
-import { useRouter } from "next/navigation";
+import { useProject } from "@/providers/project-provider";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 
@@ -37,10 +36,16 @@ const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }>
 
 type SortKey = "title" | "status" | "type" | "priority" | "assignee" | "due_date" | "created_at";
 
-export function ListView({ projectId, tasks }: { projectId: string; tasks: any[] }) {
-    const router = useRouter();
-    const [slideOverOpen, setSlideOverOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<any | null>(null);
+interface ListViewProps {
+    projectId: string;
+    tasks: any[];
+    allTasks: any[];
+    onOpenTask: (task: any) => void;
+}
+
+export function ListView({ projectId: _projectId, tasks, allTasks, onOpenTask }: ListViewProps) {
+    const project = useProject() as any;
+    const taskPrefix = project?.task_prefix ?? "TCK";
     const [sortKey, setSortKey] = useState<SortKey>("created_at");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -86,8 +91,7 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
     );
 
     return (
-        <>
-            <div className="h-full overflow-auto bg-muted/20">
+        <div className="h-full overflow-auto bg-muted/20">
                 <table className="w-full min-w-[800px] border-collapse">
                     <thead className="sticky top-0 z-10 bg-background border-b border-border/60">
                         <tr>
@@ -119,18 +123,25 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
                             const initials = task.assignee
                                 ? getInitials(task.assignee.first_name ?? "", task.assignee.last_name ?? "", task.assignee.email ?? "")
                                 : null;
+                            const taskSlug = task.task_number ? `${taskPrefix}-${task.task_number}` : task.id.split("-")[0].substring(0, 4).toUpperCase();
+                            const subTaskCount = allTasks.filter(t => t.parent_id === task.id).length;
 
                             return (
                                 <tr
                                     key={task.id}
-                                    onClick={() => { setSelectedTask(task); setSlideOverOpen(true); }}
+                                    onClick={() => onOpenTask(task)}
                                     className="bg-background hover:bg-muted/40 cursor-pointer transition-colors group"
                                 >
                                     {/* ID */}
                                     <td className="px-4 py-3">
-                                        <span className="font-mono text-[10px] font-bold text-muted-foreground/40 group-hover:text-muted-foreground">
-                                            {task.id.split("-")[0].substring(0, 4).toUpperCase()}
-                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            {task.parent_id && (
+                                                <GitBranch className="w-3 h-3 text-muted-foreground/30 rotate-180 shrink-0" />
+                                            )}
+                                            <span className="font-mono text-[10px] font-bold text-muted-foreground/40 group-hover:text-muted-foreground">
+                                                {taskSlug}
+                                            </span>
+                                        </div>
                                     </td>
 
                                     {/* Type */}
@@ -143,9 +154,19 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
 
                                     {/* Title */}
                                     <td className="px-4 py-3 max-w-[320px]">
-                                        <p className="text-sm font-semibold text-foreground truncate">{task.title}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm font-semibold text-foreground truncate">{task.title}</p>
+                                            {subTaskCount > 0 && (
+                                                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground shrink-0">
+                                                    <GitBranch className="w-3 h-3" />
+                                                    {subTaskCount}
+                                                </span>
+                                            )}
+                                        </div>
                                         {task.description && (
-                                            <p className="text-xs text-muted-foreground truncate mt-0.5">{task.description}</p>
+                                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                                {task.description.replace(/<[^>]*>/g, " ").trim()}
+                                            </p>
                                         )}
                                     </td>
 
@@ -213,15 +234,6 @@ export function ListView({ projectId, tasks }: { projectId: string; tasks: any[]
                         })}
                     </tbody>
                 </table>
-            </div>
-
-            <TaskSlideOver
-                open={slideOverOpen}
-                onOpenChange={setSlideOverOpen}
-                task={selectedTask}
-                projectId={projectId}
-                onSaved={() => router.refresh()}
-            />
-        </>
+        </div>
     );
 }

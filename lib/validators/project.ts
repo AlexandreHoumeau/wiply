@@ -50,11 +50,18 @@ export interface TaskData {
   priority?: string;
   assignee_id?: string | null;
   due_date?: string | null;
+  parent_id?: string | null;
+  version_id?: string | null;
+}
+
+export interface VersionData {
+  name: string;
 }
 
 export interface ProjectSettingsData {
   name?: string;
   description?: string | null;
+  task_prefix?: string | null;
   start_date?: string | null;
   figma_url?: string | null;
   github_url?: string | null;
