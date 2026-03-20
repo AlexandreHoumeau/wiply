@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    Briefcase, Building2, ChevronsUpDown, Kanban, LayoutDashboard,
+    Briefcase, Building2, ChevronsUpDown, FileText, Kanban, LayoutDashboard,
     LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers
 } from "lucide-react"
 import Link from "next/link"
@@ -27,6 +27,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 const mainNav = [
     { label: "Tableau de bord", href: "/app", icon: LayoutDashboard },
     { label: "Opportunités", href: "/app/opportunities", icon: Briefcase },
+    { label: "Devis", href: "/app/quotes", icon: FileText, proOnly: true },
     { label: "Projets", href: "/app/projects", icon: Kanban },
 ]
 
@@ -110,7 +111,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                             <p className="px-3 text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-[0.2em] mb-3 mt-2">Plateforme</p>
                         ) : <div className="h-4" />}
                         {mainNav.map((item) => (
-                            <NavItem key={item.href} item={item} active={isLinkActive(item.href)} isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} />
+                            <NavItem key={item.href} item={item} active={isLinkActive(item.href)} isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} locked={(item as any).proOnly && agency?.plan !== 'PRO'} />
                         ))}
                     </div>
 
@@ -194,20 +195,38 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
     )
 }
 
-function NavItem({ item, active, isCollapsed, primaryColor }: any) {
+function NavItem({ item, active, isCollapsed, primaryColor, locked }: any) {
     const navContent = (
         <Button variant="ghost" className={cn("w-full transition-all duration-200 group relative overflow-hidden h-10", isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3", active ? "bg-sidebar-accent/50" : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40")} style={active ? { color: primaryColor } : undefined}>
             {active && <motion.div layoutId="sidebarActive" className="absolute left-0 w-1 h-5 rounded-r-full" style={{ backgroundColor: primaryColor }} transition={{ type: "spring", stiffness: 300, damping: 30 }} />}
             <item.icon className={cn("h-[18px] w-[18px] shrink-0 transition-colors", !active && "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70")} style={active ? { color: primaryColor } : undefined} />
             <AnimatePresence mode="wait">
                 {!isCollapsed && (
-                    <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} exit={{ opacity: 0, width: 0 }} className={cn("text-sm whitespace-nowrap overflow-hidden", active ? "font-bold" : "font-medium")}>
+                    <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} exit={{ opacity: 0, width: 0 }} className={cn("text-sm whitespace-nowrap overflow-hidden flex-1", active ? "font-bold" : "font-medium")}>
                         {item.label}
                     </motion.span>
                 )}
             </AnimatePresence>
+            {!isCollapsed && locked && (
+                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 shrink-0">PRO</span>
+            )}
         </Button>
     )
+
+    if (locked) {
+        return (
+            <div className="block relative opacity-70">
+                {isCollapsed ? (
+                    <Tooltip>
+                        <TooltipTrigger asChild>{navContent}</TooltipTrigger>
+                        <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-foreground text-background">
+                            {item.label} — PRO uniquement
+                        </TooltipContent>
+                    </Tooltip>
+                ) : navContent}
+            </div>
+        )
+    }
 
     return (
         <Link href={item.href} className="block relative">
