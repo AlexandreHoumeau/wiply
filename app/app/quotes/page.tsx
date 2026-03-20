@@ -2,9 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, FileText, ExternalLink, Trash2, Lock, TrendingUp, CheckCircle2, Clock, Send, XCircle, AlertCircle } from "lucide-react"
+import { Plus, FileText, ExternalLink, Trash2, Lock, CheckCircle2, Clock, Send, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useAgency } from "@/providers/agency-provider"
 import { useQuotes, useDeleteQuote } from "@/hooks/use-quotes"
 import { computeQuoteTotals } from "@/lib/validators/quotes"
@@ -50,6 +54,7 @@ export default function QuotesPage() {
   const router = useRouter()
   const { agency } = useAgency()
   const [activeTab, setActiveTab] = useState("all")
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const deleteQuote = useDeleteQuote()
 
   const { data: allQuotes } = useQuotes()
@@ -76,10 +81,10 @@ export default function QuotesPage() {
     )
   }
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!confirm("Supprimer ce devis ?")) return
-    const result = await deleteQuote.mutateAsync(id)
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return
+    const result = await deleteQuote.mutateAsync(deleteTarget)
+    setDeleteTarget(null)
     if ("error" in result && result.error) toast.error(result.error)
     else toast.success("Devis supprimé")
   }
@@ -244,7 +249,7 @@ export default function QuotesPage() {
                           <ExternalLink className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={(e) => handleDelete(quote.id, e)}
+                          onClick={() => setDeleteTarget(quote.id)}
                           className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors text-muted-foreground hover:text-red-500"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -258,6 +263,27 @@ export default function QuotesPage() {
           </table>
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce devis ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le devis et toutes ses lignes seront définitivement supprimés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              disabled={deleteQuote.isPending}
+            >
+              {deleteQuote.isPending ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
