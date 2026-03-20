@@ -92,8 +92,8 @@ export default function OpportunitiesPage() {
       </div>
 
       {/* STATUS METRICS */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 shrink-0">
-        {(["to_do", "first_contact", "proposal_sent", "won", "lost"] as OpportunityStatus[]).map((status) => {
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-3 shrink-0">
+        {(["inbound", "to_do", "first_contact", "proposal_sent", "won", "lost"] as OpportunityStatus[]).map((status) => {
           const count = statusCounts[status] || 0;
           const colorClass = STATUS_COLORS[status].split(" ")[0];
           return (

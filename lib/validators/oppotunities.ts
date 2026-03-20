@@ -13,6 +13,7 @@ export const opportunitySchema = z.object({
   company_sector: z.string().optional(),
 
   status: z.enum([
+    "inbound",
     "to_do",
     "first_contact",
     "second_contact",
@@ -53,6 +54,7 @@ export type OpportunityFormValues = z.infer<typeof opportunitySchema>;
 
 
 export type OpportunityStatus =
+  | "inbound"
   | "to_do"
   | "first_contact"
   | "second_contact"
@@ -62,6 +64,7 @@ export type OpportunityStatus =
   | "lost";
 
 export const mapOpportunityStatusLabel: Record<OpportunityStatus, string> = {
+  inbound: "Entrant",
   to_do: "À faire",
   first_contact: "Premier contact",
   second_contact: "Deuxième contact",
@@ -119,6 +122,7 @@ export const mapOpportunityWithCompanyToFormValues = (opportunity: OpportunityWi
 
 
 export const ALL_STATUSES: OpportunityStatus[] = [
+  "inbound",
   "to_do",
   "first_contact",
   "second_contact",

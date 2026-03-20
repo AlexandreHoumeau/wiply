@@ -47,6 +47,7 @@ type EventConfig = {
 };
 
 const STATUS_BADGE_COLOR: Record<string, string> = {
+    inbound: "bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/40",
     to_do: "bg-muted text-muted-foreground border-border",
     first_contact: "bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800/40",
     second_contact: "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/40",

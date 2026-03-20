@@ -8,6 +8,7 @@ import { Activity, ArrowRight, Briefcase } from "lucide-react";
 import type { PipelineRow } from "@/actions/dashboard.server";
 
 const STATUS_BAR_COLORS: Record<OpportunityStatus, string> = {
+  inbound: "bg-cyan-500",
   to_do: "bg-muted-foreground/50",
   first_contact: "bg-blue-500",
   second_contact: "bg-indigo-500",
