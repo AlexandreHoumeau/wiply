@@ -1,12 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { CompanyWithRelations } from "@/lib/validators/companies";
 import { cn } from "@/lib/utils";
-import { Globe, Mail, Phone, Trash2 } from "lucide-react";
-import { deleteCompany } from "@/actions/companies.server";
+import { Globe, Loader2, Mail, MapPin, Phone, Trash2 } from "lucide-react";
+import { deleteCompany, updateCompanyBillingAddress } from "@/actions/companies.server";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -19,11 +19,36 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export function CompanyCard({ company }: { company: CompanyWithRelations }) {
   const isClient = company.projects.length > 0;
   const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
+
+  const [billingDialog, setBillingDialog] = useState<{ open: boolean; companyId: string; current: string | null }>({
+    open: false, companyId: "", current: null
+  });
+  const [billingValue, setBillingValue] = useState("");
+  const [isSavingBilling, setIsSavingBilling] = useState(false);
+
+  const handleSaveBilling = async () => {
+    setIsSavingBilling(true);
+    const result = await updateCompanyBillingAddress(billingDialog.companyId, billingValue || null);
+    setIsSavingBilling(false);
+    if ("error" in result) { toast.error(result.error); return; }
+    queryClient.invalidateQueries({ queryKey: ["companies"] });
+    setBillingDialog({ open: false, companyId: "", current: null });
+    toast.success("Adresse de facturation mise à jour");
+  };
 
   function handleDelete() {
     startTransition(async () => {
@@ -66,6 +91,17 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
           >
             {isClient ? "Client" : "Prospect"}
           </span>
+
+          <button
+            onClick={() => {
+              setBillingValue(company.billing_address ?? "");
+              setBillingDialog({ open: true, companyId: company.id, current: company.billing_address });
+            }}
+            className="h-7 w-7 flex items-center justify-center rounded-xl text-muted-foreground/50 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
+            title="Adresse de facturation"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+          </button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -130,6 +166,28 @@ export function CompanyCard({ company }: { company: CompanyWithRelations }) {
           <p className="text-xs text-muted-foreground/50 italic">Aucune information de contact</p>
         )}
       </div>
+
+      {/* Billing address dialog */}
+      <Dialog open={billingDialog.open} onOpenChange={open => setBillingDialog(s => ({ ...s, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adresse de facturation</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={billingValue}
+            onChange={e => setBillingValue(e.target.value)}
+            placeholder="Adresse de facturation (si différente du siège social)"
+            rows={3}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBillingDialog(s => ({ ...s, open: false }))}>Annuler</Button>
+            <Button onClick={handleSaveBilling} disabled={isSavingBilling}>
+              {isSavingBilling ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bottom: projects or opportunities */}
       <div className="mt-5 pt-4 border-t border-border/50">

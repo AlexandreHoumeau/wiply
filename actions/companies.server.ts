@@ -22,7 +22,7 @@ export async function fetchCompanies({
   let query = supabase
     .from("companies")
     .select(
-      "id, name, email, phone_number, website, business_sector, created_at, address, opportunities(id, status, name, slug), projects(id, status, name, slug)"
+      "id, name, email, phone_number, website, business_sector, created_at, address, billing_address, opportunities(id, status, name, slug), projects(id, status, name, slug)"
     )
     .eq("agency_id", agencyId);
 
