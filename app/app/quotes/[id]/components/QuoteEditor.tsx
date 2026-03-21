@@ -348,7 +348,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
             aiOpen ? "border-[var(--brand-primary)]/30 bg-[var(--brand-primary)]/3" : "border-dashed border-border hover:border-[var(--brand-primary)]/40"
           )}>
             <button
-              onClick={() => setAiOpen(!aiOpen)}
+              onClick={() => { if (aiOpen) setContextOpen(false); setAiOpen(!aiOpen) }}
               className="w-full flex items-center gap-3 px-4 py-3 text-left"
             >
               <div
