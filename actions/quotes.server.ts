@@ -377,11 +377,29 @@ export async function generateQuoteWithAI({
     .eq("agency_id", agencyId)
     .maybeSingle()
 
+  // Fetch opportunity notes (up to 5 most recent) — error intentionally ignored
+  let opportunityNotes: string[] = []
+  if (opportunity?.id) {
+    const { data: noteEvents } = await supabase
+      .from("opportunity_events")
+      .select("metadata")
+      .eq("opportunity_id", opportunity.id)
+      .eq("event_type", "note_added")
+      .order("created_at", { ascending: false })
+      .limit(5)
+    if (noteEvents) {
+      opportunityNotes = noteEvents
+        .map((e: any) => e.metadata?.text)
+        .filter(Boolean)
+    }
+  }
+
   // Build rich context
   const contextParts: string[] = []
   if (company?.name) contextParts.push(`Client : ${company.name}${company.business_sector ? ` (secteur : ${company.business_sector})` : ""}${company.website ? ` — ${company.website}` : ""}`)
   if (opportunity?.name) contextParts.push(`Opportunité : ${opportunity.name}`)
   if (opportunity?.description) contextParts.push(`Description de l'opportunité : ${opportunity.description}`)
+  if (opportunityNotes.length > 0) contextParts.push(`Notes sur l'opportunité :\n${opportunityNotes.map((n, i) => `- ${n}`).join("\n")}`)
   if (quote.title) contextParts.push(`Titre du devis : ${quote.title}`)
 
   const context = contextParts.length > 0 ? `\n\nContexte disponible :\n${contextParts.join("\n")}` : ""
