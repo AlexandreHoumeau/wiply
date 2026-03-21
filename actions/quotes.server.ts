@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
-import { checkQuoteEnabled } from "@/lib/billing/checkLimit"
+import { checkAiEnabled, checkQuoteEnabled } from "@/lib/billing/checkLimit"
 import {
   CreateQuoteInput,
   UpdateQuoteInput,
@@ -289,15 +289,19 @@ export async function reorderQuoteItems(quoteId: string, orderedIds: string[]) {
   return { success: true }
 }
 
-export async function listOpportunitiesForSelect() {
+export async function listOpportunitiesForSelect(search?: string) {
   const supabase = await createClient()
   const agencyId = await getAgencyId()
-  const { data } = await supabase
+  let query = supabase
     .from("opportunities")
     .select("id, name, company_id, company:companies(id, name)")
     .eq("agency_id", agencyId)
     .order("created_at", { ascending: false })
-    .limit(200)
+    .limit(10)
+  if (search?.trim()) {
+    query = query.ilike("name", `%${search.trim()}%`)
+  }
+  const { data } = await query
   return (data ?? []).map(o => ({
     id: o.id as string,
     name: o.name as string,
@@ -306,12 +310,30 @@ export async function listOpportunitiesForSelect() {
   })) as Array<{ id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }>
 }
 
+export async function getOpportunityForSelect(id: string) {
+  const supabase = await createClient()
+  const agencyId = await getAgencyId()
+  const { data } = await supabase
+    .from("opportunities")
+    .select("id, name, company_id, company:companies(id, name)")
+    .eq("agency_id", agencyId)
+    .eq("id", id)
+    .single()
+  if (!data) return null
+  return {
+    id: data.id as string,
+    name: data.name as string,
+    company_id: data.company_id as string | null,
+    company: Array.isArray(data.company) ? (data.company[0] ?? null) : (data.company as any ?? null),
+  } as { id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }
+}
+
 export async function generateQuoteWithAI({
   quoteId,
   prompt,
 }: {
   quoteId: string
-  prompt: string
+  prompt?: string
 }): Promise<{
   error?: string
   data?: {
@@ -331,6 +353,11 @@ export async function generateQuoteWithAI({
   const check = await checkQuoteEnabled(agencyId)
   if (!check.allowed) return { error: check.reason }
 
+  const aiCheck = await checkAiEnabled(agencyId)
+  if (!aiCheck.allowed) return { error: aiCheck.reason }
+
+  const normalizedPrompt = prompt?.trim() || undefined
+
   // Fetch quote with opportunity and company context
   const { data: quote } = await supabase
     .from("quotes")
@@ -342,6 +369,12 @@ export async function generateQuoteWithAI({
 
   const opportunity = quote.opportunity as any
   const company = quote.company as any
+
+  const { data: aiConfig } = await supabase
+    .from("agency_ai_configs")
+    .select("ai_context, tone, key_points, custom_instructions")
+    .eq("agency_id", agencyId)
+    .maybeSingle()
 
   // Build rich context
   const contextParts: string[] = []
@@ -355,10 +388,20 @@ export async function generateQuoteWithAI({
   const { Mistral } = await import("@mistralai/mistralai")
   const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY! })
 
-  const systemPrompt = `Tu es un expert en rédaction de devis commerciaux pour agences digitales françaises. Tu génères des propositions commerciales professionnelles, précises et convaincantes. Utilise le contexte fourni pour personnaliser le devis. Réponds UNIQUEMENT avec du JSON valide, sans markdown, sans backticks.`
+  const agencyConfigParts: string[] = []
+  if (aiConfig?.ai_context) agencyConfigParts.push(`Contexte de l'agence : ${aiConfig.ai_context}`)
+  if (aiConfig?.tone) agencyConfigParts.push(`Ton souhaité : ${aiConfig.tone}`)
+  if (aiConfig?.key_points) agencyConfigParts.push(`Points clés : ${aiConfig.key_points}`)
+  if (aiConfig?.custom_instructions) agencyConfigParts.push(`Instructions supplémentaires : ${aiConfig.custom_instructions}`)
+  const agencyConfigSection = agencyConfigParts.length > 0 ? `\n\n${agencyConfigParts.join("\n")}` : ""
 
-  const userPrompt = `Génère un devis professionnel basé sur la demande suivante :
-"${prompt}"${context}
+  const systemPrompt = `Tu es un expert en rédaction de devis commerciaux pour agences digitales françaises. Tu génères des propositions commerciales professionnelles, précises et convaincantes. Utilise le contexte fourni pour personnaliser le devis. Réponds UNIQUEMENT avec du JSON valide, sans markdown, sans backticks.${agencyConfigSection}`
+
+  const intro = normalizedPrompt
+    ? `Génère un devis professionnel basé sur la demande suivante :\n"${normalizedPrompt}"`
+    : `Génère un devis professionnel basé uniquement sur le contexte ci-dessous.`
+
+  const userPrompt = `${intro}${context}
 
 Retourne un objet JSON avec exactement cette structure :
 {
