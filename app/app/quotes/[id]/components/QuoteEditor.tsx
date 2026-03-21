@@ -73,6 +73,14 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
 
   // AI panel state
   const [aiOpen, setAiOpen] = useState(false)
+  const [contextOpen, setContextOpen] = useState(false)
+  const contextCount = [
+    quote.company?.name,
+    quote.company?.business_sector,
+    (quote.opportunity as any)?.name,
+    (quote.opportunity as any)?.status,
+    (quote.opportunity as any)?.description,
+  ].filter(Boolean).length
   const [aiPrompt, setAiPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [aiPreview, setAiPreview] = useState<{
@@ -143,7 +151,6 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   }
 
   const handleGenerate = async () => {
-    if (!aiPrompt.trim()) return toast.error("Décrivez votre projet")
     setIsGenerating(true)
     setAiPreview(null)
     // Save opportunity/company link first so AI can fetch them
@@ -155,7 +162,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
     }
     const result = await generateQuoteWithAI({
       quoteId: quote.id,
-      prompt: aiPrompt,
+      prompt: aiPrompt.trim() || undefined,
     })
     setIsGenerating(false)
     if (result.error) { toast.error(result.error); return }
@@ -359,18 +366,59 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
 
             {aiOpen && (
               <div className="px-4 pb-4 space-y-3 border-t border-[var(--brand-primary)]/10">
-                <div className="pt-3 space-y-2">
+                {/* Context summary */}
+                <div className="pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setContextOpen(!contextOpen)}
+                    className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left"
+                  >
+                    <span className="font-medium">Contexte</span>
+                    <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
+                      {contextCount}
+                    </span>
+                    <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", contextOpen && "rotate-90")} />
+                  </button>
+                  {contextOpen && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {contextCount === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">Liez une opportunité pour enrichir la génération.</p>
+                      ) : (
+                        <>
+                          {quote.company?.name && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">🏢 {quote.company.name}</span>
+                          )}
+                          {quote.company?.business_sector && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">Secteur : {quote.company.business_sector}</span>
+                          )}
+                          {(quote.opportunity as any)?.name && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">📋 {(quote.opportunity as any).name}</span>
+                          )}
+                          {(quote.opportunity as any)?.status && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">Statut : {(quote.opportunity as any).status}</span>
+                          )}
+                          {(quote.opportunity as any)?.description && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">
+                              📝 &ldquo;{((quote.opportunity as any).description as string).slice(0, 80)}{(quote.opportunity as any).description.length > 80 ? "…" : ""}&rdquo;
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
                   <Textarea
                     value={aiPrompt}
                     onChange={e => setAiPrompt(e.target.value)}
-                    placeholder="Ex : Refonte complète du site web d'un cabinet d'avocats. Inclure UX/UI design, développement React, migration de contenu et formation de l'équipe."
+                    placeholder="Optionnel — précisez vos besoins ou laissez vide pour générer depuis le contexte"
                     rows={3}
                     className="resize-none text-sm bg-background"
                     onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate() }}
                   />
                   <button
                     onClick={handleGenerate}
-                    disabled={isGenerating || !aiPrompt.trim()}
+                    disabled={isGenerating || (!aiPrompt.trim() && contextCount === 0)}
                     className="flex items-center gap-2 h-8 px-4 rounded-lg text-sm font-semibold disabled:opacity-50 transition-all"
                     style={{ backgroundColor: "var(--brand-primary)", color: "white" }}
                   >
@@ -421,7 +469,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                         Appliquer tout
                       </button>
                       <button
-                        onClick={() => setAiPreview(null)}
+                        onClick={() => { setAiPreview(null); handleGenerate() }}
                         className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
