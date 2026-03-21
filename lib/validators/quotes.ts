@@ -29,6 +29,9 @@ export const QuoteSchema = z.object({
   discount_value: z.number().nullable(),
   tax_rate: z.number().nullable(),
   notes: z.string().optional().nullable(),
+  service_start_date: z.string().nullable().optional(),
+  payment_terms_preset: z.enum(['immediate', '15_days', '30_days', '45_days', '60_days', 'custom']).nullable().optional(),
+  payment_terms_notes: z.string().nullable().optional(),
   items: z.array(QuoteItemSchema).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
@@ -52,6 +55,18 @@ export const CreateQuoteItemSchema = QuoteItemSchema.omit({
 })
 
 export const UpdateQuoteItemSchema = CreateQuoteItemSchema.partial()
+
+export const PaymentTermsPresetSchema = z.enum(['immediate', '15_days', '30_days', '45_days', '60_days', 'custom'])
+export type PaymentTermsPreset = z.infer<typeof PaymentTermsPresetSchema>
+
+export const PAYMENT_TERMS_LABELS: Record<string, string> = {
+  immediate: 'Comptant',
+  '15_days': '15 jours',
+  '30_days': '30 jours net',
+  '45_days': '45 jours',
+  '60_days': '60 jours fin de mois',
+  custom: 'Personnalisé',
+}
 
 export type Quote = z.infer<typeof QuoteSchema>
 export type QuoteItem = z.infer<typeof QuoteItemSchema>

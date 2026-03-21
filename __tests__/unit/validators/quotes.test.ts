@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { computeQuoteTotals, ALLOWED_TRANSITIONS } from "@/lib/validators/quotes"
+import { computeQuoteTotals, ALLOWED_TRANSITIONS, QuoteSchema } from "@/lib/validators/quotes"
 
 describe("computeQuoteTotals", () => {
   it("retourne des zéros sans items", () => {
@@ -103,5 +103,53 @@ describe("ALLOWED_TRANSITIONS", () => {
 
   it("expired n'a plus de transitions", () => {
     expect(ALLOWED_TRANSITIONS.expired).toHaveLength(0)
+  })
+})
+
+describe("QuoteSchema new fields", () => {
+  const baseQuote = {
+    id: "550e8400-e29b-41d4-a716-446655440000",
+    agency_id: "550e8400-e29b-41d4-a716-446655440001",
+    company_id: null,
+    opportunity_id: null,
+    title: "Test",
+    status: "draft" as const,
+    token: "abc123",
+    valid_until: null,
+    currency: "EUR",
+    discount_type: null,
+    discount_value: null,
+    tax_rate: null,
+    notes: null,
+  }
+
+  it("accepte service_start_date null", () => {
+    const r = QuoteSchema.safeParse({ ...baseQuote, service_start_date: null })
+    expect(r.success).toBe(true)
+  })
+
+  it("accepte service_start_date comme string ISO", () => {
+    const r = QuoteSchema.safeParse({ ...baseQuote, service_start_date: "2026-04-01" })
+    expect(r.success).toBe(true)
+  })
+
+  it("accepte payment_terms_preset null", () => {
+    const r = QuoteSchema.safeParse({ ...baseQuote, payment_terms_preset: null })
+    expect(r.success).toBe(true)
+  })
+
+  it("accepte payment_terms_preset valide", () => {
+    const r = QuoteSchema.safeParse({ ...baseQuote, payment_terms_preset: "30_days" })
+    expect(r.success).toBe(true)
+  })
+
+  it("rejette payment_terms_preset invalide", () => {
+    const r = QuoteSchema.safeParse({ ...baseQuote, payment_terms_preset: "invalid_value" })
+    expect(r.success).toBe(false)
+  })
+
+  it("accepte payment_terms_notes null", () => {
+    const r = QuoteSchema.safeParse({ ...baseQuote, payment_terms_notes: null })
+    expect(r.success).toBe(true)
   })
 })
