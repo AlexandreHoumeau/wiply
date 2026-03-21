@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUpdateQuote, useUpdateQuoteStatus, useAddQuoteItem, useUpdateQuoteItem, useDeleteQuoteItem } from "@/hooks/use-quotes"
-import { computeQuoteTotals, ALLOWED_TRANSITIONS, QuoteStatus } from "@/lib/validators/quotes"
+import { computeQuoteTotals, ALLOWED_TRANSITIONS, QuoteStatus, PAYMENT_TERMS_LABELS } from "@/lib/validators/quotes"
 import { generateQuoteWithAI, listOpportunitiesForSelect } from "@/actions/quotes.server"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -60,6 +60,9 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   const [discountValue, setDiscountValue] = useState<string>(quote.discount_value?.toString() ?? "")
   const [taxRate, setTaxRate] = useState<string>(quote.tax_rate?.toString() ?? "")
   const [isSaving, setIsSaving] = useState(false)
+  const [serviceStartDate, setServiceStartDate] = useState(quote.service_start_date ?? "")
+  const [paymentTermsPreset, setPaymentTermsPreset] = useState<string>(quote.payment_terms_preset ?? "")
+  const [paymentTermsNotes, setPaymentTermsNotes] = useState(quote.payment_terms_notes ?? "")
 
   // Opportunity linking
   const [opportunities, setOpportunities] = useState<OpportunityOption[]>([])
@@ -133,6 +136,9 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
       tax_rate: taxRate ? parseFloat(taxRate) : null,
       opportunity_id: selectedOpp?.id ?? null,
       company_id: selectedOpp?.company_id ?? null,
+      service_start_date: serviceStartDate || null,
+      payment_terms_preset: (paymentTermsPreset || null) as any,
+      payment_terms_notes: paymentTermsNotes || null,
     })
     setIsSaving(false)
     if ("error" in result && result.error) toast.error(result.error)
@@ -301,6 +307,40 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                   {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Service start date */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Date de début</Label>
+              <Input type="date" value={serviceStartDate} onChange={e => setServiceStartDate(e.target.value)} className="h-9" />
+            </div>
+
+            {/* Payment terms preset */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Modalités de paiement</Label>
+              <Select value={paymentTermsPreset} onValueChange={setPaymentTermsPreset}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Sélectionner..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">—</SelectItem>
+                  {Object.entries(PAYMENT_TERMS_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Payment terms notes - full width */}
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Précisions sur le paiement</Label>
+              <Textarea
+                value={paymentTermsNotes}
+                onChange={e => setPaymentTermsNotes(e.target.value)}
+                placeholder="Ex: 30% à la commande, solde à la livraison"
+                className="text-sm resize-none"
+                rows={2}
+              />
             </div>
           </div>
 
