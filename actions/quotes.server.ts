@@ -38,7 +38,7 @@ export async function getQuotes(filters?: {
 
   let query = supabase
     .from("quotes")
-    .select("*, company:companies(id, name), opportunity:opportunities(id, name)")
+    .select("*, items:quote_items(quantity, unit_price), company:companies(id, name), opportunity:opportunities(id, name)")
     .eq("agency_id", agencyId)
     .order("created_at", { ascending: false })
 
@@ -75,7 +75,7 @@ export async function getQuote(id: string) {
 export async function getPublicQuote(token: string) {
   const { data: quote, error } = await supabaseAdmin
     .from("quotes")
-    .select("id, title, description, status, valid_until, currency, discount_type, discount_value, tax_rate, notes, created_at, company:companies(name), agency:agencies(name, logo_url, primary_color, secondary_color)")
+    .select("id, title, description, status, valid_until, currency, discount_type, discount_value, tax_rate, notes, created_at, service_start_date, payment_terms_preset, payment_terms_notes, company:companies(name, billing_address), agency:agencies(name, legal_name, legal_form, rcs_number, vat_number, address, phone, email, logo_url, primary_color, secondary_color)")
     .eq("token", token)
     .single()
 
@@ -399,7 +399,7 @@ export async function generateQuoteWithAI({
   if (company?.name) contextParts.push(`Client : ${company.name}${company.business_sector ? ` (secteur : ${company.business_sector})` : ""}${company.website ? ` — ${company.website}` : ""}`)
   if (opportunity?.name) contextParts.push(`Opportunité : ${opportunity.name}`)
   if (opportunity?.description) contextParts.push(`Description de l'opportunité : ${opportunity.description}`)
-  if (opportunityNotes.length > 0) contextParts.push(`Notes sur l'opportunité :\n${opportunityNotes.map((n, i) => `- ${n}`).join("\n")}`)
+  if (opportunityNotes.length > 0) contextParts.push(`Notes sur l'opportunité :\n${opportunityNotes.map((n: string) => `- ${n}`).join("\n")}`)
   if (quote.title) contextParts.push(`Titre du devis : ${quote.title}`)
 
   const context = contextParts.length > 0 ? `\n\nContexte disponible :\n${contextParts.join("\n")}` : ""
