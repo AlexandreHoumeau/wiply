@@ -4,19 +4,11 @@ import { InviteEmail } from '@/emails/agency-invite';
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"
-import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState } from "@/lib/validators/agency"
+import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState, updateAgencySchema } from "@/lib/validators/agency"
 import { sendEmail } from "@/lib/email"
 import crypto from "crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
-// Validation schema for agency information
-const updateAgencySchema = z.object({
-    name: z.string().min(1, "Le nom de l'agence est requis").max(200),
-    website: z.string().url("URL invalide").optional().or(z.literal('')),
-    phone: z.string().optional(),
-    email: z.string().email("Email invalide").optional().or(z.literal('')),
-    address: z.string().optional(),
-})
 
 
 export async function updateAgencyInformation(
@@ -31,10 +23,15 @@ export async function updateAgencyInformation(
             phone: formData.get("phone") as string,
             email: formData.get("email") as string,
             address: formData.get("address") as string,
+            legal_name: formData.get("legal_name") as string || undefined,
+            legal_form: formData.get("legal_form") as string || undefined,
+            rcs_number: formData.get("rcs_number") as string || undefined,
+            vat_number: formData.get("vat_number") as string || undefined,
         }
 
         // 2. Validate with Zod
-        const validatedFields = updateAgencySchema.safeParse(rawData)
+        const localSchema = updateAgencySchema.omit({ agency_id: true })
+        const validatedFields = localSchema.safeParse(rawData)
 
         if (!validatedFields.success) {
             return {
@@ -86,6 +83,10 @@ export async function updateAgencyInformation(
                 phone: validatedFields.data.phone || null,
                 email: validatedFields.data.email || null,
                 address: validatedFields.data.address || null,
+                legal_name: validatedFields.data.legal_name || null,
+                legal_form: validatedFields.data.legal_form || null,
+                rcs_number: validatedFields.data.rcs_number || null,
+                vat_number: validatedFields.data.vat_number || null,
             })
             .eq("id", profile.agency_id)
 
