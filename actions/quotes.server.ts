@@ -370,6 +370,7 @@ export async function generateQuoteWithAI({
   const opportunity = quote.opportunity as any
   const company = quote.company as any
 
+  // error intentionally ignored — agency config is optional enrichment; generation proceeds without it
   const { data: aiConfig } = await supabase
     .from("agency_ai_configs")
     .select("ai_context, tone, key_points, custom_instructions")
