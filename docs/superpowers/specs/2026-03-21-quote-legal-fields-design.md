@@ -57,7 +57,7 @@ ALTER TABLE quotes
 - `payment_terms_preset` : valeur parmi `immediate`, `15_days`, `30_days`, `45_days`, `60_days`, `custom`
 - `payment_terms_notes` : texte libre pour préciser les modalités
 
-Toutes les nouvelles colonnes sont nullable pour ne pas bloquer les devis existants.
+Toutes les nouvelles colonnes sont nullable pour ne pas bloquer les devis existants. Pas de migration `DOWN` nécessaire (colonnes nullable, aucune contrainte ajoutée).
 
 ---
 
@@ -65,8 +65,9 @@ Toutes les nouvelles colonnes sont nullable pour ne pas bloquer les devis exista
 
 ### `lib/validators/agency.ts`
 - Ajouter `legal_name`, `legal_form`, `rcs_number`, `vat_number` à `updateAgencySchema` (tous optionnels)
-- Étendre le type `Agency` avec ces 4 champs (nullable)
+- Étendre **le type `Agency` hand-written** (lignes 154–170) avec ces 4 champs nullable : `legal_name: string | null`, `legal_form: string | null`, `rcs_number: string | null`, `vat_number: string | null`
 - Ajouter `legalFormSchema` : `z.enum(['SARL', 'SAS', 'SASU', 'EURL', 'SA', 'SNC', 'Auto-entrepreneur', 'Autre'])`
+- Validation TVA : `z.string().regex(/^FR\d{2}\s?\d{3}\s?\d{3}\s?\d{3}$/).optional()` dans le schema
 
 ### `lib/validators/quotes.ts`
 - Ajouter `service_start_date`, `payment_terms_preset`, `payment_terms_notes` à `QuoteSchema` (tous optionnels/nullable)
@@ -74,7 +75,10 @@ Toutes les nouvelles colonnes sont nullable pour ne pas bloquer les devis exista
 - `UpdateQuoteSchema` et `CreateQuoteSchema` mis à jour automatiquement via `.partial()` / `.omit()`
 
 ### `lib/validators/companies.ts`
-- Ajouter `billing_address: z.string().optional().nullable()` au schema company existant
+- `companies.ts` contient uniquement des types TypeScript hand-written, **pas de schema Zod**
+- Ajouter `billing_address: string | null` au type `Company` existant
+- Ajouter un `updateCompanySchema` Zod minimal (uniquement les champs éditables dans ce scope) : `z.object({ id: z.string().uuid(), billing_address: z.string().nullable().optional() })`
+- Ajouter le type `UpdateCompanyInput` inféré
 
 ---
 
@@ -90,15 +94,28 @@ Champs :
 | Raison sociale | `Input` texte | `legal_name` |
 | Forme juridique | `Select` (SARL/SAS/SASU/EURL/SA/SNC/Auto-entrepreneur/Autre) | `legal_form` |
 | N° RCS / Répertoire des métiers | `Input` texte | `rcs_number` |
-| N° TVA intracommunautaire | `Input` texte | `vat_number` |
+| N° TVA intracommunautaire | `Input` texte, placeholder `FR00 000 000 000` | `vat_number` |
 
 Accès : visible uniquement si `role === 'agency_admin'` (garde déjà en place côté page settings).
 
-L'action `updateAgency` dans `actions/settings.server.ts` est mise à jour pour persister ces champs.
+**Fichier à mettre à jour** : `actions/agency.server.ts` — fonction `updateAgencyInformation`.
+Ce fichier contient un `updateAgencySchema` local (lignes 13–19) **distinct** du schema dans `lib/validators/agency.ts`. Pour la cohérence, remplacer le schema local par l'import partagé, et y ajouter les 4 nouveaux champs.
 
 ---
 
-## 4. Quote Editor
+## 4. Company : adresse de facturation
+
+**Problème** : il n'existe pas de page/modal d'édition de company, ni d'action `updateCompany`.
+
+**Solution** : créer une action `updateCompanyBillingAddress(id, billing_address)` dans `actions/companies.server.ts` (fichier à créer ou dans le fichier companies existant), et ajouter un bouton "Modifier" dans la page entreprise ou dans la liste pour ouvrir un Dialog minimal avec ce champ.
+
+**Fichiers concernés** :
+- `actions/companies.server.ts` (nouveau ou existant) — `updateCompanyBillingAddress`
+- `app/app/companies/page.tsx` ou un sous-composant — afficher/éditer `billing_address`
+
+---
+
+## 5. Quote Editor
 
 **Fichier** : `app/app/quotes/[id]/components/QuoteEditor.tsx`
 
@@ -118,23 +135,26 @@ Options du Select `payment_terms_preset` :
 - 60 jours fin de mois (`60_days`)
 - Personnalisé (`custom`)
 
-`payment_terms_notes` est toujours affiché (pas conditionnel), pour permettre de compléter n'importe quelle option.
+`payment_terms_notes` est **toujours affiché dans l'éditeur** (pas conditionnel), pour permettre de compléter n'importe quelle option avec des détails libres.
 
 Sauvegarde via `updateQuote` avec debounce (pattern existant).
 
 ---
 
-## 5. Vue publique du devis (client portal)
+## 6. Vue publique du devis (client portal)
 
-**Fichier** : `actions/quotes.server.ts` — `getPublicQuote`
+**Fichier page** : `app/devis/[token]/page.tsx` (à ne pas confondre avec `/portal/[token]` qui est le portail projet client).
 
-Mettre à jour la query pour inclure :
+**Fichier action** : `actions/quotes.server.ts` — `getPublicQuote`
+
+Mettre à jour la query pour inclure (ajouts par rapport à l'existant) :
 ```
 agency(name, legal_name, legal_form, rcs_number, vat_number, address, phone, email, logo_url, primary_color, secondary_color)
 company(name, billing_address)
 ```
+Note : `address`, `phone`, `email` sont **déjà absents** de la query actuelle — les ajouter en même temps que les champs légaux.
 
-Et ajouter `service_start_date, payment_terms_preset, payment_terms_notes` dans le select quotes.
+Ajouter `service_start_date, payment_terms_preset, payment_terms_notes` dans le select quotes.
 
 **Affichage** (portal public) :
 
@@ -145,12 +165,14 @@ Et ajouter `service_start_date, payment_terms_preset, payment_terms_notes` dans 
 
 **Bloc Client** :
 - Nom de l'entreprise
-- Adresse de facturation (si renseignée), sinon mention absente
+- Adresse de facturation si renseignée (affichée uniquement si non nulle)
 
 **Bloc Conditions** (bas de devis) :
 - Validité : "Valable jusqu'au [valid_until]"
-- Date de début : "[service_start_date]" (si renseignée)
-- Modalités : libellé du preset + notes si renseignées
+- Date de début : "[service_start_date]" (affiché uniquement si non null)
+- Modalités : libellé humain du preset + `payment_terms_notes` si renseignées (affiché uniquement si non nul)
+
+Note : dans l'éditeur, `payment_terms_notes` est toujours affiché ; dans la vue publique, il est conditionnel (affiché seulement si renseigné) pour ne pas montrer de ligne vide au client.
 
 Les totaux HT, remise, TVA, TTC sont déjà affichés via `computeQuoteTotals`.
 
@@ -158,6 +180,6 @@ Les totaux HT, remise, TVA, TTC sont déjà affichés via `computeQuoteTotals`.
 
 ## Périmètre exclu
 
-- Pas de champs légaux sur le profil `companies` (hors `billing_address`) — les coordonnées complètes du client ne sont pas gérées dans Wiply
+- Pas de champs légaux supplémentaires sur le profil `companies` (hors `billing_address`)
 - Pas de génération PDF dans ce scope
-- Pas de validation format stricte du numéro TVA côté DB (validation Zod uniquement)
+- Pas de validation format stricte du numéro TVA côté DB (validation Zod côté formulaire uniquement)
