@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft, Copy, ExternalLink, Plus, Trash2, GripVertical, Save,
@@ -68,8 +68,30 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   )
   const [oppDropdownOpen, setOppDropdownOpen] = useState(false)
   const [oppSearch, setOppSearch] = useState("")
+  const [isOppSearching, setIsOppSearching] = useState(false)
+  const oppSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => { listOpportunitiesForSelect().then(setOpportunities) }, [])
+  useEffect(() => {
+    if (oppDropdownOpen) {
+      setIsOppSearching(true)
+      listOpportunitiesForSelect(oppSearch).then(data => {
+        setOpportunities(data)
+        setIsOppSearching(false)
+      })
+    }
+  }, [oppDropdownOpen])
+
+  const handleOppSearchChange = useCallback((value: string) => {
+    setOppSearch(value)
+    if (oppSearchTimeout.current) clearTimeout(oppSearchTimeout.current)
+    oppSearchTimeout.current = setTimeout(() => {
+      setIsOppSearching(true)
+      listOpportunitiesForSelect(value).then(data => {
+        setOpportunities(data)
+        setIsOppSearching(false)
+      })
+    }, 300)
+  }, [])
 
   // AI panel state
   const [aiOpen, setAiOpen] = useState(false)
@@ -307,13 +329,16 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                 {oppDropdownOpen && (
                   <div className="absolute z-50 top-10 left-0 right-0 rounded-md border border-border bg-popover shadow-lg overflow-hidden">
                     <div className="p-2 border-b border-border">
-                      <Input value={oppSearch} onChange={e => setOppSearch(e.target.value)} placeholder="Rechercher..." className="h-7 text-sm" autoFocus />
+                      <Input value={oppSearch} onChange={e => handleOppSearchChange(e.target.value)} placeholder="Rechercher..." className="h-7 text-sm" autoFocus />
                     </div>
                     <div className="max-h-52 overflow-y-auto">
-                      {opportunities.filter(o =>
-                        o.name.toLowerCase().includes(oppSearch.toLowerCase()) ||
-                        (o.company?.name ?? "").toLowerCase().includes(oppSearch.toLowerCase())
-                      ).map(opp => (
+                      {isOppSearching ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : opportunities.length === 0 ? (
+                        <p className="px-3 py-4 text-sm text-muted-foreground text-center">Aucune opportunité</p>
+                      ) : opportunities.map(opp => (
                         <button key={opp.id} type="button" onClick={() => handleSelectOpp(opp)}
                           className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted transition-colors">
                           <div className="flex-1 min-w-0">
@@ -322,7 +347,6 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                           </div>
                         </button>
                       ))}
-                      {opportunities.length === 0 && <p className="px-3 py-4 text-sm text-muted-foreground text-center">Aucune opportunité</p>}
                     </div>
                   </div>
                 )}

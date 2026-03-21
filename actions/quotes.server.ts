@@ -63,7 +63,7 @@ export async function getQuote(id: string) {
 
   const { data, error } = await supabase
     .from("quotes")
-    .select("*, items:quote_items(*), company:companies(id, name), opportunity:opportunities(id, name)")
+    .select("*, items:quote_items(*), company:companies(id, name, business_sector), opportunity:opportunities(id, name, status, description)")
     .eq("id", id)
     .eq("agency_id", agencyId)
     .single()
