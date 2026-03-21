@@ -41,6 +41,10 @@ export const addressSchema = z
     .max(200, "L'adresse ne peut pas dépasser 200 caractères")
     .optional()
 
+export const legalFormSchema = z.enum([
+  'SARL', 'SAS', 'SASU', 'EURL', 'SA', 'SNC', 'Auto-entrepreneur', 'Autre'
+])
+
 
 /* ============================================================
    Create Agency
@@ -70,6 +74,12 @@ export const updateAgencySchema = z.object({
     website: websiteSchema,
     phone: phoneSchema,
     address: addressSchema,
+    email: emailSchema,
+    // New legal fields
+    legal_name: z.string().max(200).optional(),
+    legal_form: legalFormSchema.optional(),
+    rcs_number: z.string().max(100).optional(),
+    vat_number: z.string().regex(/^FR\d{2}\s?\d{3}\s?\d{3}\s?\d{3}$/, "Format invalide (ex: FR12 345 678 901)").optional().or(z.literal('')),
 })
 
 export type UpdateAgencyInput = z.infer<typeof updateAgencySchema>
@@ -80,6 +90,7 @@ export type UpdateAgencyState = {
     errors?: {
         agency_id?: string[]
         name?: string[]
+        vat_number?: string[]
     }
 }
 
@@ -167,6 +178,11 @@ export type Agency = {
     logo_url: string | null;
     demo_ends_at: string | null;
     plan: string | null;
+    // Legal fields
+    legal_name: string | null;
+    legal_form: string | null;
+    rcs_number: string | null;
+    vat_number: string | null;
 }
 
 /** Returns true if the agency has an effective PRO plan (paid or active demo) */
