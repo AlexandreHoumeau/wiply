@@ -1,5 +1,5 @@
 import { getPublicQuote } from "@/actions/quotes.server"
-import { computeQuoteTotals } from "@/lib/validators/quotes"
+import { computeQuoteTotals, PAYMENT_TERMS_LABELS } from "@/lib/validators/quotes"
 import { notFound } from "next/navigation"
 import { PrintButton } from "./print-button"
 
@@ -96,6 +96,19 @@ export default async function PublicQuotePage({
                   )}
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "16px", color: "#0f0f0f" }}>{agency?.name}</div>
+                    {agency?.legal_name && agency.legal_name !== agency.name && (
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>{agency.legal_name}</div>
+                    )}
+                    {(agency?.legal_form || agency?.rcs_number || agency?.vat_number) && (
+                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>
+                        {[agency?.legal_form, agency?.rcs_number && `RCS ${agency.rcs_number}`, agency?.vat_number && `TVA ${agency.vat_number}`].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
+                    {(agency?.address || agency?.phone || agency?.email) && (
+                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
+                        {[agency?.address, agency?.phone, agency?.email].filter(Boolean).join(" · ")}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -126,6 +139,11 @@ export default async function PublicQuotePage({
                     À l&apos;attention de
                   </div>
                   <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f0f0f" }}>{company.name}</div>
+                  {company.billing_address && (
+                    <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px", whiteSpace: "pre-wrap" }}>
+                      {company.billing_address}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -234,6 +252,29 @@ export default async function PublicQuotePage({
               <p style={{ fontSize: "13px", color: "#4b5563", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                 {quote.notes}
               </p>
+            </div>
+          )}
+
+          {/* Conditions */}
+          {(quote.service_start_date || quote.payment_terms_preset || quote.payment_terms_notes) && (
+            <div style={{ padding: "20px 40px", background: "#fafafa", borderTop: "1px solid #f0f0f0" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: "#9ca3af", marginBottom: "8px" }}>
+                Conditions
+              </div>
+              <div style={{ fontSize: "13px", color: "#4b5563", lineHeight: 1.8 }}>
+                {quote.service_start_date && (
+                  <div>Début de prestation : <strong>{fmtDate(quote.service_start_date)}</strong></div>
+                )}
+                {quote.payment_terms_preset && (
+                  <div>
+                    Modalités de paiement : <strong>{PAYMENT_TERMS_LABELS[quote.payment_terms_preset] ?? quote.payment_terms_preset}</strong>
+                    {quote.payment_terms_notes && ` — ${quote.payment_terms_notes}`}
+                  </div>
+                )}
+                {!quote.payment_terms_preset && quote.payment_terms_notes && (
+                  <div>{quote.payment_terms_notes}</div>
+                )}
+              </div>
             </div>
           )}
 
