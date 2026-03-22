@@ -221,6 +221,7 @@ export function TaskSlideOver({
                                     placeholder="Description, contexte, critères d'acceptation…"
                                     minHeight="72px"
                                     className="text-muted-foreground"
+                                    enableEntityRefs
                                 />
                             </div>
                         </div>
