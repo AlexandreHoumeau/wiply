@@ -16,6 +16,8 @@ import { computeQuoteTotals, ALLOWED_TRANSITIONS, QuoteStatus, PAYMENT_TERMS_LAB
 import { generateQuoteWithAI, listOpportunitiesForSelect } from "@/actions/quotes.server"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useAgency } from "@/providers/agency-provider"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 type OpportunityOption = { id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }
 
@@ -43,8 +45,19 @@ function fmt(amount: number, currency = "EUR") {
 
 type QuoteData = any
 
+const AGENCY_FIELDS: { key: string; label: string }[] = [
+  { key: "address", label: "Adresse" },
+  { key: "phone", label: "Téléphone" },
+  { key: "email", label: "Email" },
+  { key: "legal_name", label: "Raison sociale" },
+  { key: "legal_form", label: "Forme juridique" },
+  { key: "rcs_number", label: "N° RCS" },
+  { key: "vat_number", label: "N° TVA intracommunautaire" },
+]
+
 export function QuoteEditor({ quote }: { quote: QuoteData }) {
   const router = useRouter()
+  const { agency } = useAgency()
   const updateQuote = useUpdateQuote(quote.id)
   const updateStatus = useUpdateQuoteStatus(quote.id)
   const addItem = useAddQuoteItem(quote.id)
@@ -63,6 +76,10 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   const [serviceStartDate, setServiceStartDate] = useState(quote.service_start_date ?? "")
   const [paymentTermsPreset, setPaymentTermsPreset] = useState<string>(quote.payment_terms_preset ?? "")
   const [paymentTermsNotes, setPaymentTermsNotes] = useState(quote.payment_terms_notes ?? "")
+  const [showAgencyWarning, setShowAgencyWarning] = useState(false)
+  const [pendingAction, setPendingAction] = useState<"copy" | "open" | null>(null)
+
+  const missingAgencyFields = AGENCY_FIELDS.filter(f => !agency?.[f.key as keyof typeof agency])
 
   // Opportunity linking
   const [opportunities, setOpportunities] = useState<OpportunityOption[]>([])
@@ -262,19 +279,25 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
           <div className="h-5 w-px bg-border mx-1" />
 
           <button
-            onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success("Lien copié !") }}
+            onClick={() => {
+              if (missingAgencyFields.length > 0) { setPendingAction("copy"); setShowAgencyWarning(true) }
+              else { navigator.clipboard.writeText(publicUrl); toast.success("Lien copié !") }
+            }}
             className="flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <Copy className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Lien</span>
           </button>
-          <a
-            href={publicUrl} target="_blank" rel="noopener noreferrer"
+          <button
+            onClick={() => {
+              if (missingAgencyFields.length > 0) { setPendingAction("open"); setShowAgencyWarning(true) }
+              else { window.open(publicUrl, "_blank") }
+            }}
             className="flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Voir</span>
-          </a>
+          </button>
 
           <button
             onClick={handleSave}
@@ -323,7 +346,6 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                   <SelectValue placeholder="Sélectionner..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">—</SelectItem>
                   {Object.entries(PAYMENT_TERMS_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>{label}</SelectItem>
                   ))}
@@ -744,6 +766,42 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
           </div>
         </div>
       </div>
+
+      {/* Agency settings warning dialog */}
+      <Dialog open={showAgencyWarning} onOpenChange={setShowAgencyWarning}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Informations de l'agence incomplètes</DialogTitle>
+            <DialogDescription>
+              Les champs suivants ne sont pas renseignés dans les paramètres de l'agence. Ils sont requis pour les mentions légales obligatoires sur le devis.
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="text-sm space-y-1.5 my-1">
+            {missingAgencyFields.map(f => (
+              <li key={f.key} className="flex items-center gap-2 text-muted-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                {f.label}
+              </li>
+            ))}
+          </ul>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => router.push("/app/settings/agency")}>
+              Compléter les informations
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowAgencyWarning(false)
+                if (pendingAction === "copy") { navigator.clipboard.writeText(publicUrl); toast.success("Lien copié !") }
+                else if (pendingAction === "open") { window.open(publicUrl, "_blank") }
+                setPendingAction(null)
+              }}
+            >
+              Continuer quand même
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

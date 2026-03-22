@@ -26,11 +26,11 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_STYLES: Record<string, { dot: string; text: string; bg: string }> = {
-  draft:    { dot: "bg-slate-400",   text: "text-slate-600",  bg: "bg-slate-50" },
-  sent:     { dot: "bg-blue-500",    text: "text-blue-700",   bg: "bg-blue-50" },
-  accepted: { dot: "bg-emerald-500", text: "text-emerald-700",bg: "bg-emerald-50" },
-  rejected: { dot: "bg-red-500",     text: "text-red-700",    bg: "bg-red-50" },
-  expired:  { dot: "bg-amber-500",   text: "text-amber-700",  bg: "bg-amber-50" },
+  draft:    { dot: "bg-zinc-300",     text: "text-zinc-500",    bg: "bg-zinc-50" },
+  sent:     { dot: "bg-zinc-500",     text: "text-zinc-600",    bg: "bg-zinc-50" },
+  accepted: { dot: "bg-emerald-500",  text: "text-emerald-700", bg: "bg-emerald-50/60" },
+  rejected: { dot: "bg-zinc-300",     text: "text-zinc-400",    bg: "bg-zinc-50" },
+  expired:  { dot: "bg-zinc-300",     text: "text-zinc-400",    bg: "bg-zinc-50" },
 }
 
 const STAT_CARDS = [
@@ -93,7 +93,7 @@ export default function QuotesPage() {
   const statData = STAT_CARDS.map(card => {
     const filtered = (allQuotes ?? []).filter(q => q.status === card.status)
     const total = filtered.reduce((sum, q) => {
-      const t = computeQuoteTotals({ discount_type: q.discount_type as any, discount_value: q.discount_value, tax_rate: q.tax_rate, items: [] })
+      const t = computeQuoteTotals({ discount_type: q.discount_type as any, discount_value: q.discount_value, tax_rate: q.tax_rate, items: (q as any).items ?? [] })
       return sum + t.total
     }, 0)
     return { ...card, count: filtered.length, total }
@@ -130,13 +130,13 @@ export default function QuotesPage() {
               className={cn(
                 "group relative text-left rounded-xl border p-4 transition-all hover:shadow-sm cursor-pointer",
                 activeTab === status
-                  ? "border-[var(--brand-primary)]/30 bg-[var(--brand-primary)]/5 shadow-sm"
+                  ? "border-foreground/20 bg-card shadow-sm"
                   : "border-border bg-card hover:border-border/80"
               )}
             >
               <div className="flex items-start justify-between gap-2 mb-3">
-                <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", style.bg)}>
-                  <Icon className={cn("w-4 h-4", style.text)} />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                  <Icon className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <span className="text-2xl font-bold tabular-nums tracking-tight">{count}</span>
               </div>
@@ -209,8 +209,7 @@ export default function QuotesPage() {
             <tbody>
               {quotes.map((quote, i) => {
                 const style = STATUS_STYLES[quote.status] ?? STATUS_STYLES.draft
-                // Note: totals need items - the list query doesn't fetch items so total will be 0
-                // This is by design for performance; full totals shown in detail view
+                const { total } = computeQuoteTotals({ discount_type: quote.discount_type as any, discount_value: quote.discount_value, tax_rate: quote.tax_rate, items: (quote as any).items ?? [] })
                 return (
                   <tr
                     key={quote.id}
@@ -229,13 +228,13 @@ export default function QuotesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", style.text)}>
+                      <span className={cn("inline-flex items-center gap-1.5 text-xs", style.text)}>
                         <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", style.dot)} />
                         {STATUS_LABELS[quote.status]}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right font-mono text-sm font-semibold tabular-nums">
-                      {formatCurrency(0, quote.currency)}
+                      {formatCurrency(total, quote.currency)}
                     </td>
                     <td className="px-4 py-3.5 text-xs text-muted-foreground tabular-nums">
                       {quote.created_at ? formatDate(quote.created_at) : "—"}

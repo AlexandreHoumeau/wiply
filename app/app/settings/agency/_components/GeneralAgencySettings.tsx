@@ -258,7 +258,7 @@ export default function GeneralAgencySettings({
             {/* rcs_number + vat_number — 2 columns */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="rcs_number">N° RCS / Répertoire des métiers</Label>
+                <Label htmlFor="rcs_number">N° RCS / SIREN / Répertoire des métiers</Label>
                 <Input
                   id="rcs_number"
                   name="rcs_number"
