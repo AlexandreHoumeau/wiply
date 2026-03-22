@@ -156,6 +156,7 @@ export async function fetchOpportunityStatusCounts(agencyId: string) {
             return acc;
         },
         {
+            inbound: 0,
             to_do: 0,
             first_contact: 0,
             second_contact: 0,

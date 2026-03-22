@@ -41,6 +41,10 @@ export const addressSchema = z
     .max(200, "L'adresse ne peut pas dépasser 200 caractères")
     .optional()
 
+export const legalFormSchema = z.enum([
+  'SARL', 'SAS', 'SASU', 'EURL', 'SA', 'SNC', 'Auto-entrepreneur', 'Autre'
+])
+
 
 /* ============================================================
    Create Agency
@@ -70,6 +74,12 @@ export const updateAgencySchema = z.object({
     website: websiteSchema,
     phone: phoneSchema,
     address: addressSchema,
+    email: emailSchema,
+    // New legal fields
+    legal_name: z.string().max(200).optional(),
+    legal_form: legalFormSchema.optional(),
+    rcs_number: z.string().max(100).optional(),
+    vat_number: z.string().regex(/^FR\d{2}\s?\d{3}\s?\d{3}\s?\d{3}$/, "Format invalide (ex: FR12 345 678 901)").optional().or(z.literal('')),
 })
 
 export type UpdateAgencyInput = z.infer<typeof updateAgencySchema>
@@ -80,8 +90,58 @@ export type UpdateAgencyState = {
     errors?: {
         agency_id?: string[]
         name?: string[]
+        vat_number?: string[]
     }
 }
+
+/* ============================================================
+   Update Agency Profile
+============================================================ */
+
+export const updateAgencyProfileSchema = z.object({
+    name: agencyNameSchema,
+    website: websiteSchema,
+    email: z.string().email("Email invalide").toLowerCase().or(z.literal("")).optional(),
+    phone: phoneSchema,
+    address: addressSchema,
+})
+
+export type UpdateAgencyProfileState = {
+    success: boolean
+    message?: string
+    errors?: {
+        name?: string[]
+        website?: string[]
+        email?: string[]
+        phone?: string[]
+        address?: string[]
+    }
+} | null
+
+/* ============================================================
+   Update Agency Legal
+============================================================ */
+
+export const updateAgencyLegalSchema = z.object({
+    legal_name: z.string().max(200).optional().or(z.literal("")),
+    legal_form: legalFormSchema.optional(),
+    rcs_number: z.string().max(100).optional().or(z.literal("")),
+    vat_number: z.string()
+        .regex(/^FR\d{2}\s?\d{3}\s?\d{3}\s?\d{3}$/, "Format invalide (ex: FR12 345 678 901)")
+        .optional()
+        .or(z.literal("")),
+})
+
+export type UpdateAgencyLegalState = {
+    success: boolean
+    message?: string
+    errors?: {
+        legal_name?: string[]
+        legal_form?: string[]
+        rcs_number?: string[]
+        vat_number?: string[]
+    }
+} | null
 
 /* ============================================================
    Invite Member
@@ -166,4 +226,16 @@ export type Agency = {
     secondary_color: string | null;
     logo_url: string | null;
     demo_ends_at: string | null;
+    plan: string | null;
+    // Legal fields
+    legal_name: string | null;
+    legal_form: string | null;
+    rcs_number: string | null;
+    vat_number: string | null;
+}
+
+/** Returns true if the agency has an effective PRO plan (paid or active demo) */
+export function isProPlan(agency: Pick<Agency, 'plan' | 'demo_ends_at'>): boolean {
+    if (agency.demo_ends_at && new Date(agency.demo_ends_at) > new Date()) return true
+    return agency.plan === 'PRO'
 }

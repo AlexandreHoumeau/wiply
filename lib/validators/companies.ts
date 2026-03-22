@@ -1,3 +1,12 @@
+import { z } from 'zod'
+
+export const updateCompanySchema = z.object({
+  id: z.string().uuid(),
+  billing_address: z.string().nullable().optional(),
+})
+
+export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>
+
 export type Company = {
   id: string;
   name: string;
@@ -7,6 +16,7 @@ export type Company = {
   website: string | null;
   business_sector: string | null;
   created_at: string;
+  billing_address: string | null;
 };
 
 export type CompanyWithRelations = Company & {

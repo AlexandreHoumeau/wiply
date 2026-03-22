@@ -109,3 +109,18 @@ export async function checkAiEnabled(
 
     return { allowed: true }
 }
+
+export async function checkQuoteEnabled(
+    agencyId: string
+): Promise<{ allowed: boolean; reason?: string }> {
+    const plan = await getAgencyPlan(agencyId)
+
+    if (!PLANS[plan].quotes_enabled) {
+        return {
+            allowed: false,
+            reason: 'Les devis sont disponibles uniquement sur le plan PRO.',
+        }
+    }
+
+    return { allowed: true }
+}
