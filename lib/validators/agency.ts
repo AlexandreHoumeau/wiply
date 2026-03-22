@@ -95,6 +95,55 @@ export type UpdateAgencyState = {
 }
 
 /* ============================================================
+   Update Agency Profile
+============================================================ */
+
+export const updateAgencyProfileSchema = z.object({
+    name: agencyNameSchema,
+    website: websiteSchema,
+    email: z.string().email("Email invalide").toLowerCase().or(z.literal("")).optional(),
+    phone: phoneSchema,
+    address: addressSchema,
+})
+
+export type UpdateAgencyProfileState = {
+    success: boolean
+    message?: string
+    errors?: {
+        name?: string[]
+        website?: string[]
+        email?: string[]
+        phone?: string[]
+        address?: string[]
+    }
+} | null
+
+/* ============================================================
+   Update Agency Legal
+============================================================ */
+
+export const updateAgencyLegalSchema = z.object({
+    legal_name: z.string().max(200).optional().or(z.literal("")),
+    legal_form: legalFormSchema.optional(),
+    rcs_number: z.string().max(100).optional().or(z.literal("")),
+    vat_number: z.string()
+        .regex(/^FR\d{2}\s?\d{3}\s?\d{3}\s?\d{3}$/, "Format invalide (ex: FR12 345 678 901)")
+        .optional()
+        .or(z.literal("")),
+})
+
+export type UpdateAgencyLegalState = {
+    success: boolean
+    message?: string
+    errors?: {
+        legal_name?: string[]
+        legal_form?: string[]
+        rcs_number?: string[]
+        vat_number?: string[]
+    }
+} | null
+
+/* ============================================================
    Invite Member
 ============================================================ */
 
