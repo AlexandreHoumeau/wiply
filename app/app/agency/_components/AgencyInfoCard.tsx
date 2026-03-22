@@ -35,7 +35,7 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
     } else if (state.message) {
       toast.error(state.message);
     }
-  }, [state]);
+  }, [state, router]);
 
   const fields = [
     { icon: Globe, label: "Site internet", value: agency.website, isLink: true },

@@ -59,7 +59,7 @@ export async function updateAgencyProfile(
 
     if (updateError) return { success: false, message: "Erreur lors de la mise à jour" }
 
-    revalidateTag(`settings-${user.id}`)
+    revalidateTag(`settings-${user.id}`, {})
     revalidatePath("/app/settings/agency")
 
     return { success: true, message: "Profil mis à jour" }
@@ -114,7 +114,7 @@ export async function updateAgencyLegal(
 
     if (updateError) return { success: false, message: "Erreur lors de la mise à jour" }
 
-    revalidateTag(`settings-${user.id}`)
+    revalidateTag(`settings-${user.id}`, {})
     revalidatePath("/app/settings/agency")
 
     return { success: true, message: "Mentions légales mises à jour" }
