@@ -4,117 +4,11 @@ import { InviteEmail } from '@/emails/agency-invite';
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"
-import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState, updateAgencySchema, updateAgencyProfileSchema, UpdateAgencyProfileState, updateAgencyLegalSchema, UpdateAgencyLegalState } from "@/lib/validators/agency"
+import { inviteAgencyMemberSchema, InviteAgencyMemberState, updateAgencyProfileSchema, UpdateAgencyProfileState, updateAgencyLegalSchema, UpdateAgencyLegalState } from "@/lib/validators/agency"
 import { sendEmail } from "@/lib/email"
 import crypto from "crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
-
-
-export async function updateAgencyInformation(
-    prevState: UpdateAgencyState | null,
-    formData: FormData
-): Promise<UpdateAgencyState> {
-    try {
-        // 1. Extract form data
-        const rawData = {
-            name: formData.get("name") as string,
-            website: formData.get("website") as string,
-            phone: formData.get("phone") as string,
-            email: formData.get("email") as string,
-            address: formData.get("address") as string,
-            legal_name: formData.get("legal_name") as string || undefined,
-            legal_form: formData.get("legal_form") as string || undefined,
-            rcs_number: formData.get("rcs_number") as string || undefined,
-            vat_number: formData.get("vat_number") as string || undefined,
-        }
-
-        // 2. Validate with Zod
-        const localSchema = updateAgencySchema.omit({ agency_id: true })
-        const validatedFields = localSchema.safeParse(rawData)
-
-        if (!validatedFields.success) {
-            return {
-                success: false,
-                errors: validatedFields.error.flatten().fieldErrors,
-                message: "Veuillez corriger les erreurs",
-            }
-        }
-
-        // 3. Get authenticated user and their agency
-        const supabase = await createClient()
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-        if (authError || !user) {
-            return {
-                success: false,
-                message: "Non authentifié",
-            }
-        }
-
-        // Get user's profile to find agency_id
-        const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("agency_id, role")
-            .eq("id", user.id)
-            .single()
-
-        if (profileError || !profile?.agency_id) {
-            return {
-                success: false,
-                message: "Aucune agence associée à votre compte",
-            }
-        }
-
-        // Check if user has permission (admin only)
-        if (profile.role !== 'agency_admin') {
-            return {
-                success: false,
-                message: "Vous n'avez pas les permissions pour modifier l'agence",
-            }
-        }
-
-        // 4. Update agency
-        const { error: updateError } = await supabase
-            .from("agencies")
-            .update({
-                name: validatedFields.data.name,
-                website: validatedFields.data.website || null,
-                phone: validatedFields.data.phone || null,
-                email: validatedFields.data.email || null,
-                address: validatedFields.data.address || null,
-                legal_name: validatedFields.data.legal_name || null,
-                legal_form: validatedFields.data.legal_form || null,
-                rcs_number: validatedFields.data.rcs_number || null,
-                vat_number: validatedFields.data.vat_number || null,
-            })
-            .eq("id", profile.agency_id)
-
-        if (updateError) {
-            console.error("Error updating agency:", updateError)
-            return {
-                success: false,
-                message: "Erreur lors de la mise à jour de l'agence",
-            }
-        }
-
-        // 5. Revalidate
-        revalidatePath("/settings/agency")
-        revalidatePath("/settings")
-        revalidateTag(`settings-${user.id}`, {})
-
-        return {
-            success: true,
-            message: "Agence mise à jour avec succès",
-        }
-    } catch (error) {
-        console.error("Unexpected error:", error)
-        return {
-            success: false,
-            message: "Une erreur inattendue s'est produite",
-        }
-    }
-}
 
 
 export async function updateAgencyProfile(
