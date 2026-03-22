@@ -17,7 +17,7 @@ export default function MentionsLegales() {
         Alexandre Houmeau<br />
         Micro-entrepreneur<br />
         4 rue Rose, 33300 Bordeaux, France<br />
-        SIRET : en cours d&apos;immatriculation<br />
+        SIRET : 91761722700033
         Email : <a href="mailto:contact@wiply.fr">contact@wiply.fr</a>
       </p>
 
