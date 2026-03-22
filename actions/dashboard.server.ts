@@ -38,6 +38,7 @@ export type DashboardData = {
 };
 
 const PIPELINE_STATUSES: OpportunityStatus[] = [
+  "inbound",
   "to_do",
   "first_contact",
   "second_contact",

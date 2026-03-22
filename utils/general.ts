@@ -1,6 +1,7 @@
 import { ContactVia, OpportunityStatus } from "@/lib/validators/oppotunities";
 
 export const STATUS_COLORS: Record<OpportunityStatus, string> = {
+    inbound: "bg-cyan-100 text-cyan-800",
     to_do: "bg-gray-100 text-gray-800",
     first_contact: "bg-blue-100 text-blue-800",
     second_contact: "bg-indigo-100 text-indigo-800",

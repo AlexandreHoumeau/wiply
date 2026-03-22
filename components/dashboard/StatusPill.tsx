@@ -5,6 +5,7 @@ import {
 } from "@/lib/validators/oppotunities";
 
 const STATUS_PILL_STYLES: Record<OpportunityStatus, { bg: string; text: string }> = {
+  inbound: { bg: "bg-cyan-50 dark:bg-cyan-950/40", text: "text-cyan-700 dark:text-cyan-400" },
   to_do: { bg: "bg-muted", text: "text-muted-foreground" },
   first_contact: { bg: "bg-blue-50 dark:bg-blue-950/40", text: "text-blue-700 dark:text-blue-400" },
   second_contact: { bg: "bg-indigo-50 dark:bg-indigo-950/40", text: "text-indigo-700 dark:text-indigo-400" },

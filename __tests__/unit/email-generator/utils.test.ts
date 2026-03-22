@@ -6,14 +6,18 @@ import {
 } from "@/lib/email_generator/utils";
 
 describe("STATUS_TO_INTENT", () => {
-  it("couvre les 7 statuts d'opportunité", () => {
+  it("couvre les 8 statuts d'opportunité", () => {
     const statuses = [
-      "to_do", "first_contact", "second_contact",
+      "inbound", "to_do", "first_contact", "second_contact",
       "proposal_sent", "negotiation", "won", "lost",
     ];
     for (const s of statuses) {
       expect(STATUS_TO_INTENT[s as keyof typeof STATUS_TO_INTENT]).toBeDefined();
     }
+  });
+
+  it("inbound → first_contact", () => {
+    expect(STATUS_TO_INTENT.inbound).toBe("first_contact");
   });
 
   it("to_do et first_contact → first_contact", () => {

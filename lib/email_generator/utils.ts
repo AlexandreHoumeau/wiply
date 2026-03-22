@@ -2,6 +2,7 @@ import z from "zod";
 import { OpportunityStatus, OpportunityWithCompany } from "../validators/oppotunities";
 
 export const STATUS_TO_INTENT: Record<OpportunityStatus, EmailIntent> = {
+    inbound: "first_contact",
     to_do: "first_contact",
     first_contact: "first_contact",
     second_contact: "follow_up",

@@ -14,6 +14,15 @@ const getDefaultParams = (overrides: Partial<Parameters<typeof getOpportunityRec
 });
 
 describe("getOpportunityRecommendation", () => {
+    describe("status: inbound", () => {
+        it("returns action with warm response CTA", () => {
+            const result = getOpportunityRecommendation(getDefaultParams({ status: "inbound" }));
+            expect(result.level).toBe("action");
+            expect(result.iconName).toBe("MessageCircle");
+            expect(result.primaryCta?.label).toBe("Générer une réponse");
+        });
+    });
+
     describe("status: to_do", () => {
         it("returns action to generate message if no AI messages", () => {
             const result = getOpportunityRecommendation(getDefaultParams({ status: "to_do", aiMessageCount: 0 }));

@@ -26,6 +26,16 @@ export function getOpportunityRecommendation(params: {
     const { status, aiMessageCount, totalClicks, daysSinceLastActivity, daysSinceLastClick, hasTrackingLink } = params;
 
     switch (status) {
+        case "inbound":
+            return {
+                level: "action",
+                iconName: "MessageCircle",
+                title: "Prospect entrant — répondez à son initiative",
+                description: "Ce prospect a pris contact en premier. Générez une réponse chaleureuse et personnalisée pour concrétiser l'opportunité.",
+                primaryCta: { label: "Générer une réponse", tab: "message" },
+                secondaryCta: { label: "Passer en 1er contact", statusUpdate: "first_contact" },
+            };
+
         case "to_do":
             if (aiMessageCount === 0) {
                 return {

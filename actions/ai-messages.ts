@@ -169,15 +169,18 @@ export async function generateOpportunityMessage(
 		}
 		agencyWebsite = (agencyResult as any).data?.website || null;
 
+		const isLost = opportunity.status === "lost";
+
 		// Contextes métiers
 		const statusContext = {
+			"inbound": "prospect entrant — il a pris contact en premier, répondre à son initiative",
 			"to_do": "première approche — aucun contact précédent",
 			"first_contact": "suivi après un premier échange",
 			"second_contact": "deuxième relance, toujours sans réponse concrète",
 			"proposal_sent": "relance après envoi d'une proposition commerciale",
 			"negotiation": "en cours de négociation des termes",
 			"won": "client gagné — message de bienvenue ou de lancement",
-			"lost": "prospect perdu — clôture professionnelle ou tentative de reconquête",
+			"lost": "prospect perdu — l'opportunité est clôturée",
 		}[opportunity.status as string] || "contact professionnel";
 
 		const channelGuidelines = {
@@ -218,6 +221,7 @@ export async function generateOpportunityMessage(
 			`- Secteur : ${opportunity.company?.business_sector || "non spécifié"}`,
 			companyWebsite ? `- Site web du prospect : ${companyWebsite}` : "",
 			`- Situation actuelle : ${statusContext}`,
+			isLost ? "- IMPORTANT : ce prospect a refusé ou l'opportunité est perdue. Le message doit être soit une clôture professionnelle et élégante (remercier, laisser la porte ouverte), soit une tentative de reconquête subtile et non insistante. Ne pas prétendre que la relation est toujours active. Ne pas faire de proposition commerciale directe." : "",
 			"",
 			opportunity.description ? `DESCRIPTION DE L'OPPORTUNITÉ :\n${opportunity.description}` : "",
 			customContext ? `\nCONTEXTE ADDITIONNEL :\n${customContext}` : "",

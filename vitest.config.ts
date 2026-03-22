@@ -15,6 +15,7 @@ export default defineConfig({
         "lib/config/**",
         "lib/email_generator/**",
         "lib/validators/oppotunities.ts",
+        "lib/validators/quotes.ts",
         "lib/utils.ts",
         "actions/dashboard.server.ts",
         // Add more paths here as you write unit tests for other files.

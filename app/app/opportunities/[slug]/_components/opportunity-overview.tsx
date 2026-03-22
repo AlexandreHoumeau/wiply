@@ -45,6 +45,7 @@ import { updateOpportunityStatus } from "@/actions/opportunity.client";
 
 // --- Status pipeline stages ---
 const PIPELINE_STAGES: { id: OpportunityStatus; label: string }[] = [
+    { id: "inbound", label: "Entrant" },
     { id: "to_do", label: "À faire" },
     { id: "first_contact", label: "1er contact" },
     { id: "second_contact", label: "2e contact" },
