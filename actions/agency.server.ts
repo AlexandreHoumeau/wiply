@@ -4,7 +4,7 @@ import { InviteEmail } from '@/emails/agency-invite';
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"
-import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState, updateAgencySchema } from "@/lib/validators/agency"
+import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState, updateAgencySchema, updateAgencyProfileSchema, UpdateAgencyProfileState, updateAgencyLegalSchema, UpdateAgencyLegalState } from "@/lib/validators/agency"
 import { sendEmail } from "@/lib/email"
 import crypto from "crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
@@ -116,6 +116,118 @@ export async function updateAgencyInformation(
     }
 }
 
+
+export async function updateAgencyProfile(
+  prevState: UpdateAgencyProfileState,
+  formData: FormData
+): Promise<UpdateAgencyProfileState> {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return { success: false, message: "Non authentifié" }
+
+    const rawData = {
+      name: formData.get("name") as string,
+      website: formData.get("website") ?? undefined,
+      email: formData.get("email") ?? undefined,
+      phone: formData.get("phone") ?? undefined,
+      address: formData.get("address") ?? undefined,
+    }
+
+    const validated = updateAgencyProfileSchema.safeParse(rawData)
+    if (!validated.success) {
+      return {
+        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        message: "Veuillez corriger les erreurs",
+      }
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("agency_id, role")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile?.agency_id) return { success: false, message: "Aucune agence associée" }
+    if (profile.role !== "agency_admin") return { success: false, message: "Permissions insuffisantes" }
+
+    const { error: updateError } = await supabase
+      .from("agencies")
+      .update({
+        name: validated.data.name,
+        website: validated.data.website || null,
+        email: validated.data.email || null,
+        phone: validated.data.phone || null,
+        address: validated.data.address || null,
+      })
+      .eq("id", profile.agency_id)
+
+    if (updateError) return { success: false, message: "Erreur lors de la mise à jour" }
+
+    revalidateTag(`settings-${user.id}`)
+    revalidatePath("/app/settings/agency")
+
+    return { success: true, message: "Profil mis à jour" }
+  } catch {
+    return { success: false, message: "Une erreur inattendue s'est produite" }
+  }
+}
+
+export async function updateAgencyLegal(
+  prevState: UpdateAgencyLegalState,
+  formData: FormData
+): Promise<UpdateAgencyLegalState> {
+  try {
+    const rawData = {
+      legal_name: formData.get("legal_name") as string || undefined,
+      legal_form: formData.get("legal_form") as string || undefined,
+      rcs_number: formData.get("rcs_number") as string || undefined,
+      vat_number: formData.get("vat_number") as string || undefined,
+    }
+
+    const validated = updateAgencyLegalSchema.safeParse(rawData)
+    if (!validated.success) {
+      return {
+        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        message: "Veuillez corriger les erreurs",
+      }
+    }
+
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return { success: false, message: "Non authentifié" }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("agency_id, role")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile?.agency_id) return { success: false, message: "Aucune agence associée" }
+    if (profile.role !== "agency_admin") return { success: false, message: "Permissions insuffisantes" }
+
+    const { error: updateError } = await supabase
+      .from("agencies")
+      .update({
+        legal_name: validated.data.legal_name || null,
+        legal_form: validated.data.legal_form || null,
+        rcs_number: validated.data.rcs_number || null,
+        vat_number: validated.data.vat_number || null,
+      })
+      .eq("id", profile.agency_id)
+
+    if (updateError) return { success: false, message: "Erreur lors de la mise à jour" }
+
+    revalidateTag(`settings-${user.id}`)
+    revalidatePath("/app/settings/agency")
+
+    return { success: true, message: "Mentions légales mises à jour" }
+  } catch {
+    return { success: false, message: "Une erreur inattendue s'est produite" }
+  }
+}
 
 export async function inviteTeamMember(
     prevState: InviteAgencyMemberState | null,
