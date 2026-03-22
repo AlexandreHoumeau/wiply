@@ -4,11 +4,20 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Mention from "@tiptap/extension-mention";
+import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion";
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Bold, Italic, Link2, ExternalLink, Trash2 } from "lucide-react";
 import type { AgencyMember } from "@/actions/agency.server";
+import type { EntityRef } from "@/actions/references.server";
+import {
+    searchTickets,
+    searchOpportunities,
+    searchProjects,
+    searchQuotes,
+} from "@/actions/references.server";
 import {
     Dialog,
     DialogContent,
@@ -19,7 +28,27 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// ─── Mention suggestion list ────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+function isEntityRef(item: AgencyMember | EntityRef): item is EntityRef {
+    return "entityType" in item;
+}
+
+const ENTITY_COLORS: Record<EntityRef["entityType"], string> = {
+    ticket: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
+    opportunity: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    project: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
+    quote: "bg-green-500/10 text-green-700 dark:text-green-400",
+};
+
+const ENTITY_LABELS: Record<EntityRef["entityType"], string> = {
+    ticket: "Ticket",
+    opportunity: "Opportunité",
+    project: "Projet",
+    quote: "Devis",
+};
+
+// ─── People mention list ─────────────────────────────────────────────────────
 
 interface MentionListProps {
     items: AgencyMember[];
@@ -33,6 +62,7 @@ interface MentionListHandle {
 const MentionList = forwardRef<MentionListHandle, MentionListProps>(function MentionList({ items, command }, ref) {
     const [selected, setSelected] = useState(0);
 
+    // eslint-disable-next-line react-compiler/react-compiler
     useEffect(() => { setSelected(0); }, [items]);
 
     useImperativeHandle(ref, () => ({
@@ -79,6 +109,9 @@ const MentionList = forwardRef<MentionListHandle, MentionListProps>(function Men
                         onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            const label = item.first_name
+                                ? `${item.first_name} ${item.last_name ?? ""}`.trim()
+                                : item.email ?? item.id;
                             command({ id: item.id, label });
                         }}
                     >
@@ -96,7 +129,81 @@ const MentionList = forwardRef<MentionListHandle, MentionListProps>(function Men
     );
 });
 
-// ─── Link dialog ────────────────────────────────────────────────────────────
+// ─── Entity mention list ──────────────────────────────────────────────────────
+
+interface EntityMentionListProps {
+    items: EntityRef[];
+    command: (item: { id: string; label: string; entityType: string; projectSlug?: string }) => void;
+    hint?: string;
+}
+
+interface EntityMentionListHandle {
+    onKeyDown: (event: KeyboardEvent) => boolean;
+}
+
+const EntityMentionList = forwardRef<EntityMentionListHandle, EntityMentionListProps>(
+    function EntityMentionList({ items, command, hint }, ref) {
+        const [selected, setSelected] = useState(0);
+
+        // eslint-disable-next-line react-compiler/react-compiler
+        useEffect(() => { setSelected(0); }, [items]);
+
+        useImperativeHandle(ref, () => ({
+            onKeyDown: (event: KeyboardEvent) => {
+                if (event.key === "ArrowUp") {
+                    setSelected((s) => (s - 1 + items.length) % items.length);
+                    return true;
+                }
+                if (event.key === "ArrowDown") {
+                    setSelected((s) => (s + 1) % items.length);
+                    return true;
+                }
+                if (event.key === "Enter") {
+                    const item = items[selected];
+                    if (item) command({ id: item.id, label: item.label, entityType: item.entityType, projectSlug: item.projectSlug });
+                    return true;
+                }
+                return false;
+            },
+        }));
+
+        if (items.length === 0 && !hint) return null;
+
+        return (
+            <div className="bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[240px] max-w-[320px] overflow-hidden">
+                {hint && items.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground/60 italic">{hint}</div>
+                )}
+                {items.map((item, i) => (
+                    <button
+                        key={`${item.entityType}-${item.id}`}
+                        type="button"
+                        className={cn(
+                            "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors",
+                            i === selected ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50"
+                        )}
+                        onMouseEnter={() => setSelected(i)}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            command({ id: item.id, label: item.label, entityType: item.entityType, projectSlug: item.projectSlug });
+                        }}
+                    >
+                        <span className={cn(
+                            "text-[9px] font-bold rounded px-1 py-0.5 shrink-0 uppercase tracking-wide",
+                            ENTITY_COLORS[item.entityType]
+                        )}>
+                            {ENTITY_LABELS[item.entityType]}
+                        </span>
+                        <span className="truncate text-xs">{item.label}</span>
+                    </button>
+                ))}
+            </div>
+        );
+    }
+);
+
+// ─── Link dialog ─────────────────────────────────────────────────────────────
 
 interface LinkDialogProps {
     open: boolean;
@@ -110,6 +217,7 @@ function LinkDialog({ open, initialUrl, onConfirm, onRemove, onClose }: LinkDial
     const [url, setUrl] = useState(initialUrl);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // eslint-disable-next-line react-compiler/react-compiler
     useEffect(() => {
         if (open) {
             setUrl(initialUrl);
@@ -173,7 +281,94 @@ function LinkDialog({ open, initialUrl, onConfirm, onRemove, onClose }: LinkDial
     );
 }
 
-// ─── Main editor ────────────────────────────────────────────────────────────
+// ─── Entity mention Tiptap extensions ────────────────────────────────────────
+
+const EntityMentionSlash = Mention.extend({
+    name: "entityMentionSlash",
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            entityType: {
+                default: null,
+                parseHTML: (el) => el.getAttribute("data-entity-type"),
+            },
+            projectSlug: {
+                default: null,
+                parseHTML: (el) => el.getAttribute("data-project-slug"),
+            },
+        };
+    },
+    renderHTML({ node }) {
+        const colorMap: Record<string, string> = {
+            ticket: "bg-blue-500/10 text-blue-700",
+            opportunity: "bg-amber-500/10 text-amber-700",
+            project: "bg-violet-500/10 text-violet-700",
+            quote: "bg-green-500/10 text-green-700",
+        };
+        return [
+            "span",
+            {
+                class: cn(
+                    "entity-ref cursor-pointer inline-flex items-center gap-0.5 rounded px-1 font-medium text-[0.85em]",
+                    colorMap[node.attrs.entityType as string] ?? ""
+                ),
+                "data-type": "entity-slash",
+                "data-entity-type": node.attrs.entityType,
+                "data-id": node.attrs.id,
+                "data-label": node.attrs.label,
+                "data-project-slug": node.attrs.projectSlug ?? "",
+            },
+            node.attrs.label as string,
+        ];
+    },
+    parseHTML() {
+        return [{ tag: 'span[data-type="entity-slash"]' }];
+    },
+});
+
+const EntityMentionHash = Mention.extend({
+    name: "entityMentionHash",
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            projectSlug: {
+                default: null,
+                parseHTML: (el) => el.getAttribute("data-project-slug"),
+            },
+        };
+    },
+    renderHTML({ node }) {
+        return [
+            "span",
+            {
+                class: "entity-ref cursor-pointer inline-flex items-center gap-0.5 bg-blue-500/10 text-blue-700 rounded px-1 font-medium text-[0.85em]",
+                "data-type": "entity-hash",
+                "data-entity-type": "ticket",
+                "data-id": node.attrs.id,
+                "data-label": node.attrs.label,
+                "data-project-slug": node.attrs.projectSlug ?? "",
+            },
+            node.attrs.label as string,
+        ];
+    },
+    parseHTML() {
+        return [{ tag: 'span[data-type="entity-hash"]' }];
+    },
+});
+
+// ─── Navigation helper ────────────────────────────────────────────────────────
+
+function buildEntityUrl(type: string, id: string, projectSlug?: string | null): string | null {
+    switch (type) {
+        case "ticket": return projectSlug ? `/app/projects/${projectSlug}/board?task=${id}` : `/app/projects`;
+        case "project": return `/app/projects/${id}`;
+        case "opportunity": return `/app/opportunities/${id}`;
+        case "quote": return `/app/quotes/${id}`;
+        default: return null;
+    }
+}
+
+// ─── Main editor ─────────────────────────────────────────────────────────────
 
 interface RichTextEditorProps {
     content: string;
@@ -184,6 +379,7 @@ interface RichTextEditorProps {
     className?: string;
     minHeight?: string;
     autoFocus?: boolean;
+    enableEntityRefs?: boolean;
 }
 
 export function RichTextEditor({
@@ -195,11 +391,23 @@ export function RichTextEditor({
     className,
     minHeight = "120px",
     autoFocus = false,
+    enableEntityRefs = false,
 }: RichTextEditorProps) {
+    const router = useRouter();
+
+    // ── People mention state ──
     const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
     const [mentionItems, setMentionItems] = useState<AgencyMember[]>([]);
     const mentionCommandRef = useRef<((item: { id: string; label: string }) => void) | null>(null);
     const mentionListRef = useRef<MentionListHandle>(null);
+
+    // ── Entity mention state ──
+    const [entityPopupPos, setEntityPopupPos] = useState<{ x: number; y: number } | null>(null);
+    const [entityItems, setEntityItems] = useState<EntityRef[]>([]);
+    const [entityHint, setEntityHint] = useState<string | undefined>(undefined);
+    const entityCommandRef = useRef<((item: { id: string; label: string; entityType: string; projectSlug?: string }) => void) | null>(null);
+    const entityListRef = useRef<EntityMentionListHandle>(null);
+
     const onSubmitRef = useRef(onSubmit);
     useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
 
@@ -214,15 +422,15 @@ export function RichTextEditor({
                 autolink: true,
                 HTMLAttributes: { class: "text-primary underline underline-offset-2 cursor-pointer" },
             }),
+            // @ → people mentions (unchanged)
             Mention.configure({
-                HTMLAttributes: {
-                    class: "mention",
-                },
+                HTMLAttributes: { class: "mention" },
                 renderHTML({ options, node }) {
                     return [
                         "span",
                         {
                             ...options.HTMLAttributes,
+                            "data-type": "mention",
                             "data-id": node.attrs.id,
                             "data-label": node.attrs.label,
                             class: cn(options.HTMLAttributes?.class as string, "inline-flex items-center gap-0.5 bg-primary/10 text-primary rounded px-1 font-medium text-[0.85em]"),
@@ -240,34 +448,134 @@ export function RichTextEditor({
                         });
                     },
                     render: () => ({
-                        onStart: (props: any) => {
+                        onStart: (props: SuggestionProps<AgencyMember>) => {
                             const rect = props.clientRect?.();
                             if (rect) setPopupPos({ x: rect.left, y: rect.bottom + 4 });
                             setMentionItems(props.items);
-                            mentionCommandRef.current = (item) => props.command(item);
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            mentionCommandRef.current = (item) => (props.command as (a: any) => void)(item);
                         },
-                        onUpdate: (props: any) => {
+                        onUpdate: (props: SuggestionProps<AgencyMember>) => {
                             const rect = props.clientRect?.();
                             if (rect) setPopupPos({ x: rect.left, y: rect.bottom + 4 });
                             setMentionItems(props.items);
-                            mentionCommandRef.current = (item) => props.command(item);
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            mentionCommandRef.current = (item) => (props.command as (a: any) => void)(item);
                         },
                         onExit: () => {
                             setPopupPos(null);
                             setMentionItems([]);
                             mentionCommandRef.current = null;
                         },
-                        onKeyDown: ({ event }: { event: KeyboardEvent }) => {
-                            if (event.key === "Escape") {
-                                setPopupPos(null);
-                                setMentionItems([]);
-                                return true;
-                            }
+                        onKeyDown: ({ event }: SuggestionKeyDownProps) => {
+                            if (event.key === "Escape") { setPopupPos(null); setMentionItems([]); return true; }
                             return mentionListRef.current?.onKeyDown(event) ?? false;
                         },
                     }),
                 },
             }),
+            // / → entity mentions (/o /p /d)
+            ...(enableEntityRefs ? [
+                EntityMentionSlash.configure({
+                    suggestion: {
+                        char: "/",
+                        items: async ({ query }: { query: string }) => {
+                            const first = query[0]?.toLowerCase();
+                            const rest = query.slice(1).trimStart();
+                            if (first === "o") {
+                                setEntityHint(rest.length === 0 ? "Tapez pour chercher une opportunité…" : undefined);
+                                return rest.length === 0 ? [] : searchOpportunities(rest);
+                            }
+                            if (first === "p") {
+                                setEntityHint(rest.length === 0 ? "Tapez pour chercher un projet…" : undefined);
+                                return rest.length === 0 ? [] : searchProjects(rest);
+                            }
+                            if (first === "d") {
+                                setEntityHint(rest.length === 0 ? "Tapez pour chercher un devis…" : undefined);
+                                return rest.length === 0 ? [] : searchQuotes(rest);
+                            }
+                            setEntityHint("Tapez /o /p /d pour référencer une entité");
+                            return [];
+                        },
+                        render: () => ({
+                            onStart: (props: SuggestionProps<EntityRef>) => {
+                                const rect = props.clientRect?.();
+                                if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
+                                setEntityItems(props.items);
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                            },
+                            onUpdate: (props: SuggestionProps<EntityRef>) => {
+                                const rect = props.clientRect?.();
+                                if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
+                                setEntityItems(props.items);
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                            },
+                            onExit: () => {
+                                setEntityPopupPos(null);
+                                setEntityItems([]);
+                                setEntityHint(undefined);
+                                entityCommandRef.current = null;
+                            },
+                            onKeyDown: ({ event }: SuggestionKeyDownProps) => {
+                                if (event.key === "Escape") {
+                                    setEntityPopupPos(null);
+                                    setEntityItems([]);
+                                    setEntityHint(undefined);
+                                    return true;
+                                }
+                                return entityListRef.current?.onKeyDown(event) ?? false;
+                            },
+                        }),
+                    },
+                }),
+                // # → ticket mentions
+                EntityMentionHash.configure({
+                    suggestion: {
+                        char: "#",
+                        items: async ({ query }: { query: string }) => {
+                            if (!query.trim()) {
+                                setEntityHint("Tapez pour chercher un ticket…");
+                                return [];
+                            }
+                            setEntityHint(undefined);
+                            return searchTickets(query);
+                        },
+                        render: () => ({
+                            onStart: (props: SuggestionProps<EntityRef>) => {
+                                const rect = props.clientRect?.();
+                                if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
+                                setEntityItems(props.items);
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                            },
+                            onUpdate: (props: SuggestionProps<EntityRef>) => {
+                                const rect = props.clientRect?.();
+                                if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
+                                setEntityItems(props.items);
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                            },
+                            onExit: () => {
+                                setEntityPopupPos(null);
+                                setEntityItems([]);
+                                setEntityHint(undefined);
+                                entityCommandRef.current = null;
+                            },
+                            onKeyDown: ({ event }: SuggestionKeyDownProps) => {
+                                if (event.key === "Escape") {
+                                    setEntityPopupPos(null);
+                                    setEntityItems([]);
+                                    setEntityHint(undefined);
+                                    return true;
+                                }
+                                return entityListRef.current?.onKeyDown(event) ?? false;
+                            },
+                        }),
+                    },
+                }),
+            ] : []),
         ],
         content: content || "",
         onUpdate: ({ editor }) => {
@@ -286,6 +594,16 @@ export function RichTextEditor({
                     return true;
                 }
                 return false;
+            },
+            // Make entity-ref nodes navigable with click inside the editor
+            handleClickOn: (_view, _pos, node, _nodePos, _event) => {
+                if (!enableEntityRefs) return false;
+                const typeName = node.type.name;
+                if (typeName !== "entityMentionSlash" && typeName !== "entityMentionHash") return false;
+                const entityType = typeName === "entityMentionHash" ? "ticket" : (node.attrs.entityType as string);
+                const url = buildEntityUrl(entityType, node.attrs.id as string, node.attrs.projectSlug as string | null);
+                if (url) router.push(url);
+                return true;
             },
         },
         autofocus: autoFocus,
@@ -376,7 +694,24 @@ export function RichTextEditor({
                 />
             </div>
 
-            {/* Mention popup */}
+            {/* Entity ref hint bar */}
+            {enableEntityRefs && (
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="text-[10px] text-muted-foreground/40 select-none">
+                        <span className="font-mono bg-muted/40 rounded px-0.5">#</span> ticket
+                        <span className="mx-1.5 opacity-50">·</span>
+                        <span className="font-mono bg-muted/40 rounded px-0.5">/o</span> opportunité
+                        <span className="mx-1.5 opacity-50">·</span>
+                        <span className="font-mono bg-muted/40 rounded px-0.5">/p</span> projet
+                        <span className="mx-1.5 opacity-50">·</span>
+                        <span className="font-mono bg-muted/40 rounded px-0.5">/d</span> devis
+                        <span className="mx-1.5 opacity-50">·</span>
+                        <span className="font-mono bg-muted/40 rounded px-0.5">@</span> membre
+                    </span>
+                </div>
+            )}
+
+            {/* People mention popup */}
             {popupPos && mentionItems.length > 0 && typeof document !== "undefined" &&
                 createPortal(
                     <div
@@ -387,6 +722,24 @@ export function RichTextEditor({
                             ref={mentionListRef}
                             items={mentionItems}
                             command={(item) => mentionCommandRef.current?.(item)}
+                        />
+                    </div>,
+                    document.body
+                )
+            }
+
+            {/* Entity mention popup */}
+            {entityPopupPos && (entityItems.length > 0 || !!entityHint) && typeof document !== "undefined" &&
+                createPortal(
+                    <div
+                        style={{ position: "fixed", left: entityPopupPos.x, top: entityPopupPos.y, zIndex: 9999 }}
+                        onMouseDown={(e) => e.preventDefault()}
+                    >
+                        <EntityMentionList
+                            ref={entityListRef}
+                            items={entityItems}
+                            hint={entityHint}
+                            command={(item) => entityCommandRef.current?.(item)}
                         />
                     </div>,
                     document.body

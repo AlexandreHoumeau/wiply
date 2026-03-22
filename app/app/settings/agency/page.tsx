@@ -1,12 +1,7 @@
 "use client"
 
-import { inviteTeamMember, updateAgencyInformation } from "@/actions/agency.server"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { inviteTeamMember, updateAgencyProfile, updateAgencyLegal } from "@/actions/agency.server"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-    AlertCircle,
-    CheckCircle2
-} from "lucide-react"
 import { useActionState, useEffect, useState } from "react"
 import { useSettings } from "../settings-context"
 import { useUpgradeDialog } from "@/providers/UpgradeDialogProvider"
@@ -28,7 +23,8 @@ export default function AgencyPage() {
     }
 
     // Actions Server avec useActionState
-    const [agencyState, agencyFormAction, isAgencyPending] = useActionState(updateAgencyInformation, null)
+    const [profileState, profileFormAction, isProfilePending] = useActionState(updateAgencyProfile, null)
+    const [legalState, legalFormAction, isLegalPending] = useActionState(updateAgencyLegal, null)
     const [inviteState, inviteFormAction, isInvitePending] = useActionState(inviteTeamMember, null)
 
     // Fermeture automatique de la modale d'invitation en cas de succès
@@ -42,14 +38,6 @@ export default function AgencyPage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
-            {/* Alertes de retour (Mise à jour Agence) */}
-            {agencyState?.message && (
-                <Alert variant={agencyState.success ? "default" : "destructive"} className="shadow-sm border-2">
-                    {agencyState.success ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <AlertCircle className="h-4 w-4" />}
-                    <AlertDescription className="font-medium">{agencyState.message}</AlertDescription>
-                </Alert>
-            )}
-
             <Tabs defaultValue="general" className="w-full">
                 <TabsList className="bg-slate-100/80 p-1 mb-8">
                     <TabsTrigger value="general" className="data-[state=active]:shadow-sm">Général</TabsTrigger>
@@ -57,7 +45,15 @@ export default function AgencyPage() {
                         Équipe ({team.length})
                     </TabsTrigger>
                 </TabsList>
-                <GeneralAgencySettings agency={agency} isAgencyPending={isAgencyPending} agencyState={agencyState} agencyFormAction={agencyFormAction} />
+                <GeneralAgencySettings
+                    agency={agency}
+                    profileFormAction={profileFormAction}
+                    isProfilePending={isProfilePending}
+                    profileState={profileState}
+                    legalFormAction={legalFormAction}
+                    isLegalPending={isLegalPending}
+                    legalState={legalState}
+                />
                 <TeamMemberSettings team={team} invites={invites} profile={profile} inviteState={inviteState} inviteFormAction={inviteFormAction} isInvitePending={isInvitePending} inviteDialogOpen={inviteDialogOpen} setInviteDialogOpen={setInviteDialogOpen} onInviteClick={handleInviteClick} />
             </Tabs>
         </div>

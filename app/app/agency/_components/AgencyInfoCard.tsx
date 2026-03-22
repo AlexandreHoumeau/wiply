@@ -1,6 +1,6 @@
 "use client";
 
-import { updateAgencyInformation } from "@/actions/agency.server";
+import { updateAgencyProfile } from "@/actions/agency.server";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,7 @@ import { toast } from "sonner";
 export function AgencyInfoCard({ agency }: { agency: Agency }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  const [state, formAction, isPending] = useActionState(updateAgencyInformation, null);
+  const [state, formAction, isPending] = useActionState(updateAgencyProfile, null);
 
   useEffect(() => {
     if (!state) return;
@@ -35,7 +35,7 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
     } else if (state.message) {
       toast.error(state.message);
     }
-  }, [state]);
+  }, [state, router]);
 
   const fields = [
     { icon: Globe, label: "Site internet", value: agency.website, isLink: true },

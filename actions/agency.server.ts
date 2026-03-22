@@ -4,117 +4,124 @@ import { InviteEmail } from '@/emails/agency-invite';
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { checkMemberLimit } from "@/lib/billing/checkLimit"
-import { inviteAgencyMemberSchema, InviteAgencyMemberState, UpdateAgencyState } from "@/lib/validators/agency"
+import { inviteAgencyMemberSchema, InviteAgencyMemberState, updateAgencyProfileSchema, UpdateAgencyProfileState, updateAgencyLegalSchema, UpdateAgencyLegalState } from "@/lib/validators/agency"
 import { sendEmail } from "@/lib/email"
 import crypto from "crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
-// Validation schema for agency information
-const updateAgencySchema = z.object({
-    name: z.string().min(1, "Le nom de l'agence est requis").max(200),
-    website: z.string().url("URL invalide").optional().or(z.literal('')),
-    phone: z.string().optional(),
-    email: z.string().email("Email invalide").optional().or(z.literal('')),
-    address: z.string().optional(),
-})
 
 
-export async function updateAgencyInformation(
-    prevState: UpdateAgencyState | null,
-    formData: FormData
-): Promise<UpdateAgencyState> {
-    try {
-        // 1. Extract form data
-        const rawData = {
-            name: formData.get("name") as string,
-            website: formData.get("website") as string,
-            phone: formData.get("phone") as string,
-            email: formData.get("email") as string,
-            address: formData.get("address") as string,
-        }
+export async function updateAgencyProfile(
+  prevState: UpdateAgencyProfileState,
+  formData: FormData
+): Promise<UpdateAgencyProfileState> {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return { success: false, message: "Non authentifié" }
 
-        // 2. Validate with Zod
-        const validatedFields = updateAgencySchema.safeParse(rawData)
-
-        if (!validatedFields.success) {
-            return {
-                success: false,
-                errors: validatedFields.error.flatten().fieldErrors,
-                message: "Veuillez corriger les erreurs",
-            }
-        }
-
-        // 3. Get authenticated user and their agency
-        const supabase = await createClient()
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-        if (authError || !user) {
-            return {
-                success: false,
-                message: "Non authentifié",
-            }
-        }
-
-        // Get user's profile to find agency_id
-        const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("agency_id, role")
-            .eq("id", user.id)
-            .single()
-
-        if (profileError || !profile?.agency_id) {
-            return {
-                success: false,
-                message: "Aucune agence associée à votre compte",
-            }
-        }
-
-        // Check if user has permission (admin only)
-        if (profile.role !== 'agency_admin') {
-            return {
-                success: false,
-                message: "Vous n'avez pas les permissions pour modifier l'agence",
-            }
-        }
-
-        // 4. Update agency
-        const { error: updateError } = await supabase
-            .from("agencies")
-            .update({
-                name: validatedFields.data.name,
-                website: validatedFields.data.website || null,
-                phone: validatedFields.data.phone || null,
-                email: validatedFields.data.email || null,
-                address: validatedFields.data.address || null,
-            })
-            .eq("id", profile.agency_id)
-
-        if (updateError) {
-            console.error("Error updating agency:", updateError)
-            return {
-                success: false,
-                message: "Erreur lors de la mise à jour de l'agence",
-            }
-        }
-
-        // 5. Revalidate
-        revalidatePath("/settings/agency")
-        revalidatePath("/settings")
-        revalidateTag(`settings-${user.id}`, {})
-
-        return {
-            success: true,
-            message: "Agence mise à jour avec succès",
-        }
-    } catch (error) {
-        console.error("Unexpected error:", error)
-        return {
-            success: false,
-            message: "Une erreur inattendue s'est produite",
-        }
+    const rawData = {
+      name: formData.get("name") as string,
+      website: formData.get("website") ?? undefined,
+      email: formData.get("email") ?? undefined,
+      phone: formData.get("phone") ?? undefined,
+      address: formData.get("address") ?? undefined,
     }
+
+    const validated = updateAgencyProfileSchema.safeParse(rawData)
+    if (!validated.success) {
+      return {
+        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        message: "Veuillez corriger les erreurs",
+      }
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("agency_id, role")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile?.agency_id) return { success: false, message: "Aucune agence associée" }
+    if (profile.role !== "agency_admin") return { success: false, message: "Permissions insuffisantes" }
+
+    const { error: updateError } = await supabase
+      .from("agencies")
+      .update({
+        name: validated.data.name,
+        website: validated.data.website || null,
+        email: validated.data.email || null,
+        phone: validated.data.phone || null,
+        address: validated.data.address || null,
+      })
+      .eq("id", profile.agency_id)
+
+    if (updateError) return { success: false, message: "Erreur lors de la mise à jour" }
+
+    revalidateTag(`settings-${user.id}`, {})
+    revalidatePath("/app/settings/agency")
+
+    return { success: true, message: "Profil mis à jour" }
+  } catch {
+    return { success: false, message: "Une erreur inattendue s'est produite" }
+  }
 }
 
+export async function updateAgencyLegal(
+  prevState: UpdateAgencyLegalState,
+  formData: FormData
+): Promise<UpdateAgencyLegalState> {
+  try {
+    const rawData = {
+      legal_name: formData.get("legal_name") as string || undefined,
+      legal_form: formData.get("legal_form") as string || undefined,
+      rcs_number: formData.get("rcs_number") as string || undefined,
+      vat_number: formData.get("vat_number") as string || undefined,
+    }
+
+    const validated = updateAgencyLegalSchema.safeParse(rawData)
+    if (!validated.success) {
+      return {
+        success: false,
+        errors: validated.error.flatten().fieldErrors,
+        message: "Veuillez corriger les erreurs",
+      }
+    }
+
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return { success: false, message: "Non authentifié" }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("agency_id, role")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile?.agency_id) return { success: false, message: "Aucune agence associée" }
+    if (profile.role !== "agency_admin") return { success: false, message: "Permissions insuffisantes" }
+
+    const { error: updateError } = await supabase
+      .from("agencies")
+      .update({
+        legal_name: validated.data.legal_name || null,
+        legal_form: validated.data.legal_form || null,
+        rcs_number: validated.data.rcs_number || null,
+        vat_number: validated.data.vat_number || null,
+      })
+      .eq("id", profile.agency_id)
+
+    if (updateError) return { success: false, message: "Erreur lors de la mise à jour" }
+
+    revalidateTag(`settings-${user.id}`, {})
+    revalidatePath("/app/settings/agency")
+
+    return { success: true, message: "Mentions légales mises à jour" }
+  } catch {
+    return { success: false, message: "Une erreur inattendue s'est produite" }
+  }
+}
 
 export async function inviteTeamMember(
     prevState: InviteAgencyMemberState | null,

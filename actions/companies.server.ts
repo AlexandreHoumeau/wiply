@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 import {
   CompanyWithRelations,
   DEFAULT_PAGE_SIZE,
@@ -21,7 +22,7 @@ export async function fetchCompanies({
   let query = supabase
     .from("companies")
     .select(
-      "id, name, email, phone_number, website, business_sector, created_at, address, opportunities(id, status, name, slug), projects(id, status, name, slug)"
+      "id, name, email, phone_number, website, business_sector, created_at, address, billing_address, opportunities(id, status, name, slug), projects(id, status, name, slug)"
     )
     .eq("agency_id", agencyId);
 
@@ -105,4 +106,30 @@ export async function fetchCompanySectors(agencyId: string): Promise<string[]> {
       (data ?? []).map((c) => c.business_sector as string).filter(Boolean)
     ),
   ].sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+export async function updateCompanyBillingAddress(id: string, billing_address: string | null) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Non authentifié" }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single()
+
+  if (!profile?.agency_id) return { error: "Agence introuvable" }
+
+  const { error } = await supabase
+    .from("companies")
+    .update({ billing_address: billing_address || null })
+    .eq("id", id)
+    .eq("agency_id", profile.agency_id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath("/app/companies")
+  return { success: true }
 }

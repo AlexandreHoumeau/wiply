@@ -144,8 +144,9 @@ export function TaskComments({
                                     onChange={onCommentChange}
                                     onSubmit={onSubmitComment}
                                     members={members}
-                                    placeholder="Écrire un commentaire… (@ pour mentionner)"
+                                    placeholder="Écrire un commentaire…"
                                     minHeight="36px"
+                                    enableEntityRefs
                                 />
                             </div>
                             {commentHtml.trim() && commentHtml !== "<p></p>" && (
