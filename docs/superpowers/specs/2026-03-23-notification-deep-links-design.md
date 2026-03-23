@@ -22,23 +22,23 @@ Enrich `metadata` at notification creation time with the routing data needed to 
 **Target URL:** `/app/projects/{project_slug}/board?task={task_prefix}-{task_number}`
 
 **Files:**
-- `actions/task.server.ts` — expand task query to include `task_number`, `task_prefix`, and a project join for `slug`
-- `actions/project.server.ts` (`createTask`) — query project by `projectId` for `slug` + `task_prefix`; use `nextNumber` for `task_number`
-- `actions/project.server.ts` (`updateTaskDetails`) — expand `currentTask` query to join project for `slug`, `task_prefix`, `task_number`
+- `actions/task.server.ts` (`addTaskComment`) — expand task query to include `task_number`, `task_prefix`, and a project join for `slug`. This function emits **only `task_comment`** — including for mention-detected recipients. It does not and should not emit `task_mention`.
+- `actions/project.server.ts` (`createTask`) — add a new `SELECT slug, task_prefix FROM projects WHERE id = projectId` query (the function currently has no project query at all — it only uses `projectId` for the task insert); use the already-computed `nextNumber` for `task_number`; only emits `task_assigned`
+- `actions/project.server.ts` (`updateTaskDetails`) — expand `currentTask` query to join project for `slug`, `task_prefix`, `task_number`; emits `task_assigned` and `task_mention`. This is the **only** code path that emits `task_mention`.
 
 ### opportunity_status_changed
 **Added fields:** `opportunity_slug`
 **Target URL:** `/app/opportunities/{opportunity_slug}`
 
 **Files:**
-- `actions/opportunity.server.ts` — `opp.slug` is already in scope; add it to metadata
+- `actions/opportunity.server.ts` — add `slug` to the opportunities SELECT (currently selects `status, agency_id, name`; must become `status, agency_id, name, slug`); then add `opportunity_slug: opp.slug` to metadata
 
 ### portal_submission
 **Added fields:** `project_slug`
 **Target URL:** `/app/projects/{project_slug}/checklist`
 
 **Files:**
-- `actions/portal.server.ts` — `project.slug` is already in scope (queried by project_id); add it to metadata
+- `actions/portal.server.ts` — add `slug` to the project SELECT (currently selects `id, is_portal_active, agency_id`; must become `id, is_portal_active, agency_id, slug`); then add `project_slug: project.slug` to metadata
 
 ### tracking_click
 **Added fields:** `opportunity_slug`
@@ -78,17 +78,23 @@ function resolveLink(n: Notification): string | null {
 }
 ```
 
-If `resolveLink` returns `null` (old notifications without enriched metadata), clicking marks as read but does not navigate — no regression.
+If `resolveLink` returns `null` (old notifications without enriched metadata), clicking still marks as read but does not navigate — no regression. Notification items with no resolvable link must **not** show a pointer cursor or any visual navigation affordance (remove `cursor-pointer` / hover styles for those items).
 
 ## Digest email
 
-### send-digest/index.ts (Edge Function)
-- Add `metadata` to the notifications SELECT query
-- In `buildDigestHtml`, call a `resolveLink(type, metadata)` helper per notification
+### send-digest/index.ts (Edge Function) — the only runtime email path
+
+- Fix pre-existing type mismatch: `TYPE_TO_PREF` and `TYPE_META` currently use `"opportunity_status"` but notifications are stored as `"opportunity_status_changed"` — update both maps to use `"opportunity_status_changed"`
+- Add `task_mention` to `TYPE_META` with `{ label: "Mention", emoji: "🔔" }` — it is currently absent, causing the fallback `"•"` emoji and raw type string to appear in digest emails. No preference column (`notify_task_mention`) exists, so `TYPE_TO_PREF` is left unchanged; `task_mention` already passes through the preference filter because `undefined` is falsy (the guard is `if (prefKey && !profile[prefKey]) continue`)
+- Add `metadata` to the notifications SELECT query and add `metadata: Record<string, unknown> | null` to the `buildDigestHtml` inline type annotation
+- In `buildDigestHtml`, add a Deno-side `resolveLink(type: string, metadata: Record<string, unknown> | null): string | null` helper (same switch logic as the UI helper, but takes `type` and `metadata` separately rather than a full notification object since the Notification type is not available in Deno)
 - If a link exists: wrap the notification title in an `<a>` tag and add a small "Voir →" link at the end of the row
+- `tracking_links` has a confirmed `opportunity_id` FK — joining `opportunities(slug)` in `app/t/[code]/route.ts` is valid
 - The footer "Voir toutes les notifications" button is unchanged
 
-### emails/digest.tsx (React Email component)
+### emails/digest.tsx (React Email component) — preview/dev only
+
+This component is **not** used at runtime; `send-digest/index.ts` builds raw HTML directly. Changes here are optional and only affect local dev previews:
 - Add `link?: string` to the `DigestNotification` type
 - Make the notification title a link when `link` is present
 
