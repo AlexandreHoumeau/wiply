@@ -13,7 +13,8 @@ const SENDER = { name: "Wiply", email: "noreply@wiply.fr" };
 const TYPE_TO_PREF: Record<string, string> = {
     task_assigned: "notify_task_assigned",
     task_comment: "notify_task_comment",
-    opportunity_status: "notify_opportunity_status",
+    task_mention: "notify_task_comment",
+    opportunity_status_changed: "notify_opportunity_status",
     tracking_click: "notify_tracking_click",
     portal_submission: "notify_portal_submission",
 };
@@ -21,11 +22,45 @@ const TYPE_TO_PREF: Record<string, string> = {
 const TYPE_META: Record<string, { label: string; emoji: string }> = {
     task_assigned: { label: "Tâche assignée", emoji: "📋" },
     task_comment: { label: "Commentaire", emoji: "💬" },
-    opportunity_status: { label: "Opportunité", emoji: "📊" },
+    task_mention: { label: "Mention", emoji: "🔔" },
+    opportunity_status_changed: { label: "Opportunité", emoji: "📊" },
     tracking_click: { label: "Lien cliqué", emoji: "🔗" },
     portal_submission: { label: "Portail client", emoji: "📁" },
     member_joined: { label: "Nouveau membre", emoji: "👋" },
 };
+
+function resolveLink(type: string, metadata: Record<string, unknown>): string | null {
+    switch (type) {
+        case "member_joined":
+            return `${APP_URL}/app/agency`;
+        case "task_comment":
+        case "task_assigned":
+        case "task_mention": {
+            const project_slug = metadata.project_slug as string | undefined;
+            const task_prefix = metadata.task_prefix as string | undefined;
+            const task_number = metadata.task_number as number | undefined;
+            if (!project_slug || !task_prefix || task_number == null) return null;
+            return `${APP_URL}/app/projects/${project_slug}/board?task=${task_prefix}-${task_number}`;
+        }
+        case "opportunity_status_changed": {
+            const opportunity_slug = metadata.opportunity_slug as string | undefined;
+            if (!opportunity_slug) return null;
+            return `${APP_URL}/app/opportunities/${opportunity_slug}`;
+        }
+        case "portal_submission": {
+            const project_slug = metadata.project_slug as string | undefined;
+            if (!project_slug) return null;
+            return `${APP_URL}/app/projects/${project_slug}/checklist`;
+        }
+        case "tracking_click": {
+            const opportunity_slug = metadata.opportunity_slug as string | undefined;
+            if (!opportunity_slug) return null;
+            return `${APP_URL}/app/opportunities/${opportunity_slug}/tracking`;
+        }
+        default:
+            return null;
+    }
+}
 
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleString("fr-FR", {
@@ -36,17 +71,24 @@ function formatDate(iso: string): string {
     });
 }
 
-function buildDigestHtml(firstName: string, notifications: Array<{ type: string; title: string; body: string | null; created_at: string }>): string {
+function buildDigestHtml(firstName: string, notifications: Array<{ type: string; title: string; body: string | null; created_at: string; metadata: Record<string, unknown> }>): string {
     const count = notifications.length;
     const rows = notifications.slice(0, 10).map((n) => {
         const meta = TYPE_META[n.type] ?? { label: n.type, emoji: "•" };
+        const link = resolveLink(n.type, n.metadata ?? {});
+        const titleHtml = link
+            ? `<a href="${link}" style="color:#6366f1;text-decoration:none;font-size:14px;font-weight:600">${n.title}</a>`
+            : `<span style="color:#111827;font-size:14px;font-weight:600">${n.title}</span>`;
+        const voirHtml = link
+            ? ` <a href="${link}" style="color:#6366f1;font-size:11px;text-decoration:none">Voir →</a>`
+            : "";
         return `
         <tr>
           <td style="width:36px;vertical-align:top;padding-top:2px;font-size:18px">${meta.emoji}</td>
           <td style="vertical-align:top;padding-bottom:12px">
-            <div style="color:#111827;font-size:14px;font-weight:600;margin:0 0 2px">${n.title}</div>
+            <div style="margin:0 0 2px">${titleHtml}</div>
             ${n.body ? `<div style="color:#6b7280;font-size:13px;margin:0 0 4px">${n.body}</div>` : ""}
-            <div style="color:#9ca3af;font-size:11px">${meta.label} · ${formatDate(n.created_at)}</div>
+            <div style="color:#9ca3af;font-size:11px">${meta.label} · ${formatDate(n.created_at)}${voirHtml}</div>
           </td>
         </tr>`;
     }).join("\n");
@@ -122,6 +164,7 @@ Deno.serve(async (_req) => {
                 title,
                 body,
                 created_at,
+                metadata,
                 profile:profiles!notifications_user_id_fkey (
                     email,
                     first_name,

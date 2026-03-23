@@ -181,7 +181,7 @@ export async function updateOpportunityStatus(
     // Fetch current status and agency_id in one query
     const { data: opp } = await supabase
         .from("opportunities")
-        .select("status, agency_id, name")
+        .select("status, agency_id, name, slug")
         .eq("id", opportunityId)
         .single();
 
@@ -214,7 +214,7 @@ export async function updateOpportunityStatus(
             type: "opportunity_status_changed",
             title: "Opportunité mise à jour",
             body: `"${opp.name}" est passé à ${status.replace(/_/g, " ")}`,
-            metadata: { opportunity_id: opportunityId, from: opp.status, to: status },
+            metadata: { opportunity_id: opportunityId, opportunity_slug: opp.slug, from: opp.status, to: status },
         });
     }
 

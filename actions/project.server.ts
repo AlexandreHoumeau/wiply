@@ -371,6 +371,12 @@ export async function createTask(
       .maybeSingle();
     const nextNumber = (maxRow?.task_number ?? 0) + 1;
 
+    const { data: projectInfo } = await supabase
+      .from("projects")
+      .select("slug, task_prefix")
+      .eq("id", projectId)
+      .single();
+
     const { data: newTask, error } = await supabase
       .from("tasks")
       .insert({
@@ -400,7 +406,12 @@ export async function createTask(
         type: "task_assigned",
         title: "Tâche assignée",
         body: `Vous avez été assigné à "${data.title}"`,
-        metadata: { task_id: (newTask as any).id },
+        metadata: {
+          task_id: (newTask as any).id,
+          project_slug: projectInfo?.slug ?? null,
+          task_number: nextNumber,
+          task_prefix: projectInfo?.task_prefix ?? null,
+        },
       });
     }
 
@@ -423,7 +434,7 @@ export async function updateTaskDetails(
     // Fetch current task to detect assignee change
     const { data: currentTask } = await supabase
       .from("tasks")
-      .select("assignee_id, agency_id")
+      .select("assignee_id, agency_id, task_number, project:projects!tasks_project_id_fkey(slug, task_prefix)")
       .eq("id", taskId)
       .single();
 
@@ -460,7 +471,12 @@ export async function updateTaskDetails(
         type: "task_assigned",
         title: "Tâche assignée",
         body: `Vous avez été assigné à "${data.title}"`,
-        metadata: { task_id: taskId },
+        metadata: {
+          task_id: taskId,
+          project_slug: (currentTask.project as any)?.slug ?? null,
+          task_number: currentTask.task_number,
+          task_prefix: (currentTask.project as any)?.task_prefix ?? null,
+        },
       });
     }
 
@@ -477,7 +493,12 @@ export async function updateTaskDetails(
             type: "task_mention",
             title: "Vous avez été mentionné",
             body: `Vous avez été mentionné dans la description de "${data.title}"`,
-            metadata: { task_id: taskId },
+            metadata: {
+              task_id: taskId,
+              project_slug: (currentTask.project as any)?.slug ?? null,
+              task_number: currentTask.task_number,
+              task_prefix: (currentTask.project as any)?.task_prefix ?? null,
+            },
           });
         }
       }

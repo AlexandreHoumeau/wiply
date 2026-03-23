@@ -59,7 +59,7 @@ export async function submitClientContent(magicToken: string, itemId: string, fo
         // Resolve project from token and verify portal is active
         const { data: project, error: projectError } = await supabaseAdmin
             .from("projects")
-            .select("id, is_portal_active, agency_id")
+            .select("id, is_portal_active, agency_id, slug")
             .eq("magic_token", magicToken)
             .single();
 
@@ -152,7 +152,7 @@ export async function submitClientContent(magicToken: string, itemId: string, fo
                         type: "portal_submission",
                         title: "Livrable reçu",
                         body: `Un client a soumis un élément via le portail`,
-                        metadata: { project_id: project.id, checklist_item_id: itemId },
+                        metadata: { project_id: project.id, project_slug: project.slug, checklist_item_id: itemId },
                     });
                 }
             });

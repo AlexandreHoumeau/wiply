@@ -1,6 +1,6 @@
 type NotificationInput = {
   type: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
 }
 
 /**

@@ -119,7 +119,7 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
         // Notify task creator and assignee (excluding the commenter)
         const { data: task } = await supabase
             .from("tasks")
-            .select("created_by, assignee_id, title, agency_id")
+            .select("created_by, assignee_id, title, agency_id, task_number, project:projects!tasks_project_id_fkey(slug, task_prefix)")
             .eq("id", taskId)
             .single();
 
@@ -139,7 +139,12 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
                     type: "task_comment",
                     title: "Nouveau commentaire",
                     body: `Commentaire sur la tâche "${task.title}"`,
-                    metadata: { task_id: taskId },
+                    metadata: {
+                        task_id: taskId,
+                        project_slug: (task.project as any)?.slug ?? null,
+                        task_number: task.task_number,
+                        task_prefix: (task.project as any)?.task_prefix ?? null,
+                    },
                 });
             }
 
@@ -154,7 +159,12 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
                         type: "task_comment",
                         title: "Vous avez été mentionné",
                         body: `Vous avez été mentionné dans un commentaire sur "${task.title}"`,
-                        metadata: { task_id: taskId },
+                        metadata: {
+                            task_id: taskId,
+                            project_slug: (task.project as any)?.slug ?? null,
+                            task_number: task.task_number,
+                            task_prefix: (task.project as any)?.task_prefix ?? null,
+                        },
                     });
                 }
             }

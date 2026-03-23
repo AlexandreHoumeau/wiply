@@ -15,7 +15,7 @@ export async function GET(
 	// 1. Récupérer le lien
 	const { data: link } = await supabase
 		.from("tracking_links")
-		.select("*, agencies(website)")
+		.select("*, agencies(website), opportunity:opportunities(slug)")
 		.eq("short_code", code)
 		.single();
 
@@ -69,7 +69,7 @@ export async function GET(
 					type: "tracking_click",
 					title: "Lien cliqué",
 					body: `Quelqu'un a cliqué sur "${label}" (${device}, ${os})`,
-					metadata: { tracking_link_id: link.id, device, os },
+					metadata: { tracking_link_id: link.id, opportunity_slug: (link.opportunity as any)?.slug ?? null, device, os },
 				});
 			}
 		});
