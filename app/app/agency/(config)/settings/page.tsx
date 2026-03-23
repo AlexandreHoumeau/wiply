@@ -3,7 +3,7 @@
 import { inviteTeamMember, updateAgencyProfile, updateAgencyLegal } from "@/actions/agency.server"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useActionState, useEffect, useState } from "react"
-import { useSettings } from "../settings-context"
+import { useSettings } from "@/app/app/settings/settings-context"
 import { useUpgradeDialog } from "@/providers/UpgradeDialogProvider"
 import GeneralAgencySettings from "./_components/GeneralAgencySettings"
 import TeamMemberSettings from "./_components/TeamMemberSettings"

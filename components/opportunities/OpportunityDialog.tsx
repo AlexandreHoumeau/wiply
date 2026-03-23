@@ -52,9 +52,17 @@ import { mapContactViaLabel, mapOpportunityStatusLabel, mapOpportunityWithCompan
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useLoadingBar } from "@/hooks/useLoadingBar";
-import { Building2, FileText, Mail, MapPin, Phone, Globe, Briefcase, Check, ChevronsUpDown, Loader2, Wand2 } from "lucide-react";
+import { Building2, FileText, Mail, MapPin, Phone, Globe, Briefcase, Check, ChevronsUpDown, Loader2, Wand2, Link2, Plus, X } from "lucide-react";
 import { BUSINESS_SECTORS } from "@/utils/business-sectors";
 import { cn } from "@/lib/utils";
+import { useFieldArray } from "react-hook-form";
+
+const LINK_PRESETS = [
+	{ label: 'LinkedIn',  placeholder: 'https://linkedin.com/in/...' },
+	{ label: 'Instagram', placeholder: 'https://instagram.com/...' },
+	{ label: 'Dribbble',  placeholder: 'https://dribbble.com/...' },
+	{ label: 'Behance',   placeholder: 'https://behance.net/...' },
+]
 
 interface OpportunityDialogProps {
 	open: boolean;
@@ -85,9 +93,15 @@ export function OpportunityDialog({
 			company_website: "",
 			company_address: "",
 			company_sector: "",
+			company_links: [],
 			status: "to_do",
 			contact_via: "email",
 		},
+	});
+
+	const { fields: linkFields, append: appendLink, remove: removeLink } = useFieldArray({
+		control: form.control,
+		name: "company_links",
 	});
 
 	// Watch contact_via to show conditional required fields
@@ -124,6 +138,7 @@ export function OpportunityDialog({
 				company_website: "",
 				company_address: "",
 				company_sector: "",
+				company_links: [],
 				status: "to_do",
 				contact_via: "email",
 			});
@@ -470,6 +485,100 @@ export function OpportunityDialog({
 										)}
 									/>
 								</div>
+							</div>
+
+							<Separator />
+
+							{/* Links Section */}
+							<div className="space-y-4 py-4 px-6">
+								<div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+									<Link2 className="h-4 w-4" />
+									<span>LIENS & RÉSEAUX</span>
+								</div>
+
+								{/* Preset shortcut buttons */}
+								<div className="flex flex-wrap gap-2">
+									{LINK_PRESETS.map((preset) => {
+										const alreadyAdded = linkFields.some(f => f.label === preset.label)
+										return (
+											<Button
+												key={preset.label}
+												type="button"
+												variant="outline"
+												size="sm"
+												className="h-7 px-3 text-xs gap-1.5"
+												disabled={alreadyAdded}
+												onClick={() => appendLink({ label: preset.label, url: "" })}
+											>
+												<Plus className="h-3 w-3" />
+												{preset.label}
+											</Button>
+										)
+									})}
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										className="h-7 px-3 text-xs gap-1.5"
+										onClick={() => appendLink({ label: "", url: "" })}
+									>
+										<Plus className="h-3 w-3" />
+										Personnalisé
+									</Button>
+								</div>
+
+								{/* Link rows */}
+								{linkFields.length > 0 && (
+									<div className="space-y-2">
+										{linkFields.map((field, index) => {
+											const isPreset = LINK_PRESETS.some(p => p.label === field.label)
+											const placeholder = LINK_PRESETS.find(p => p.label === field.label)?.placeholder ?? "https://..."
+											return (
+												<div key={field.id} className="flex items-center gap-2">
+													{isPreset ? (
+														<span className="shrink-0 inline-flex items-center h-9 px-3 rounded-md border border-border bg-muted text-xs font-medium text-muted-foreground min-w-[90px]">
+															{field.label}
+														</span>
+													) : (
+														<FormField
+															control={form.control}
+															name={`company_links.${index}.label`}
+															render={({ field: f }) => (
+																<FormItem className="shrink-0 w-[110px]">
+																	<FormControl>
+																		<Input placeholder="Nom" className="h-9 text-xs" {...f} />
+																	</FormControl>
+																	<FormMessage />
+																</FormItem>
+															)}
+														/>
+													)}
+													<FormField
+														control={form.control}
+														name={`company_links.${index}.url`}
+														render={({ field: f }) => (
+															<FormItem className="flex-1">
+																<FormControl>
+																	<Input placeholder={placeholder} className="h-9 text-xs" {...f} />
+																</FormControl>
+																<FormMessage />
+															</FormItem>
+														)}
+													/>
+													<Button
+														type="button"
+														variant="ghost"
+														size="icon"
+														className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+														onClick={() => removeLink(index)}
+													>
+														<X className="h-4 w-4" />
+													</Button>
+												</div>
+											)
+										})}
+									</div>
+								)}
 							</div>
 						</ScrollArea>
 

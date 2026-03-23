@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Company } from "./companies";
+import { Company, CompanyLink } from "./companies";
 
 export const opportunitySchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
@@ -11,6 +11,10 @@ export const opportunitySchema = z.object({
   company_website: z.string().url("URL invalide").optional().or(z.literal("")),
   company_address: z.string().optional(),
   company_sector: z.string().optional(),
+  company_links: z.array(z.object({
+    label: z.string().min(1),
+    url: z.string().url("URL invalide"),
+  })),
 
   status: z.enum([
     "inbound",
@@ -116,6 +120,7 @@ export const mapOpportunityWithCompanyToFormValues = (opportunity: OpportunityWi
   company_website: opportunity?.company?.website || "",
   company_address: opportunity?.company?.address || "",
   company_sector: opportunity?.company?.business_sector || "",
+  company_links: opportunity?.company?.links ?? [],
   status: opportunity.status,
   contact_via: opportunity.contact_via!,
 });

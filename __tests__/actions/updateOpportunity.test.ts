@@ -18,6 +18,7 @@ const basePayload: OpportunityFormValues = {
   company_website: "",
   company_address: "",
   company_sector: "",
+  company_links: [],
   status: "first_contact",
   contact_via: "email",
 };

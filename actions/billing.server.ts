@@ -42,8 +42,8 @@ export async function createCheckoutSession(
             ? { customer: agency.stripe_customer_id }
             : { customer_email: user.email }),
         line_items: [{ price: PLANS.PRO.price_id, quantity: 1 }],
-        success_url: `${baseUrl}/app/settings/billing?success=true`,
-        cancel_url: `${baseUrl}/app/settings/billing`,
+        success_url: `${baseUrl}/app/agency/billing?success=true`,
+        cancel_url: `${baseUrl}/app/agency/billing`,
         metadata: { agency_id: agencyId },
         subscription_data: { metadata: { agency_id: agencyId } },
     })
@@ -70,7 +70,7 @@ export async function createPortalSession(
     const baseUrl = await getBaseUrl()
     const session = await stripe.billingPortal.sessions.create({
         customer: agency.stripe_customer_id,
-        return_url: `${baseUrl}/app/settings/billing`,
+        return_url: `${baseUrl}/app/agency/billing`,
     })
 
     return { url: session.url }

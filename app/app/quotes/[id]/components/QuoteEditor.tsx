@@ -785,7 +785,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
             ))}
           </ul>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => router.push("/app/settings/agency")}>
+            <Button variant="outline" onClick={() => router.push("/app/agency/settings")}>
               Compléter les informations
             </Button>
             <Button

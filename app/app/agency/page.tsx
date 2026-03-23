@@ -16,6 +16,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+
 import Link from "next/link";
 import { AgencyBrandingDialog } from "./_components/AgencyBrandingDialog";
 
@@ -129,13 +130,13 @@ export default async function AgencyOverviewPage() {
               </div>
             </div>
 
-            {/* <Link
-              href="/app/settings"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 px-5 py-2.5 text-lg font-medium text-white backdrop-blur-md transition-all duration-300 shadow-lg"
+            <Link
+              href="/app/agency/settings"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md transition-all duration-300 shadow-lg"
             >
               <Settings className="h-4 w-4 text-white/70" />
               Paramètres
-            </Link> */}
+            </Link>
           </div>
         </div>
       </div>
@@ -159,7 +160,7 @@ export default async function AgencyOverviewPage() {
                   <h2 className="card-title">Abonnement & Facturation</h2>
                 </div>
                 <Link
-                  href="/app/settings/billing"
+                  href="/app/agency/billing"
                   className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Gérer <ArrowRight className="h-3.5 w-3.5" />
@@ -193,7 +194,7 @@ export default async function AgencyOverviewPage() {
                         </span>
                       ) : (
                         <Link
-                          href="/app/settings/billing"
+                          href="/app/agency/billing"
                           className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm hover:bg-white/20 transition-colors"
                         >
                           Passer au PRO →

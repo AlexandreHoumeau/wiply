@@ -53,7 +53,7 @@ export async function updateAIConfigAction(prevState: any, formData: FormData): 
     }
 
     // 4. Revalider le cache pour mettre à jour l'UI
-    revalidatePath('/app/settings/ai')
+    revalidatePath('/app/agency/ai')
 
     return {
         success: true,

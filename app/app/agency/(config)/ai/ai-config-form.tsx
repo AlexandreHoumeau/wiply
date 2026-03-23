@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { useActionState, useEffect, useState } from "react"
 import { toast } from "sonner"
-import { useSettings } from "../settings-context"
+import { useSettings } from "@/app/app/settings/settings-context"
 
 const TONE_OPTIONS = [
     { label: 'Professionnel', value: 'professional', icon: Shield, desc: 'Sérieux et expert' },

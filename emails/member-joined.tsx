@@ -38,7 +38,7 @@ export const MemberJoinedEmail = ({
                     <strong>{memberName}</strong> ({memberEmail}) a accepté son invitation et a rejoint l'espace de l'agence <strong>{agencyName}</strong>.
                 </Text>
                 <Section style={buttonContainer}>
-                    <Button style={button} href={`${appUrl}/app/settings/agency`}>
+                    <Button style={button} href={`${appUrl}/app/agency/settings`}>
                         Voir l'équipe
                     </Button>
                 </Section>

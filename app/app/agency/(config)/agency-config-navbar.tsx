@@ -1,16 +1,18 @@
 'use client'
 
-import { User } from 'lucide-react'
+import { Building2, CreditCard, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils"
-import { motion } from "framer-motion" // Optionnel mais recommandé pour l'animation
+import { motion } from "framer-motion"
 
 const sections = [
-    { id: 'profile', label: 'Profil', icon: User, href: '/app/settings/profile' },
+    { id: 'settings', label: 'Général & Équipe', icon: Building2, href: '/app/agency/settings' },
+    { id: 'billing', label: 'Facturation', icon: CreditCard, href: '/app/agency/billing' },
+    { id: 'ai', label: 'Agent IA', icon: Sparkles, href: '/app/agency/ai' },
 ]
 
-export default function SettingsNavbar() {
+export default function AgencyConfigNavbar() {
     const pathname = usePathname()
 
     return (
@@ -32,7 +34,7 @@ export default function SettingsNavbar() {
                         >
                             {isActive && (
                                 <motion.div
-                                    layoutId="activeTab"
+                                    layoutId="activeAgencyTab"
                                     className="absolute inset-0 bg-background rounded-lg shadow-sm border border-border/50"
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
@@ -44,7 +46,6 @@ export default function SettingsNavbar() {
                             />
 
                             <span className="relative z-10">{section.label}</span>
-
                         </Link>
                     )
                 })}

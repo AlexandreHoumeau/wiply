@@ -23,7 +23,7 @@ export default function QuoteEditorWrapper({ id }: { id: string }) {
           <h2 className="text-xl font-bold">Fonctionnalité PRO</h2>
           <p className="text-muted-foreground max-w-md mt-1">Les devis sont disponibles sur le plan PRO.</p>
         </div>
-        <Button onClick={() => router.push("/app/settings/billing")}>Passer au plan PRO</Button>
+        <Button onClick={() => router.push("/app/agency/billing")}>Passer au plan PRO</Button>
       </div>
     )
   }

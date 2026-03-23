@@ -73,7 +73,7 @@ export default function NewQuotePage() {
             Les devis sont disponibles sur le plan PRO.
           </p>
         </div>
-        <Button onClick={() => router.push("/app/settings/billing")}>
+        <Button onClick={() => router.push("/app/agency/billing")}>
           Passer au plan PRO
         </Button>
       </div>

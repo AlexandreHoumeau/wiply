@@ -10,6 +10,7 @@ const validBase = {
   company_website: "",
   company_address: "",
   company_sector: "",
+  company_links: [] as { label: string; url: string }[],
   status: "to_do" as const,
   contact_via: "email" as const,
 };

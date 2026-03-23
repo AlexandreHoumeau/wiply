@@ -162,7 +162,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                                 <Link href="/app/settings/profile"><Settings className="mr-3 h-4 w-4" /><span className="font-medium">Mon Profil</span></Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild className="rounded-lg cursor-pointer py-2.5">
-                                <Link href="/app/settings/billing"><ShieldCheck className="mr-3 h-4 w-4" /><span className="font-medium">Abonnement</span></Link>
+                                <Link href="/app/agency/billing"><ShieldCheck className="mr-3 h-4 w-4" /><span className="font-medium">Abonnement</span></Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator className="my-2 bg-slate-100" />

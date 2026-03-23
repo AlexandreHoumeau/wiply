@@ -7,6 +7,11 @@ export const updateCompanySchema = z.object({
 
 export type UpdateCompanyInput = z.infer<typeof updateCompanySchema>
 
+export type CompanyLink = {
+  label: string;
+  url: string;
+};
+
 export type Company = {
   id: string;
   name: string;
@@ -17,6 +22,7 @@ export type Company = {
   business_sector: string | null;
   created_at: string;
   billing_address: string | null;
+  links: CompanyLink[];
 };
 
 export type CompanyWithRelations = Company & {

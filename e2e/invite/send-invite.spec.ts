@@ -11,7 +11,7 @@ test.describe("Send invite — from settings", () => {
     const inviteeEmail = generateTestEmail();
 
     // Navigate to agency settings → team tab
-    await adminPage.goto("/app/settings/agency");
+    await adminPage.goto("/app/agency/settings");
     await adminPage.waitForLoadState("networkidle");
 
     // Click on the "team" tab if there are multiple tabs

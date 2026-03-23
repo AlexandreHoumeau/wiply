@@ -67,6 +67,7 @@ export async function createOpportunity(values: OpportunityFormValues, agencyId?
                 phone_number: values.company_phone || null,
                 website: values.company_website || null,
                 business_sector: values.company_sector || null,
+                links: values.company_links ?? [],
             },
         ])
         .select()
@@ -121,6 +122,7 @@ export async function updateOpportunity(
         company_phone,
         company_website,
         company_sector,
+        company_links,
         ...opportunityPayload
     } = payload;
 
@@ -143,6 +145,7 @@ export async function updateOpportunity(
             phone_number: company_phone,
             website: company_website,
             business_sector: company_sector,
+            links: company_links ?? [],
         })
         .eq("id", existingOppotunity.company_id)
         .select()

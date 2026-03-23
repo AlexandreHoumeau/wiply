@@ -74,7 +74,7 @@ export default function QuotesPage() {
             Créez des propositions commerciales professionnelles avec le plan PRO.
           </p>
         </div>
-        <Button size="sm" onClick={() => router.push("/app/settings/billing")} className="rounded-full px-5">
+        <Button size="sm" onClick={() => router.push("/app/agency/billing")} className="rounded-full px-5">
           Passer au plan PRO
         </Button>
       </div>
