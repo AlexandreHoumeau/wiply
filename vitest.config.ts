@@ -11,6 +11,7 @@ export default defineConfig({
       // Only measure files that have dedicated tests.
       // Add paths here as you write new test files.
       include: [
+        "lib/notifications/**",
         "lib/billing/**",
         "lib/config/**",
         "lib/email_generator/**",
