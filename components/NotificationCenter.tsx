@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { cn } from "@/lib/utils"
 import type { Notification } from "@/lib/validators/notifications"
 import { Button } from "@/components/ui/button"
+import { resolveLink } from "@/lib/notifications/resolve-link"
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -34,22 +35,22 @@ function NotificationItem({ notification, onRead, primaryColor }: { notification
   const isUnread = !notification.read_at
   const Icon = typeIcon[notification.type] ?? Bell
 
+  const link = resolveLink(notification)
+
   const handleClick = async () => {
     if (isUnread) {
       await markAsRead(notification.id)
       onRead()
     }
-    const meta = notification.metadata
-    if (meta?.task_id) router.push(`/app/projects`)
-    if (meta?.opportunity_id) router.push(`/app/opportunities`)
+    if (link) router.push(link)
   }
 
   return (
     <div
       onClick={handleClick}
       className={cn(
-        "group relative flex cursor-pointer gap-4 p-4 transition-all duration-300",
-        "hover:bg-muted/80 active:scale-[0.98]",
+        "group relative flex gap-4 p-4 transition-all duration-300",
+        link ? "cursor-pointer hover:bg-muted/80 active:scale-[0.98]" : "cursor-default",
         isUnread ? "bg-card" : "opacity-70"
       )}
     >
