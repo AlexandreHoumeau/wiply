@@ -90,28 +90,49 @@ Rendered **only** when notes exist (timeline events with `event_type: "note_adde
 ## Data Flow
 
 ### `page.tsx`
-Add two parallel server-side fetches alongside `getOpportunityBySlug`:
+`getOpportunityBySlug` must resolve first (its result provides `opportunity.id`), then timeline and tracking are fetched in parallel:
 
 ```ts
-const [opportunity, timelineResult, trackingResult] = await Promise.all([
-  getOpportunityBySlug(slug),
-  getOpportunityTimeline(opportunityId),   // new
-  getTrackingLinks(opportunityId),          // new
+const opportunity = await getOpportunityBySlug(slug);
+if (!opportunity) return null;
+
+const [timelineResult, trackingResult] = await Promise.all([
+  getOpportunityTimeline(opportunity.id),   // new
+  getTrackingLinks(opportunity.id),          // new
 ]);
 ```
 
-Filter notes from timeline: `timelineResult.filter(e => e.event_type === "note_added")`.
+Both `getOpportunityTimeline` and `getTrackingLinks` return `{ success, data, error? }`. Extract data defensively:
+
+```ts
+const notes = (timelineResult.data ?? []).filter(e => e.event_type === "note_added");
+const trackingLinks = trackingResult.data ?? [];
+```
 
 Pass as props to `AIMessageChat`:
 - `notes: OpportunityEvent[]`
-- `trackingLinks: TrackingLink[]`
+- `trackingLinks: TrackingLinkRow[]`
+
+### `TrackingLink` type
+No `TrackingLink` type exists in `lib/validators/`. Define a minimal inline type in `AIMessageChat.tsx`:
+
+```ts
+type TrackingLinkRow = {
+  id: string;
+  short_code: string;
+  is_active: boolean;
+  campaign_name: string | null;
+};
+```
+
+The prop type uses `TrackingLinkRow[]`. `page.tsx` casts `trackingResult.data` to this type on the way in.
 
 ### `AIMessageChat` props (additions)
 ```ts
 {
   opportunity: OpportunityWithCompany;
   notes: OpportunityEvent[];          // new
-  trackingLinks: TrackingLink[];      // new
+  trackingLinks: TrackingLinkRow[];   // new
 }
 ```
 
@@ -129,13 +150,26 @@ The action already has `notes` and `trackingLinkUrl` params — wire them:
 ```ts
 sendChatMessage({
   ...existingParams,
-  notes: notes.map(n => n.metadata.text as string),
+  notes: notes.map(n => n.metadata?.text).filter(Boolean) as string[],
   trackingLinkUrl,   // null when toggle off or no active link
 })
 ```
 
+Note: `getAIGeneratedMessages` and `sendChatMessage` are Server Actions (`"use server"`). They are called directly from the Client Component — no API route is needed. This is standard Next.js App Router behavior.
+
 ### Saved drafts
-`AIMessageChat` calls `getAIGeneratedMessages(opportunityId)` on mount. Re-fetches after each successful save (pass a `onSaved` callback from `AssistantBubble` up to the parent, which re-fetches drafts).
+`AIMessageChat` calls `getAIGeneratedMessages(opportunityId)` on mount via a `useEffect`. Re-fetches after each successful save by adding an `onSaved?: () => void` prop to `AssistantBubble`, called after `result.success` in `handleSave`. The parent passes a callback that increments a counter state, triggering the drafts `useEffect` to re-fetch.
+
+`AssistantBubble` updated props:
+```ts
+{
+  content?: string;
+  loading?: boolean;
+  channel: string;
+  opportunityId: string;
+  onSaved?: () => void;   // new
+}
+```
 
 ---
 
@@ -144,7 +178,7 @@ sendChatMessage({
 | File | Change |
 |---|---|
 | `app/app/opportunities/[slug]/message/page.tsx` | Add timeline + tracking fetches, pass as props |
-| `app/app/opportunities/[slug]/_components/AIMessageChat.tsx` | Full redesign: sidebar layout, notes/tracking wiring, drafts fix |
+| `app/app/opportunities/[slug]/_components/AIMessageChat.tsx` | Full redesign: sidebar layout, notes/tracking wiring, drafts fix; add `TrackingLinkRow` type; add `onSaved` prop to `AssistantBubble` |
 | `actions/ai-messages.ts` | No changes needed — `sendChatMessage` already accepts `notes` and `trackingLinkUrl` |
 
 ---
