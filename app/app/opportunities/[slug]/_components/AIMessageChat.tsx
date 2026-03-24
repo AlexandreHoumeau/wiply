@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 // Lucide doesn't export non-deprecated LinkedIn/Instagram icons — use SVG inline
 function LinkedinSvg({ className }: { className?: string }) {
     return (
-        <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
             <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
             <rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" />
         </svg>
@@ -34,7 +34,7 @@ function LinkedinSvg({ className }: { className?: string }) {
 }
 function InstagramSvg({ className }: { className?: string }) {
     return (
-        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
         </svg>
@@ -404,7 +404,7 @@ export function AIMessageChat({
                                             : "border-border bg-background text-muted-foreground hover:bg-muted"
                                     )}
                                 >
-                                    <Icon className="h-3.5 w-3.5 shrink-0" />{label}
+                                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{label}
                                 </button>
                             ))}
                         </div>
@@ -478,9 +478,9 @@ export function AIMessageChat({
                                     Notes · {notes.length}
                                 </p>
                                 <div className="flex flex-col gap-1.5">
-                                    {notes.map((note, i) => (
+                                    {notes.map((note) => (
                                         <p
-                                            key={i}
+                                            key={note.id}
                                             className="text-xs text-muted-foreground line-clamp-2 leading-relaxed"
                                         >
                                             {note.metadata?.text}
@@ -506,6 +506,7 @@ export function AIMessageChat({
                                         return (
                                             <button
                                                 key={draft.id}
+                                                aria-label={`Copier le brouillon : ${draft.body.slice(0, 60)}`}
                                                 onClick={() => {
                                                     navigator.clipboard.writeText(draft.body);
                                                     toast.success("Copié !");
