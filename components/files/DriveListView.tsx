@@ -1,10 +1,9 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Folder, Link2, FileUp, Trash2, Download, ExternalLink, MoreHorizontal } from "lucide-react";
+import { ChevronDown, ChevronRight, Folder, Link2, FileUp, Download, ExternalLink, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { formatBytes } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { cn, formatBytes } from "@/lib/utils";
 import type { FileRecord, FolderRecord } from "@/actions/files.server";
 
 interface DriveListViewProps {
@@ -74,6 +73,7 @@ function FileRow({ file, folders, onDownload, onDelete, onMove }: {
                                 Déplacer à la racine
                             </DropdownMenuItem>
                         )}
+                        {(folders.length > 0 || file.folder_id !== null) && <DropdownMenuSeparator />}
                         <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onClick={() => onDelete(file.id)}
@@ -152,6 +152,7 @@ export function DriveListView({
                                         <DropdownMenuItem onClick={() => onRenameFolder(folder)}>
                                             Renommer
                                         </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             className="text-destructive focus:text-destructive"
                                             onClick={() => onDeleteFolder(folder.id)}
