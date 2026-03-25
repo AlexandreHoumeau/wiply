@@ -13,6 +13,7 @@ import { getProjectVersions, type ProjectVersion } from "@/actions/version.serve
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { TaskHeader } from "./TaskHeader";
 import { TaskSubTasks } from "./TaskSubTasks";
+import { TaskFiles } from "./TaskFiles";
 import { TaskComments } from "./TaskComments";
 import { TaskSidebar } from "./TaskSidebar";
 import dayjs from "dayjs";
@@ -237,6 +238,10 @@ export function TaskSlideOver({
                             onCreateSubTask={handleCreateSubTask}
                             onOpenTask={onOpenTask}
                         />
+
+                        {task && (
+                            <TaskFiles task={task} projectId={projectId} />
+                        )}
 
                         <TaskComments
                             task={task}
