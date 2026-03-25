@@ -1,20 +1,18 @@
 "use client";
 
-import { FolderPlus, FileUp, Link2, LayoutList, LayoutGrid } from "lucide-react";
+import { FolderPlus, FileUp, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface DriveHeaderProps {
     usedBytes: number;
     limitBytes: number;
-    view: "list" | "grid";
-    onViewChange: (v: "list" | "grid") => void;
     onNewFolder: () => void;
     onUpload: () => void;
     onAddLink: () => void;
 }
 
-export function DriveHeader({ usedBytes, limitBytes, view, onViewChange, onNewFolder, onUpload, onAddLink }: DriveHeaderProps) {
+export function DriveHeader({ usedBytes, limitBytes, onNewFolder, onUpload, onAddLink }: DriveHeaderProps) {
     const pct = limitBytes > 0 ? Math.min(100, (usedBytes / limitBytes) * 100) : 0;
     const usedMo = Math.round(usedBytes / (1024 * 1024));
     const limitGo = (limitBytes / (1024 * 1024 * 1024)).toFixed(0);
@@ -48,26 +46,6 @@ export function DriveHeader({ usedBytes, limitBytes, view, onViewChange, onNewFo
                 <Button size="sm" onClick={onUpload}>
                     <FileUp className="w-4 h-4 mr-1.5" /> Fichier
                 </Button>
-
-                {/* View toggle */}
-                <div className="flex rounded-lg border border-border overflow-hidden ml-2">
-                    <button
-                        className={cn("p-1.5 transition-colors", view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}
-                        onClick={() => onViewChange("list")}
-                        title="Vue liste"
-                        aria-label="Vue liste"
-                    >
-                        <LayoutList className="w-4 h-4" />
-                    </button>
-                    <button
-                        className={cn("p-1.5 transition-colors", view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}
-                        onClick={() => onViewChange("grid")}
-                        title="Vue grille"
-                        aria-label="Vue grille"
-                    >
-                        <LayoutGrid className="w-4 h-4" />
-                    </button>
-                </div>
             </div>
         </div>
     );

@@ -9,7 +9,6 @@ import {
 } from "@/actions/files.server";
 import { DriveHeader } from "./DriveHeader";
 import { DriveListView } from "./DriveListView";
-import { DriveGridView } from "./DriveGridView";
 import { CreateFolderDialog } from "./CreateFolderDialog";
 import { RenameFolderDialog } from "./RenameFolderDialog";
 import { UploadFileDialog } from "./UploadFileDialog";
@@ -28,7 +27,6 @@ export function DriveClient({ initialFiles, initialFolders, usedBytes: initialUs
     const [files, setFiles] = useState<FileRecord[]>(initialFiles);
     const [folders, setFolders] = useState<FolderRecord[]>(initialFolders);
     const [usedBytes, setUsedBytes] = useState(initialUsed);
-    const [view, setView] = useState<"list" | "grid">("list");
     const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
 
     // Hydrate expanded state from localStorage after mount (SSR-safe)
@@ -120,18 +118,9 @@ export function DriveClient({ initialFiles, initialFolders, usedBytes: initialUs
         }
     };
 
-    // ── Toggle / folder-click ──────────────────────────────────────────────
-
     const handleToggleFolder = (folderId: string) => {
         const next = { ...expandedFolders, [folderId]: !expandedFolders[folderId] };
         saveExpanded(next);
-    };
-
-    const handleFolderClick = (folderId: string) => {
-        // From grid view: switch to list and expand that folder
-        const next = { ...expandedFolders, [folderId]: true };
-        saveExpanded(next);
-        setView("list");
     };
 
     return (
@@ -139,33 +128,22 @@ export function DriveClient({ initialFiles, initialFolders, usedBytes: initialUs
             <DriveHeader
                 usedBytes={usedBytes}
                 limitBytes={limitBytes}
-                view={view}
-                onViewChange={setView}
                 onNewFolder={() => setCreateFolderOpen(true)}
                 onUpload={() => setUploadOpen(true)}
                 onAddLink={() => setLinkOpen(true)}
             />
 
-            {view === "list" ? (
-                <DriveListView
-                    files={files}
-                    folders={folders}
-                    expandedFolders={expandedFolders}
-                    onToggleFolder={handleToggleFolder}
-                    onDownload={handleDownload}
-                    onDeleteFile={handleDeleteFile}
-                    onMoveFile={handleMoveFile}
-                    onRenameFolder={setRenamingFolder}
-                    onDeleteFolder={handleDeleteFolder}
-                />
-            ) : (
-                <DriveGridView
-                    files={files}
-                    folders={folders}
-                    onMoveFile={handleMoveFile}
-                    onFolderClick={handleFolderClick}
-                />
-            )}
+            <DriveListView
+                files={files}
+                folders={folders}
+                expandedFolders={expandedFolders}
+                onToggleFolder={handleToggleFolder}
+                onDownload={handleDownload}
+                onDeleteFile={handleDeleteFile}
+                onMoveFile={handleMoveFile}
+                onRenameFolder={setRenamingFolder}
+                onDeleteFolder={handleDeleteFolder}
+            />
 
             <CreateFolderDialog
                 open={createFolderOpen}
