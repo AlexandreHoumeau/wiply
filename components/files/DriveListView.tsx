@@ -166,7 +166,11 @@ export function DriveListView({
         setOverTarget(targetId);
     };
 
-    const handleDragLeave = () => setOverTarget(null);
+    const handleDragLeave = (e: React.DragEvent) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setOverTarget(null);
+        }
+    };
 
     const handleDrop = (e: React.DragEvent, folderId: string | null) => {
         e.preventDefault();
@@ -249,7 +253,7 @@ export function DriveListView({
                                 file={file}
                                 folders={folders}
                                 isDraggable={!isFiltered}
-                                isBeingDragged={draggingId === file.id}
+                                isBeingDragged={!isFiltered && draggingId === file.id}
                                 onDownload={onDownload}
                                 onDelete={onDeleteFile}
                                 onMove={onMoveFile}
@@ -337,7 +341,7 @@ export function DriveListView({
                                                 file={file}
                                                 folders={folders}
                                                 isDraggable={!isFiltered}
-                                                isBeingDragged={draggingId === file.id}
+                                                isBeingDragged={!isFiltered && draggingId === file.id}
                                                 onDownload={onDownload}
                                                 onDelete={onDeleteFile}
                                                 onMove={onMoveFile}
