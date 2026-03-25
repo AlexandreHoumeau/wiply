@@ -23,7 +23,7 @@ This spec covers changes to the workspace-level `/app/files` page only. Project-
 
 ### 2. Toolbar — Search, Sort, Filter
 
-A single toolbar row rendered inside `DriveListView` (or as a sibling above it in `DriveClient`) between the storage bar and the file list.
+A single toolbar row rendered inside `DriveListView`, between the storage bar and the file list.
 
 **Components:**
 - **Search input** — `<Input>` with search icon. Filters files by name client-side in real time. Folder sections whose files are all hidden by the filter are hidden too.
@@ -60,7 +60,7 @@ File rows in `DriveListView` become draggable. Folder headers and the "Sans doss
 **Visual feedback:**
 - Dragging file row: `opacity-50` on the source row
 - Hover over a valid drop target: violet border + violet background tint (`border-violet-500 bg-violet-500/10`)
-- Use HTML5 drag-and-drop API (`onDragStart`, `onDragOver`, `onDragLeave`, `onDrop`) — same pattern as `DriveGridView` (which is being removed)
+- Use HTML5 drag-and-drop API (`onDragStart`, `onDragOver`, `onDragLeave`, `onDrop`, `onDragEnd`) — same pattern as `DriveGridView` (which is being removed). `onDragEnd` resets `draggingId` and `overTarget` to `null` when a drag ends without landing on a valid target.
 
 **State:**
 - `draggingId: string | null` — ID of the file being dragged
@@ -76,7 +76,7 @@ Change `max-w-[1400px]` to `max-w-[1600px]` in `app/app/files/page.tsx`.
 |--------|------|
 | Delete | `components/files/DriveGridView.tsx` |
 | Modify | `components/files/DriveHeader.tsx` — remove view toggle |
-| Modify | `components/files/DriveClient.tsx` — remove grid state, add toolbar state |
+| Modify | `components/files/DriveClient.tsx` — remove `view` state, `handleFolderClick`, `DriveGridView` import and render branch |
 | Modify | `components/files/DriveListView.tsx` — add search/sort/filter toolbar + DnD |
 | Modify | `app/app/files/page.tsx` — increase max-width |
 
@@ -85,7 +85,7 @@ Change `max-w-[1400px]` to `max-w-[1600px]` in `app/app/files/page.tsx`.
 - All filtering and sorting is **client-side** — no new server actions needed
 - `DriveListView` receives `files` and `folders` as before; it owns the `search`, `sort`, `typeFilter`, `draggingId`, and `overTarget` state internally (these are pure UI concerns, not shared upward)
 - `onMoveFile` callback from `DriveClient` is still used for DnD drops — no change to the server action interface
-- The toolbar could live in `DriveClient` (passed as props) or inside `DriveListView` itself; prefer inside `DriveListView` to keep `DriveClient` clean
+- The toolbar lives inside `DriveListView` to keep `DriveClient` clean
 
 ## Non-Goals
 
