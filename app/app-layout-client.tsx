@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Menu } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar"
 import { NavigationProgress } from "@/components/navigation-progress"
-import { DemoBanner } from "@/components/DemoBanner"
 import { cn } from "@/lib/utils";
 import { useAgency } from "@/providers/agency-provider";
 
@@ -54,7 +53,6 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
                     </div>
                 </header>
 
-                <DemoBanner />
                 <main className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
                     {children}
                 </main>

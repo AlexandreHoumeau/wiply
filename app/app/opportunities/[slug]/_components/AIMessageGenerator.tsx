@@ -493,7 +493,7 @@ export function AIMessageGenerator({
                                 value={customContext}
                                 onChange={(e) => setCustomContext(e.target.value)}
                                 placeholder={`Contexte additionnel pour « ${stageLabel} » (optionnel)...`}
-                                className="flex-1 h-[34px] min-h-0 resize-none text-xs py-2"
+                                className="flex-1 min-h-0 resize-none text-xs py-2"
                             />
                             {hasTrackingLink && (
                                 <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded-md px-2.5 py-2 whitespace-nowrap shrink-0">

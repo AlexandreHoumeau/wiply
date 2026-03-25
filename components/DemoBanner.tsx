@@ -16,7 +16,7 @@ function getLabel(days: number): string {
     return `Fin de la démo dans ${days} jour${days > 1 ? "s" : ""}`
 }
 
-export function DemoBanner() {
+export function DemoBadge() {
     const { agency } = useAgency()
 
     if (!agency?.demo_ends_at) return null
@@ -27,13 +27,13 @@ export function DemoBanner() {
     const isUrgent = days <= 3
 
     return (
-        <div className={`shrink-0 flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-medium ${
+        <div className={`flex items-center gap-1.5 p-2 rounded-lg text-[10px] font-semibold w-full ${
             isUrgent
-                ? "bg-amber-50 text-amber-700 border-b border-amber-200"
-                : "bg-indigo-50 text-indigo-700 border-b border-indigo-100"
+                ? "bg-amber-100/80 text-amber-700"
+                : "bg-indigo-100/80 text-indigo-700"
         }`}>
             <Sparkles className="h-3 w-3 shrink-0" />
-            <span>{getLabel(days)} — accès PRO complet inclus</span>
+            <span className="truncate">{getLabel(days)}</span>
         </div>
     )
 }
