@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Folder, Link2, FileUp } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatBytes } from "@/lib/utils";
+import { cn, formatBytes } from "@/lib/utils";
 import type { FileRecord, FolderRecord } from "@/actions/files.server";
 
 interface DriveGridViewProps {
@@ -57,7 +56,7 @@ export function DriveGridView({ files, folders, onMoveFile, onFolderClick }: Dri
                                 className={cn(
                                     "rounded-xl border-2 p-3 text-center cursor-pointer transition-all select-none",
                                     isOver
-                                        ? "border-indigo-500 bg-indigo-500/10"
+                                        ? "border-violet-500 bg-violet-500/10"
                                         : "border-border hover:border-border/80 hover:bg-muted/30"
                                 )}
                                 onClick={() => onFolderClick(folder.id)}
@@ -65,7 +64,7 @@ export function DriveGridView({ files, folders, onMoveFile, onFolderClick }: Dri
                                 onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, folder.id)}
                             >
-                                <Folder className={cn("w-8 h-8 mx-auto mb-2", isOver ? "text-indigo-500" : "text-muted-foreground")} />
+                                <Folder className={cn("w-8 h-8 mx-auto mb-2", isOver ? "text-violet-500" : "text-muted-foreground")} />
                                 <p className="text-xs font-medium truncate">{folder.name}</p>
                                 <p className="text-xs text-muted-foreground mt-0.5">{count} fichier{count !== 1 ? "s" : ""}</p>
                             </div>
@@ -75,9 +74,9 @@ export function DriveGridView({ files, folders, onMoveFile, onFolderClick }: Dri
                     {/* Root drop target — always visible */}
                     <div
                         className={cn(
-                            "rounded-xl border-2 border-dashed p-3 text-center transition-all select-none",
+                            "rounded-xl border-2 border-dashed p-3 text-center transition-all select-none cursor-default",
                             overTarget === "root"
-                                ? "border-indigo-500 bg-indigo-500/10"
+                                ? "border-violet-500 bg-violet-500/10"
                                 : "border-border/50 hover:border-border"
                         )}
                         onDragOver={(e) => handleDragOver(e, "root")}
@@ -85,8 +84,8 @@ export function DriveGridView({ files, folders, onMoveFile, onFolderClick }: Dri
                         onDrop={(e) => handleDrop(e, null)}
                     >
                         <div className={cn("w-8 h-8 mx-auto mb-2 rounded-full border-2 border-dashed flex items-center justify-center",
-                            overTarget === "root" ? "border-indigo-500" : "border-muted-foreground/30")}>
-                            <span className={cn("text-lg leading-none", overTarget === "root" ? "text-indigo-500" : "text-muted-foreground/30")}>↩</span>
+                            overTarget === "root" ? "border-violet-500" : "border-muted-foreground/30")}>
+                            <span className={cn("text-lg leading-none", overTarget === "root" ? "text-violet-500" : "text-muted-foreground/30")}>↩</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Racine</p>
                     </div>
@@ -107,8 +106,9 @@ export function DriveGridView({ files, folders, onMoveFile, onFolderClick }: Dri
                                 className={cn(
                                     "rounded-xl border border-border p-3 text-center cursor-grab transition-all select-none",
                                     "hover:bg-muted/30",
-                                    draggingId === file.id && "opacity-50 rotate-[-2deg] scale-95"
+                                    draggingId === file.id && "opacity-50 scale-95"
                                 )}
+                                style={draggingId === file.id ? { transform: "rotate(-2deg) scale(0.95)" } : undefined}
                             >
                                 {file.type === "link"
                                     ? <Link2 className="w-8 h-8 mx-auto mb-2 text-blue-500" />
