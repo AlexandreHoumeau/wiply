@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Briefcase, Building2, ChevronsUpDown, FileText, Kanban, LayoutDashboard,
-    LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers
+    LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers, FolderOpen
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -30,6 +30,7 @@ const mainNav = [
     { label: "Opportunités", href: "/app/opportunities", icon: Briefcase },
     { label: "Devis", href: "/app/quotes", icon: FileText, proOnly: true },
     { label: "Projets", href: "/app/projects", icon: Kanban },
+    { label: "Fichiers", href: "/app/files", icon: FolderOpen, proOnly: true },
 ]
 
 const secondaryNav = [
