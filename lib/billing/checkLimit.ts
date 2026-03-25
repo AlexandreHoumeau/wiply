@@ -136,13 +136,7 @@ export async function checkFilesEnabled(
     return { allowed: true }
 }
 
-export async function checkStorageLimit(
-    agencyId: string,
-    fileSizeBytes: number
-): Promise<{ allowed: boolean; reason?: string }> {
-    const plan = await getAgencyPlan(agencyId)
-    const limit = PLANS[plan].max_storage_bytes
-
+export async function getUsedStorageBytes(agencyId: string): Promise<number> {
     const { data, error } = await supabaseAdmin
         .from('files')
         .select('size')
@@ -150,8 +144,17 @@ export async function checkStorageLimit(
         .eq('type', 'upload')
 
     if (error) throw error
+    return (data ?? []).reduce((sum: number, row: { size: number | null }) => sum + (row.size ?? 0), 0)
+}
 
-    const usedBytes = (data ?? []).reduce((sum: number, row: { size: number | null }) => sum + (row.size ?? 0), 0)
+export async function checkStorageLimit(
+    agencyId: string,
+    fileSizeBytes: number
+): Promise<{ allowed: boolean; reason?: string }> {
+    const plan = await getAgencyPlan(agencyId)
+    const limit = PLANS[plan].max_storage_bytes
+
+    const usedBytes = await getUsedStorageBytes(agencyId)
 
     if (usedBytes + fileSizeBytes > limit) {
         const usedMB = Math.round(usedBytes / (1024 * 1024))
