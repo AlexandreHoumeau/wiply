@@ -40,13 +40,31 @@ export async function GET(
 	else if (/android/i.test(ua)) os = "Android";
 	else if (/iphone|ipad|ipod/i.test(ua)) os = "iOS";
 
+	// Détection du navigateur
+	let browser = "Autre";
+	if (/samsungbrowser/i.test(ua)) browser = "Samsung";
+	else if (/opr\//i.test(ua)) browser = "Opera";
+	else if (/edg\//i.test(ua)) browser = "Edge";
+	else if (/chrome/i.test(ua)) browser = "Chrome";
+	else if (/firefox/i.test(ua)) browser = "Firefox";
+	else if (/safari/i.test(ua)) browser = "Safari";
+
+	// Géolocalisation via les headers Vercel (automatiques en prod, null en local)
+	const countryCode = headerList.get("x-vercel-ip-country") || null;
+	const city = headerList.get("x-vercel-ip-city")
+		? decodeURIComponent(headerList.get("x-vercel-ip-city")!)
+		: null;
+
 	// 3. Enregistrement du clic enrichi
 	await supabase.from("tracking_clicks").insert({
 		tracking_link_id: link.id,
 		ip_address: ip,
 		user_agent: ua,
-		device_type: device, // Assure-toi d'avoir ces colonnes en BDD
-		os_type: os,         // ou stocke tout dans un jsonb "metadata"
+		device_type: device,
+		os_type: os,
+		browser,
+		city,
+		country_code: countryCode,
 		referer: referer
 	});
 
