@@ -28,3 +28,6 @@ create policy "agency members can delete their folders"
 -- Add folder_id to files. NULL = root (no folder).
 -- on delete set null: deleting a folder moves its files to root automatically.
 alter table files add column folder_id uuid references folders(id) on delete set null;
+
+create index on folders (agency_id);
+create index on files (folder_id);
