@@ -40,6 +40,17 @@ describe("getUsedStorageBytes", () => {
     expect(result).toBe(0);
   });
 
+  it("throws when supabase returns an error", async () => {
+    const chain: any = { select: vi.fn(() => chain), eq: vi.fn(() => chain) };
+    const dataPromise = Promise.resolve({ data: null, error: new Error("db failure") });
+    chain.then = dataPromise.then.bind(dataPromise);
+    chain.catch = dataPromise.catch.bind(dataPromise);
+    chain.finally = dataPromise.finally.bind(dataPromise);
+    vi.mocked(supabaseAdmin.from).mockReturnValue(chain);
+
+    await expect(getUsedStorageBytes("agency-1")).rejects.toThrow("db failure");
+  });
+
   it("treats null size as 0", async () => {
     const chain: any = { select: vi.fn(() => chain), eq: vi.fn(() => chain) };
     const dataPromise = Promise.resolve({
