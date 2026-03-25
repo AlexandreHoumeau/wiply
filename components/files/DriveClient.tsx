@@ -115,7 +115,7 @@ export function DriveClient({ initialFiles, initialFolders, usedBytes: initialUs
         if (file.storage_path) {
             const tab = window.open("", "_blank");
             const result = await getSignedUrl(file.storage_path);
-            if (result.success && result.url) { tab!.location.href = result.url; }
+            if (result.success && result.url && tab) { tab.location.href = result.url; }
             else { tab?.close(); toast.error("Impossible de générer le lien"); }
         }
     };
@@ -172,14 +172,12 @@ export function DriveClient({ initialFiles, initialFolders, usedBytes: initialUs
                 onOpenChange={setCreateFolderOpen}
                 onConfirm={handleCreateFolder}
             />
-            {renamingFolder && (
-                <RenameFolderDialog
-                    open={!!renamingFolder}
-                    onOpenChange={(open) => { if (!open) setRenamingFolder(null); }}
-                    currentName={renamingFolder.name}
-                    onConfirm={handleRenameFolder}
-                />
-            )}
+            <RenameFolderDialog
+                open={!!renamingFolder}
+                onOpenChange={(open) => { if (!open) setRenamingFolder(null); }}
+                currentName={renamingFolder?.name ?? ""}
+                onConfirm={handleRenameFolder}
+            />
             <UploadFileDialog
                 open={uploadOpen}
                 onOpenChange={setUploadOpen}
