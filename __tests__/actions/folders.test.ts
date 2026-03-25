@@ -7,6 +7,7 @@ vi.mock("@/lib/billing/checkLimit", () => ({
 }));
 
 import { createClient } from "@/lib/supabase/server";
+import { getUsedStorageBytes } from "@/lib/billing/checkLimit";
 import {
     getFolders,
     createFolder,
@@ -149,5 +150,20 @@ describe("moveFileToFolder", () => {
         const result = await moveFileToFolder("file-1", "folder-1");
         expect(result.success).toBe(false);
         expect(result.error).toContain("projet");
+    });
+});
+
+describe("getStorageUsage", () => {
+    it("returns usedBytes and limitBytes for a PRO agency", async () => {
+        vi.mocked(getUsedStorageBytes).mockResolvedValue(500000);
+        vi.mocked(createClient).mockResolvedValue(
+            makeSupabase({
+                agencyData: { plan: "PRO", demo_ends_at: null },
+            }) as any
+        );
+        const result = await getStorageUsage();
+        expect(result.success).toBe(true);
+        expect(result.data?.usedBytes).toBe(500000);
+        expect(result.data?.limitBytes).toBeGreaterThan(0);
     });
 });
