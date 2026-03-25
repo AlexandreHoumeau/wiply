@@ -199,6 +199,28 @@ async function deleteAgencyData(agencyId: string): Promise<void> {
             .in("user_id", profileIds)
     }
 
+    // ─── Files cleanup ──────────────────────────────────────────────────────────
+    // 1. Fetch storage paths BEFORE deleting rows
+    const { data: agencyFiles } = await supabaseAdmin
+        .from("files")
+        .select("id, storage_path")
+        .eq("agency_id", agencyId)
+        .eq("type", "upload")
+
+    // 2. Delete files rows (cascades task_files via file_id FK)
+    await supabaseAdmin.from("files").delete().eq("agency_id", agencyId)
+
+    // 3. Delete Storage objects after DB commit
+    if (agencyFiles && agencyFiles.length > 0) {
+        const storagePaths = agencyFiles
+            .map((f: { storage_path: string | null }) => f.storage_path)
+            .filter(Boolean) as string[]
+        if (storagePaths.length > 0) {
+            await supabaseAdmin.storage.from("agency-files").remove(storagePaths)
+        }
+    }
+    // ────────────────────────────────────────────────────────────────────────────
+
     // Delete tasks (task_comments have FK → tasks, no cascade, delete first)
     const { data: tasks } = await supabaseAdmin
         .from("tasks")
