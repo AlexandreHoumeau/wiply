@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { checkFilesEnabled, checkStorageLimit } from "@/lib/billing/checkLimit";
+import { checkFilesEnabled, checkStorageLimit, getUsedStorageBytes } from "@/lib/billing/checkLimit";
+import { PLANS } from "@/lib/config/plans";
 import { z } from "zod";
 
 // ─── Auth helper ─────────────────────────────────────────────────────────────
@@ -37,8 +38,16 @@ export type FileRecord = {
     uploaded_by: string | null;
     created_at: string;
     updated_at: string;
+    folder_id: string | null;
     uploader: { id: string; first_name: string | null; last_name: string | null; email: string } | null;
     task_files?: { task_id: string; task: { task_number: number; title: string; project: { slug: string; task_prefix: string } } }[];
+};
+
+export type FolderRecord = {
+    id: string;
+    agency_id: string;
+    name: string;
+    created_at: string;
 };
 
 // ─── Read actions ────────────────────────────────────────────────────────────
@@ -106,6 +115,20 @@ export async function getTaskFiles(taskId: string): Promise<{ success: boolean; 
         if (error) throw error;
         const files = (data ?? []).map((row: any) => row.file).filter(Boolean);
         return { success: true, data: files as FileRecord[] };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function getStorageUsage(): Promise<{ success: boolean; data?: { usedBytes: number; limitBytes: number }; error?: string }> {
+    try {
+        const { supabase, agencyId } = await getAuthContext();
+        const usedBytes = await getUsedStorageBytes(agencyId);
+        // getAgencyPlan is private in checkLimit.ts — inline the 3-line plan resolution here.
+        const { data } = await supabase.from("agencies").select("plan, demo_ends_at").eq("id", agencyId).single();
+        const plan = (data?.demo_ends_at && new Date(data.demo_ends_at) > new Date()) ? "PRO" : ((data?.plan as keyof typeof PLANS) || "FREE");
+        const limitBytes = PLANS[plan].max_storage_bytes;
+        return { success: true, data: { usedBytes, limitBytes } };
     } catch (err: any) {
         return { success: false, error: err.message };
     }
@@ -194,10 +217,6 @@ export async function addLink(
         const parsed = AddLinkSchema.safeParse({ projectId, name, url, taskId });
         if (!parsed.success) return { success: false, error: parsed.error.errors[0]?.message };
 
-        // Agency-wide links cannot be linked to tasks
-        if (projectId === null && taskId) {
-            return { success: false, error: "Les fichiers globaux ne peuvent pas être liés à un ticket" };
-        }
 
         const { supabase, userId, agencyId } = await getAuthContext();
 
@@ -241,14 +260,6 @@ export async function linkFileToTask(taskId: string, fileId: string): Promise<{ 
         // Verify the file belongs to this agency
         const { data: file } = await supabase.from("files").select("agency_id, project_id").eq("id", fileId).single();
         if (!file || file.agency_id !== agencyId) return { success: false, error: "Fichier introuvable" };
-
-        // Verify file is project-scoped and matches task's project
-        if (!file.project_id) return { success: false, error: "Les fichiers globaux ne peuvent pas être liés à un ticket" };
-
-        const { data: task } = await supabase.from("tasks").select("project_id").eq("id", taskId).single();
-        if (!task || task.project_id !== file.project_id) {
-            return { success: false, error: "Ce fichier n'appartient pas au même projet que ce ticket" };
-        }
 
         const { error } = await supabase.from("task_files").insert({ task_id: taskId, file_id: fileId, linked_by: userId });
         if (error) throw error;
@@ -323,6 +334,83 @@ export async function getSignedUrl(storagePath: string): Promise<{ success: bool
 
         if (error) throw error;
         return { success: true, url: data.signedUrl };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+// ─── Folders ─────────────────────────────────────────────────────────────────
+
+export async function getFolders(): Promise<{ success: boolean; data?: FolderRecord[]; error?: string }> {
+    try {
+        const { supabase, agencyId } = await getAuthContext();
+        const { data, error } = await supabase
+            .from("folders")
+            .select("*")
+            .eq("agency_id", agencyId)
+            .order("name", { ascending: true });
+        if (error) throw error;
+        return { success: true, data: (data ?? []) as FolderRecord[] };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function createFolder(name: string): Promise<{ success: boolean; data?: FolderRecord; error?: string }> {
+    try {
+        const trimmed = name.trim();
+        if (!trimmed) return { success: false, error: "Le nom du dossier ne peut pas être vide" };
+        const { supabase, agencyId } = await getAuthContext();
+        const { data, error } = await supabase
+            .from("folders")
+            .insert({ agency_id: agencyId, name: trimmed })
+            .select("*")
+            .single();
+        if (error) throw error;
+        return { success: true, data: data as FolderRecord };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function renameFolder(folderId: string, name: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const trimmed = name.trim();
+        if (!trimmed) return { success: false, error: "Le nom du dossier ne peut pas être vide" };
+        const { supabase, agencyId } = await getAuthContext();
+        const { data: folder } = await supabase.from("folders").select("agency_id").eq("id", folderId).single();
+        if (!folder || folder.agency_id !== agencyId) return { success: false, error: "Dossier introuvable" };
+        const { error } = await supabase.from("folders").update({ name: trimmed }).eq("id", folderId);
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function deleteFolder(folderId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const { supabase, agencyId } = await getAuthContext();
+        const { data: folder } = await supabase.from("folders").select("agency_id").eq("id", folderId).single();
+        if (!folder || folder.agency_id !== agencyId) return { success: false, error: "Dossier introuvable" };
+        // Files with folder_id = folderId are automatically set to NULL by the FK constraint on delete.
+        const { error } = await supabase.from("folders").delete().eq("id", folderId);
+        if (error) throw error;
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function moveFileToFolder(fileId: string, folderId: string | null): Promise<{ success: boolean; error?: string }> {
+    try {
+        const { supabase, agencyId } = await getAuthContext();
+        const { data: file } = await supabase.from("files").select("agency_id, project_id").eq("id", fileId).single();
+        if (!file || file.agency_id !== agencyId) return { success: false, error: "Fichier introuvable" };
+        if (file.project_id !== null) return { success: false, error: "Impossible de déplacer un fichier lié à un projet dans un dossier" };
+        const { error } = await supabase.from("files").update({ folder_id: folderId }).eq("id", fileId);
+        if (error) throw error;
+        return { success: true };
     } catch (err: any) {
         return { success: false, error: err.message };
     }

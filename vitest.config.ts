@@ -22,6 +22,8 @@ export default defineConfig({
         // Add more paths here as you write unit tests for other files.
         // DB-heavy CRUD wrappers (tracking.server.ts, opportunity.client.ts)
         // belong in integration tests and are excluded from this threshold.
+        "__tests__/unit/billing/getStorageUsage.test.ts",
+        "__tests__/actions/folders.test.ts",
       ],
       exclude: ["**/*.d.ts"],
       // Enforce 80% on lines & statements.
