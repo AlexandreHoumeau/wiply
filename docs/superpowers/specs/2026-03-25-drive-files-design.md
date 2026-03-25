@@ -42,7 +42,9 @@ A file management system for Wiply agencies. Files live either at the agency lev
 
 Unique constraint on `(task_id, file_id)`.
 
-**RLS:** users can insert/delete `task_files` rows only when the `task_id` belongs to a task in their agency (join through `tasks.agency_id`). This is the sole RLS guard preventing cross-agency task linking.
+**RLS:**
+- **SELECT:** users can read `task_files` rows when the `task_id` belongs to a task in their agency (join through `tasks.agency_id`).
+- **INSERT/DELETE:** users can insert/delete `task_files` rows only when the `task_id` belongs to a task in their agency.
 
 **Behaviour:**
 - Uploading from a task creates a `files` row + a `task_files` row atomically.
@@ -69,7 +71,7 @@ PRO:   { ...existing, files_enabled: true,  max_storage_bytes: 2 * 1024 * 1024 *
 
 ### New limit checks (`lib/billing/checkLimit.ts`)
 
-Both functions call through the existing `getAgencyPlan()` helper, which already handles the `demo_ends_at` trial-period override (trial agencies get PRO treatment). Both return `{ allowed: boolean; reason?: string }` — consistent with all other check functions.
+Both functions follow the existing pattern: `agencyId` is passed in by the calling action (resolved from the session), and they call `getAgencyPlan(agencyId)` which handles the `demo_ends_at` trial-period override. Both return `{ allowed: boolean; reason?: string }` — consistent with all other check functions.
 
 - **`checkFilesEnabled(agencyId)`** — returns `{ allowed: false, reason: "..." }` on FREE. Gates all file/upload actions server-side.
 - **`checkStorageLimit(agencyId, fileSizeBytes)`** — sums `size` from all `files` rows where `type = 'upload'` for the agency (`SUM` naturally skips nulls, but the `type = 'upload'` filter makes the intent explicit). Verifies `current + fileSizeBytes <= max_storage_bytes`. Called before every upload, always after `checkFilesEnabled`. This is a **soft limit**: concurrent uploads may slightly exceed the cap (no DB-level lock). Slight overages are acceptable at this scale.
@@ -88,7 +90,7 @@ Files are **not** publicly accessible. Downloads use signed URLs (TTL: **1 hour*
 
 Storage deletions (in `deleteFile`) use the `supabaseAdmin` service-role client, consistent with how `account.server.ts` handles `agency-branding` bucket deletions.
 
-**Agency deletion:** `deleteAgencyData` in `account.server.ts` must be updated to delete all `files` rows and their corresponding `agency-files` Storage objects before the agency row is deleted. Storage objects are never auto-cleaned by DB cascades — this requires explicit code.
+**Agency deletion:** `deleteAgencyData` in `account.server.ts` must be updated to delete all `files` rows and their corresponding `agency-files` Storage objects. This must happen **before** `tasks` are deleted in the sequence, because `task_files` cascades from `files` — deleting tasks first would orphan `task_files` rows before the cascade can fire. Storage objects require explicit deletion code regardless (DB cascades never clean Storage).
 
 ---
 
@@ -96,8 +98,8 @@ Storage deletions (in `deleteFile`) use the `supabaseAdmin` service-role client,
 
 ### Workspace Files tab
 
-- New entry appended as the last item in `mainNav` (after "Projets") in `app-sidebar.tsx`. Belongs in `mainNav` (primary work tool) rather than `secondaryNav` (which contains management/config items like "Agence" and "Espace interne").
-- PRO-gated using `isProPlan(agency)` client-side (consistent with how "Devis" is handled today), showing an upgrade prompt for FREE agencies.
+- New entry appended after "Projets" in `mainNav` in `app-sidebar.tsx` ("Projets" is currently the last item in `mainNav`). Belongs in `mainNav` (primary work tool) rather than `secondaryNav` (which contains management/config items like "Agence" and "Espace interne").
+- PRO-gated using `isProPlan(agency)` client-side with `proOnly: true` flag (consistent with how "Devis" is handled today), showing an upgrade prompt for FREE agencies.
 - Route: `/app/files`
 - Lists agency-wide files (`project_id IS NULL`).
 - Columns: name (with type icon), size, uploaded by, date, linked tasks (clickable badges).
@@ -106,7 +108,9 @@ Storage deletions (in `deleteFile`) use the `supabaseAdmin` service-role client,
 ### Project Files tab
 
 - New tab in `ProjectHeader` inserted before "Paramètres". Shown for **all** projects (both internal and external — unlike "Contenus attendus" which is hidden for internal projects).
-- Resulting tab order: "Vue d'ensemble" → "Board Kanban" → "Versions" → "Contenus attendus" (external only) → **"Fichiers"** → "Paramètres".
+- Resulting tab order:
+  - External projects: "Vue d'ensemble" → "Board Kanban" → "Versions" → "Contenus attendus" → **"Fichiers"** → "Paramètres"
+  - Internal projects: "Vue d'ensemble" → "Board Kanban" → "Versions" → **"Fichiers"** → "Paramètres"
 - Route: `/app/projects/[slug]/files`
 - Same layout as Workspace Files, scoped to `project_id`.
 - Each file shows which tasks it is linked to (clickable badges navigating to the task).
@@ -128,14 +132,16 @@ Storage deletions (in `deleteFile`) use the `supabaseAdmin` service-role client,
 
 `agencyId` is always resolved server-side from the authenticated session — never accepted as a parameter from the client.
 
+Input validation uses Zod schemas consistent with the rest of the codebase. `url` in `addLink` is validated as a valid URL string (using `z.string().url()`).
+
 | Function | Description |
 |----------|-------------|
 | `getAgencyFiles()` | Resolves `agencyId` from session. Returns agency-wide files (`project_id IS NULL`) |
 | `getProjectFiles(projectId)` | Returns files for a project; authorization covered by `files` RLS (agency-scoped) |
-| `getTaskFiles(taskId)` | Returns files linked to a task via `task_files` |
+| `getTaskFiles(taskId)` | Returns files linked to a task via `task_files`; authorization covered by `task_files` SELECT RLS (agency-scoped via `tasks.agency_id`) |
 | `uploadFile(formData: FormData)` | Extracts `projectId` and file from `FormData`; resolves `agencyId` from session. Checks `checkFilesEnabled` + `checkStorageLimit`, uploads to Supabase Storage, inserts `files` row. If `taskId` is present in `FormData`, also inserts `task_files` row atomically |
-| `addLink(projectId \| null, name, url, taskId?)` | Resolves `agencyId` from session. Checks `checkFilesEnabled`, inserts `type: 'link'` row. If `taskId` is provided, also inserts `task_files` row atomically. If called from Files tab pages, `taskId` is omitted and no `task_files` row is created |
-| `linkFileToTask(taskId, fileId)` | Verifies `file.project_id IS NOT NULL` and matches the task's `project_id` (prevents linking agency-wide files to tasks). Inserts into `task_files`; cross-agency protection enforced by `task_files` RLS |
+| `addLink(projectId \| null, name, url, taskId?)` | Resolves `agencyId` from session. Validates `url` with `z.string().url()`. Checks `checkFilesEnabled`, inserts `type: 'link'` row. If `taskId` is provided, also inserts `task_files` row atomically. If called from Files tab pages, `taskId` is omitted and no `task_files` row is created |
+| `linkFileToTask(taskId, fileId)` | Resolves `agencyId` from session. Verifies `file.agency_id` matches caller's agency. Verifies `file.project_id IS NOT NULL` and matches the task's `project_id`. Inserts into `task_files`; cross-agency protection also enforced by `task_files` RLS |
 | `unlinkFileFromTask(taskId, fileId)` | Deletes from `task_files` |
 | `deleteFile(fileId)` | Resolves caller's `agency_id` from session and verifies it matches the file's `agency_id`. Removes from Supabase Storage via `supabaseAdmin` (if upload) + deletes `files` row (cascades `task_files`) |
 | `getSignedUrl(storagePath)` | Looks up `files` row by `storage_path`, verifies `agency_id` matches caller's session, then generates 1-hour signed URL |
