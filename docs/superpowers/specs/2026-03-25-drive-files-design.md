@@ -50,7 +50,7 @@ Unique constraint on `(task_id, file_id)`.
 - Uploading from a task creates a `files` row + a `task_files` row atomically.
 - Adding a link from a task creates a `files` row + a `task_files` row atomically.
 - Linking an existing file to a task creates only a `task_files` row.
-- Agency-wide files (`project_id IS NULL`) cannot be linked to tasks. `linkFileToTask` enforces this server-side by verifying `file.project_id IS NOT NULL` and that it matches the task's `project_id`.
+- Agency-wide files (`project_id IS NULL`) cannot be linked to tasks. `linkFileToTask` enforces this server-side by verifying `file.project_id IS NOT NULL` and that it matches the task's `project_id`. Tasks always have a non-null `project_id` in this app, so the check is unambiguous.
 - Unlinking removes the `task_files` row only (file is preserved).
 - Deleting a file removes the `files` row; the `file_id → files ON DELETE CASCADE` on `task_files` cleans up linked rows automatically.
 - Deleting a task removes the `task_files` rows via `task_id → tasks ON DELETE CASCADE`, leaving the `files` rows intact.
@@ -75,7 +75,7 @@ PRO:   { ...existing, files_enabled: true,  max_storage_bytes: 2 * 1024 * 1024 *
 Both functions follow the existing pattern: `agencyId` is passed in by the calling action (resolved from the session), and they call `getAgencyPlan(agencyId)` which handles the `demo_ends_at` trial-period override. Both return `{ allowed: boolean; reason?: string }` — consistent with all other check functions.
 
 - **`checkFilesEnabled(agencyId)`** — returns `{ allowed: false, reason: "..." }` on FREE. Gates all file/upload actions server-side.
-- **`checkStorageLimit(agencyId, fileSizeBytes)`** — uses `createClient()` (session-scoped, consistent with other check functions) to sum `size` from all `files` rows where `type = 'upload'` for the agency. The `files` RLS naturally scopes the query to the caller's agency. Verifies `current + fileSizeBytes <= max_storage_bytes`. Called before every upload, always after `checkFilesEnabled`. This is a **soft limit**: concurrent uploads may slightly exceed the cap (no DB-level lock). Slight overages are acceptable at this scale.
+- **`checkStorageLimit(agencyId, fileSizeBytes)`** — uses `supabaseAdmin` (service-role) to sum `size` from all `files` rows where `type = 'upload'` AND `agency_id = agencyId`. Using the service-role client ensures the quota check is authoritative and not subject to RLS misconfiguration. Verifies `current + fileSizeBytes <= max_storage_bytes`. Called before every upload, always after `checkFilesEnabled`. This is a **soft limit**: concurrent uploads may slightly exceed the cap (no DB-level lock). Slight overages are acceptable at this scale.
 
 ---
 
@@ -91,12 +91,12 @@ Files are **not** publicly accessible. Downloads use signed URLs (TTL: **1 hour*
 
 Storage deletions (in `deleteFile`) use the `supabaseAdmin` service-role client, consistent with how `account.server.ts` handles `agency-branding` bucket deletions.
 
-**Agency deletion:** `deleteAgencyData` in `account.server.ts` must be updated to handle files cleanup:
-1. Fetch all `files` rows for the agency to collect `storage_path` values.
-2. Delete the corresponding `agency-files` Storage objects (requires explicit code — DB cascades never clean Storage).
-3. Delete the `files` rows (this cascades `task_files` via `file_id → files ON DELETE CASCADE`).
+**Agency deletion:** `deleteAgencyData` in `account.server.ts` must be updated to handle files cleanup. The correct order is:
+1. Fetch all `files` rows for the agency (to collect `storage_path` values) within a DB transaction.
+2. Delete the `files` rows in the same transaction (cascades `task_files` via `file_id → files ON DELETE CASCADE`). Commit.
+3. Delete the corresponding `agency-files` Storage objects after the DB transaction commits.
 
-This can happen at any point in the `deleteAgencyData` sequence — `files` has no FK dependency on `tasks` or `projects`, so ordering relative to those deletions is flexible.
+Deleting DB rows first ensures that if Storage deletion later fails (partial cleanup), the DB is already consistent — no stale rows pointing to orphaned Storage objects, and the files no longer count toward the quota. `files` has no FK dependency on `tasks` or `projects`, so this can happen at any point in the `deleteAgencyData` sequence relative to those deletions.
 
 ---
 
@@ -150,7 +150,7 @@ Input validation uses Zod schemas consistent with the rest of the codebase. `url
 | `linkFileToTask(taskId, fileId)` | Resolves `agencyId` from session. Verifies `file.agency_id` matches caller's agency. Verifies `file.project_id IS NOT NULL` and matches the task's `project_id`. Inserts into `task_files`; cross-agency protection also enforced by `task_files` RLS |
 | `unlinkFileFromTask(taskId, fileId)` | Resolves `agencyId` from session. Verifies the `task_id` belongs to the caller's agency before deleting from `task_files` |
 | `deleteFile(fileId)` | Resolves caller's `agency_id` from session and verifies it matches the file's `agency_id`. Removes from Supabase Storage via `supabaseAdmin` (if upload) + deletes `files` row (cascades `task_files`) |
-| `getSignedUrl(storagePath)` | Looks up `files` row by `storage_path`, verifies `agency_id` matches caller's session. Returns error if no row found or row has `type = 'link'`. Generates 1-hour signed URL |
+| `getSignedUrl(storagePath)` | Looks up `files` row `WHERE storage_path = ? AND agency_id = <session agency>`. Returns error if no matching row found, or if matched row has `type = 'link'`. Generates 1-hour signed URL |
 
 ---
 
