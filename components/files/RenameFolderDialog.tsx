@@ -23,9 +23,12 @@ export function RenameFolderDialog({ open, onOpenChange, currentName, onConfirm 
         e.preventDefault();
         if (!name.trim() || name.trim() === currentName) { onOpenChange(false); return; }
         setIsLoading(true);
-        await onConfirm(name.trim());
-        setIsLoading(false);
-        onOpenChange(false);
+        try {
+            await onConfirm(name.trim());
+            onOpenChange(false);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -47,7 +50,7 @@ export function RenameFolderDialog({ open, onOpenChange, currentName, onConfirm 
                     </div>
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-                        <Button type="submit" disabled={!name.trim() || isLoading}>
+                        <Button type="submit" disabled={!name.trim() || name.trim() === currentName || isLoading}>
                             {isLoading ? "Renommage…" : "Renommer"}
                         </Button>
                     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +16,19 @@ export function CreateFolderDialog({ open, onOpenChange, onConfirm }: CreateFold
     const [name, setName] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
+    useEffect(() => { if (!open) setName(""); }, [open]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
         setIsLoading(true);
-        await onConfirm(name.trim());
-        setIsLoading(false);
-        setName("");
-        onOpenChange(false);
+        try {
+            await onConfirm(name.trim());
+            setName("");
+            onOpenChange(false);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
