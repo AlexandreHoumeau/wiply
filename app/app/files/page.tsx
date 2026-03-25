@@ -20,7 +20,7 @@ export default async function FilesPage() {
     const limitBytes = storageResult.success ? (storageResult.data?.limitBytes ?? 0) : 0;
 
     return (
-        <div className="max-w-[1400px] mx-auto px-6 py-8">
+        <div className="max-w-[1600px] mx-auto px-6 py-8">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold">Drive</h1>
                 <p className="text-muted-foreground mt-1">Fichiers et liens de l&apos;espace de travail</p>
