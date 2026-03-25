@@ -66,7 +66,7 @@ export async function getAgencyFiles(): Promise<{ success: boolean; data?: FileR
 
 export async function getProjectFiles(projectId: string): Promise<{ success: boolean; data?: FileRecord[]; error?: string }> {
     try {
-        const { supabase } = await getAuthContext();
+        const { supabase, agencyId } = await getAuthContext();
         const { data, error } = await supabase
             .from("files")
             .select(`
@@ -75,6 +75,7 @@ export async function getProjectFiles(projectId: string): Promise<{ success: boo
                 task_files(task_id, task:tasks!task_files_task_id_fkey(task_number, title, project:projects!tasks_project_id_fkey(slug, task_prefix)))
             `)
             .eq("project_id", projectId)
+            .eq("agency_id", agencyId)
             .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -86,7 +87,12 @@ export async function getProjectFiles(projectId: string): Promise<{ success: boo
 
 export async function getTaskFiles(taskId: string): Promise<{ success: boolean; data?: FileRecord[]; error?: string }> {
     try {
-        const { supabase } = await getAuthContext();
+        const { supabase, agencyId } = await getAuthContext();
+
+        // Verify the task belongs to this agency
+        const { data: task } = await supabase.from("tasks").select("agency_id").eq("id", taskId).single();
+        if (!task || task.agency_id !== agencyId) return { success: true, data: [] };
+
         const { data, error } = await supabase
             .from("task_files")
             .select(`
@@ -277,16 +283,17 @@ export async function deleteFile(fileId: string): Promise<{ success: boolean; er
         const { data: file } = await supabase.from("files").select("agency_id, type, storage_path").eq("id", fileId).single();
         if (!file || file.agency_id !== agencyId) return { success: false, error: "Fichier introuvable" };
 
-        // Delete storage object first (if upload)
-        if (file.type === "upload" && file.storage_path) {
-            const { error: storageError } = await supabaseAdmin.storage
-                .from("agency-files")
-                .remove([file.storage_path]);
-            if (storageError) throw storageError;
-        }
-
+        // Delete DB row first (cascades task_files)
         const { error } = await supabase.from("files").delete().eq("id", fileId);
         if (error) throw error;
+
+        // Delete Storage object after DB commit (if upload)
+        // A dangling blob is recoverable; a dangling DB row pointing to a missing blob is not.
+        if (file.type === "upload" && file.storage_path) {
+            await supabaseAdmin.storage.from("agency-files").remove([file.storage_path]);
+            // Storage deletion errors are intentionally swallowed — blob cleanup failure
+            // doesn't affect user-visible state since the DB row is already gone.
+        }
 
         return { success: true };
     } catch (err: any) {
