@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { PLANS, PlanId } from '@/lib/config/plans'
 
 async function getAgencyPlan(agencyId: string): Promise<PlanId> {
@@ -122,5 +123,43 @@ export async function checkQuoteEnabled(
         }
     }
 
+    return { allowed: true }
+}
+
+export async function checkFilesEnabled(
+    agencyId: string
+): Promise<{ allowed: boolean; reason?: string }> {
+    const plan = await getAgencyPlan(agencyId)
+    if (!PLANS[plan].files_enabled) {
+        return { allowed: false, reason: "La gestion de fichiers est réservée aux agences PRO" }
+    }
+    return { allowed: true }
+}
+
+export async function checkStorageLimit(
+    agencyId: string,
+    fileSizeBytes: number
+): Promise<{ allowed: boolean; reason?: string }> {
+    const plan = await getAgencyPlan(agencyId)
+    const limit = PLANS[plan].max_storage_bytes
+
+    const { data, error } = await supabaseAdmin
+        .from('files')
+        .select('size')
+        .eq('agency_id', agencyId)
+        .eq('type', 'upload')
+
+    if (error) throw error
+
+    const usedBytes = (data ?? []).reduce((sum: number, row: { size: number | null }) => sum + (row.size ?? 0), 0)
+
+    if (usedBytes + fileSizeBytes > limit) {
+        const usedMB = Math.round(usedBytes / (1024 * 1024))
+        const limitMB = Math.round(limit / (1024 * 1024))
+        return {
+            allowed: false,
+            reason: `Stockage insuffisant. Utilisé : ${usedMB} Mo / ${limitMB} Mo`
+        }
+    }
     return { allowed: true }
 }
