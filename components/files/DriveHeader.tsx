@@ -55,6 +55,7 @@ export function DriveHeader({ usedBytes, limitBytes, view, onViewChange, onNewFo
                         className={cn("p-1.5 transition-colors", view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}
                         onClick={() => onViewChange("list")}
                         title="Vue liste"
+                        aria-label="Vue liste"
                     >
                         <LayoutList className="w-4 h-4" />
                     </button>
@@ -62,6 +63,7 @@ export function DriveHeader({ usedBytes, limitBytes, view, onViewChange, onNewFo
                         className={cn("p-1.5 transition-colors", view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}
                         onClick={() => onViewChange("grid")}
                         title="Vue grille"
+                        aria-label="Vue grille"
                     >
                         <LayoutGrid className="w-4 h-4" />
                     </button>
