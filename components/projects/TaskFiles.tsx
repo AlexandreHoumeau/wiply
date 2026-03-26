@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-    getTaskFiles, getProjectFiles, linkFileToTask, unlinkFileFromTask, getSignedUrl,
+    getTaskFiles, getProjectFiles, getAgencyFiles, linkFileToTask, unlinkFileFromTask, getSignedUrl,
     type FileRecord,
 } from "@/actions/files.server";
 import { UploadFileDialog } from "@/components/files/UploadFileDialog";
@@ -38,9 +38,13 @@ export function TaskFiles({ task, projectId }: TaskFilesProps) {
     }, [task?.id]);
 
     const openAddModal = () => {
-        // Load project files for "Lier existant" tab
-        getProjectFiles(projectId).then((r) => {
-            if (r.success && r.data) setProjectFiles(r.data);
+        // Load both project files and workspace files for "Lier existant" tab
+        Promise.all([getProjectFiles(projectId), getAgencyFiles()]).then(([proj, agency]) => {
+            const combined = [
+                ...(proj.success && proj.data ? proj.data : []),
+                ...(agency.success && agency.data ? agency.data : []),
+            ];
+            setProjectFiles(combined);
         });
         setAddModalOpen(true);
     };
@@ -76,9 +80,16 @@ export function TaskFiles({ task, projectId }: TaskFilesProps) {
             return;
         }
         if (file.storage_path) {
+            // Open the tab immediately to preserve the user gesture — browsers block
+            // window.open calls made after an async await.
+            const tab = window.open("", "_blank");
             const result = await getSignedUrl(file.storage_path);
-            if (result.success && result.url) window.open(result.url, "_blank");
-            else toast.error("Impossible de générer le lien");
+            if (result.success && result.url) {
+                tab!.location.href = result.url;
+            } else {
+                tab?.close();
+                toast.error("Impossible de générer le lien");
+            }
         }
     };
 

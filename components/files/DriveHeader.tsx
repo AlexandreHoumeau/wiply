@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderPlus, FileUp, Link2 } from "lucide-react";
+import { FolderPlus, FileUp, Link2, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,34 +17,73 @@ export function DriveHeader({ usedBytes, limitBytes, onNewFolder, onUpload, onAd
     const usedMo = Math.round(usedBytes / (1024 * 1024));
     const limitGo = (limitBytes / (1024 * 1024 * 1024)).toFixed(0);
 
-    const barColor = pct > 95 ? "bg-red-500" : pct > 80 ? "bg-amber-500" : "bg-gradient-to-r from-indigo-500 to-violet-500";
+    // Smoother gradient for the "good" state, standard alerts for warnings
+    const barColor = 
+        pct > 95 ? "bg-red-500 shadow-red-500/50" : 
+        pct > 80 ? "bg-amber-500 shadow-amber-500/50" : 
+        "bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-500 shadow-indigo-500/30";
 
     return (
-        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card mb-6">
-            {/* Storage bar */}
-            <div className="flex-1 min-w-0">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                    <span>Stockage</span>
-                    <span>{usedMo} Mo / {limitGo} Go</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 p-5 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-sm mb-8">
+            
+            {/* Storage Info Section */}
+            <div className="flex items-center gap-4 w-full sm:max-w-md">
+                {/* Decorative Icon */}
+                <div className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary shrink-0">
+                    <Cloud className="w-5 h-5" />
                 </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                        className={cn("h-full rounded-full transition-all", barColor)}
-                        style={{ width: `${pct}%` }}
-                    />
+                
+                {/* Storage Bar & Text */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-end justify-between mb-2">
+                        <span className="text-sm font-medium text-foreground">
+                            Espace de stockage
+                        </span>
+                        <span className="text-xs font-medium text-muted-foreground">
+                            <span className="text-foreground font-semibold">{usedMo} Mo</span> / {limitGo} Go
+                        </span>
+                    </div>
+                    
+                    {/* Premium Progress Bar with inner shadow for depth */}
+                    <div className="h-2 rounded-full bg-primary/20 overflow-hidden shadow-inner">
+                        <div
+                            className={cn("h-full rounded-full transition-all duration-500 ease-out shadow-sm", barColor)}
+                            style={{ width: `${pct}%` }}
+                        />
+                    </div>
                 </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" size="sm" onClick={onNewFolder}>
-                    <FolderPlus className="w-4 h-4 mr-1.5" /> Dossier
+            {/* Actions Section */}
+            <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+                <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={onNewFolder}
+                    className="flex-1 sm:flex-none bg-background hover:bg-muted border border-border/50 shadow-sm"
+                >
+                    <FolderPlus className="w-4 h-4 sm:mr-1.5" /> 
+                    <span className="hidden sm:inline">Dossier</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={onAddLink}>
-                    <Link2 className="w-4 h-4 mr-1.5" /> Lien
+                
+                <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={onAddLink}
+                    className="flex-1 sm:flex-none bg-background hover:bg-muted border border-border/50 shadow-sm"
+                >
+                    <Link2 className="w-4 h-4 sm:mr-1.5" /> 
+                    <span className="hidden sm:inline">Lien</span>
                 </Button>
-                <Button size="sm" onClick={onUpload}>
-                    <FileUp className="w-4 h-4 mr-1.5" /> Fichier
+                
+                {/* Primary Action gets more visual weight */}
+                <Button 
+                    size="sm" 
+                    onClick={onUpload}
+                    className="flex-1 sm:flex-none shadow-md shadow-primary/20 hover:shadow-primary/30 transition-shadow"
+                >
+                    <FileUp className="w-4 h-4 sm:mr-1.5" /> 
+                    <span className="hidden sm:inline">Importer</span>
                 </Button>
             </div>
         </div>

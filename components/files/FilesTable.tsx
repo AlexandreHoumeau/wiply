@@ -34,10 +34,12 @@ export function FilesTable({ initialFiles, projectId }: FilesTableProps) {
             return;
         }
         if (file.storage_path) {
+            const tab = window.open("", "_blank");
             const result = await getSignedUrl(file.storage_path);
             if (result.success && result.url) {
-                window.open(result.url, "_blank");
+                tab!.location.href = result.url;
             } else {
+                tab?.close();
                 toast.error("Impossible de générer le lien de téléchargement");
             }
         }

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 export default async function FilesPage() {
     const ctx = await getAuthenticatedUserContext();
-    if (!isProPlan(ctx.agency)) redirect("/app");
+    if (!ctx || !isProPlan(ctx.agency)) redirect("/app");
 
     const [filesResult, foldersResult, storageResult] = await Promise.all([
         getAgencyFiles(),
@@ -20,7 +20,7 @@ export default async function FilesPage() {
     const limitBytes = storageResult.success ? (storageResult.data?.limitBytes ?? 0) : 0;
 
     return (
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
+        <div className="px-6 py-8">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold">Drive</h1>
                 <p className="text-muted-foreground mt-1">Fichiers et liens de l&apos;espace de travail</p>
