@@ -145,28 +145,56 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
             {agency && !isProPlan(agency) && (
                 <div className="px-3 pb-3">
                     {(isMobile || !isCollapsed) ? (
-                        <div className="rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-4 relative">
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(59,130,246,0.25),_transparent_70%)]" />
-                            <div className="relative z-10">
-                                <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Plan actuel</div>
-                                <div className="text-base font-black text-white">FREE</div>
-                                <button
-                                    onClick={() => {
-                                        startCheckout(async () => {
-                                            const result = await createCheckoutSession(agency.id)
-                                            if ('url' in result) window.location.href = result.url
-                                            else toast.error(result.error)
-                                        })
-                                    }}
-                                    disabled={isCheckoutPending}
-                                    className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-2 text-[11px] font-bold text-white transition-colors disabled:opacity-50"
-                                >
-                                    <Zap className="w-3 h-3 fill-current" />
-                                    {isCheckoutPending ? 'Redirection...' : 'Passer au PRO — 39€/mois'}
-                                </button>
+                        // --- EXPANDED STATE ---
+                        <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 relative overflow-hidden group transition-colors hover:bg-indigo-500/10">
+                            {/* Subtle hover glow effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                            <div className="relative z-10 flex items-center justify-between mb-4">
+                                <div>
+                                    <p className="text-[10px] font-bold text-indigo-600/70 dark:text-indigo-400/70 uppercase tracking-widest mb-0.5">
+                                        Plan actuel
+                                    </p>
+                                    <p className="text-sm font-black text-foreground">
+                                        Gratuit
+                                    </p>
+                                </div>
+                                {/* Floating Icon Badge */}
+                                <div className="w-8 h-8 rounded-full bg-background border border-border/50 shadow-sm flex items-center justify-center shrink-0">
+                                    <Zap className="w-4 h-4 text-indigo-500 fill-indigo-500/20" />
+                                </div>
                             </div>
+
+                            <button
+                                onClick={() => {
+                                    startCheckout(async () => {
+                                        const result = await createCheckoutSession(agency.id)
+                                        if ('url' in result) window.location.href = result.url
+                                        else toast.error(result.error)
+                                    })
+                                }}
+                                disabled={isCheckoutPending}
+                                className={cn(
+                                    "w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition-all duration-200",
+                                    "hover:from-indigo-600 hover:to-violet-700 hover:shadow-md hover:shadow-indigo-500/25",
+                                    "active:scale-[0.98]",
+                                    "disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+                                )}
+                            >
+                                {isCheckoutPending ? (
+                                    <>
+                                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Redirection...
+                                    </>
+                                ) : (
+                                    <>
+                                        Débloquer Pro <span className="text-white/70 font-normal ml-0.5">— 39€/m</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     ) : (
+                        // --- COLLAPSED STATE ---
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <button
@@ -178,12 +206,21 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                                         })
                                     }}
                                     disabled={isCheckoutPending}
-                                    className="w-10 h-10 mx-auto flex items-center justify-center rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-400/30 transition-colors disabled:opacity-50"
+                                    className={cn(
+                                        "w-10 h-10 mx-auto flex items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 transition-all duration-200",
+                                        "hover:bg-indigo-500/20 hover:shadow-sm",
+                                        "active:scale-95",
+                                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+                                    )}
                                 >
-                                    <Zap className="w-4 h-4 fill-current" />
+                                    {isCheckoutPending ? (
+                                        <div className="w-4 h-4 border-2 border-indigo-600/30 dark:border-indigo-400/30 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin" />
+                                    ) : (
+                                        <Zap className="w-4.5 h-4.5 fill-current" />
+                                    )}
                                 </button>
                             </TooltipTrigger>
-                            <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-foreground text-background">
+                            <TooltipContent side="right" sideOffset={14} className="font-semibold rounded-lg bg-foreground text-background shadow-xl">
                                 Passer au PRO
                             </TooltipContent>
                         </Tooltip>
