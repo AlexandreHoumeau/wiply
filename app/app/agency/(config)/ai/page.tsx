@@ -1,7 +1,16 @@
 import { Wand2 } from "lucide-react"
 import AIConfigForm from "./ai-config-form"
+import { ProPageGate } from "@/components/pro-page-gate"
+import { fetchSettingsData } from "@/actions/settings.server"
+import { isProPlan } from "@/lib/validators/agency"
 
-export default function AISettingsPage() {
+export default async function AISettingsPage() {
+    const { agency } = await fetchSettingsData()
+
+    if (!isProPlan(agency)) {
+        return <ProPageGate feature="ai" />
+    }
+
     return (
         <div className="max-w-4xl space-y-6">
             <div className="flex flex-col gap-1">
