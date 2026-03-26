@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect, useTransition } from "react"
+import { useUpgradeDialog } from '@/providers/UpgradeDialogProvider'
+import { createCheckoutSession } from '@/actions/billing.server'
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Briefcase, Building2, ChevronsUpDown, FileText, Kanban, LayoutDashboard,
-    LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers
+    Lock, LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers, Zap
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -49,8 +51,10 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
     const pathname = usePathname()
     const router = useRouter()
     const { agency, first_name, last_name, email, role } = useAgency()
+    const { openUpgradeDialog } = useUpgradeDialog()
     const [mounted, setMounted] = useState(false)
     const [isPending, startTransition] = useTransition()
+    const [isCheckoutPending, startCheckout] = useTransition()
 
     useEffect(() => setMounted(true), [])
     useEffect(() => setIsMobileOpen(false), [pathname, setIsMobileOpen])
@@ -112,7 +116,16 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                             <p className="px-3 text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-[0.2em] mb-3 mt-2">Plateforme</p>
                         ) : <div className="h-4" />}
                         {mainNav.map((item) => (
-                            <NavItem key={item.href} item={item} active={isLinkActive(item.href)} isCollapsed={!isMobile && isCollapsed} primaryColor={primaryColor} locked={(item as any).proOnly && (!agency || !isProPlan(agency))} />
+                            <NavItem
+                                key={item.href}
+                                item={item}
+                                active={isLinkActive(item.href)}
+                                isCollapsed={!isMobile && isCollapsed}
+                                primaryColor={primaryColor}
+                                locked={(item as any).proOnly && (!agency || !isProPlan(agency))}
+                                agencyId={agency?.id ?? ''}
+                                openUpgradeDialog={openUpgradeDialog}
+                            />
                         ))}
                     </div>
 
@@ -126,6 +139,54 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                     </div>
                 </nav>
             </ScrollArea>
+
+            {/* --- FREE UPGRADE BLOC --- */}
+            {agency && !isProPlan(agency) && (
+                <div className="px-3 pb-3">
+                    {(isMobile || !isCollapsed) ? (
+                        <div className="rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-4 relative">
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(59,130,246,0.25),_transparent_70%)]" />
+                            <div className="relative z-10">
+                                <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Plan actuel</div>
+                                <div className="text-base font-black text-white">FREE</div>
+                                <button
+                                    onClick={() => {
+                                        startCheckout(async () => {
+                                            const result = await createCheckoutSession(agency.id)
+                                            if ('url' in result) window.location.href = result.url
+                                        })
+                                    }}
+                                    disabled={isCheckoutPending}
+                                    className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-2 text-[11px] font-bold text-white transition-colors disabled:opacity-50"
+                                >
+                                    <Zap className="w-3 h-3 fill-current" />
+                                    {isCheckoutPending ? 'Redirection...' : 'Passer au PRO — 39€/mois'}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={() => {
+                                        startCheckout(async () => {
+                                            const result = await createCheckoutSession(agency.id)
+                                            if ('url' in result) window.location.href = result.url
+                                        })
+                                    }}
+                                    disabled={isCheckoutPending}
+                                    className="w-10 h-10 mx-auto flex items-center justify-center rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-400/30 transition-colors disabled:opacity-50"
+                                >
+                                    <Zap className="w-4 h-4 fill-current" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-foreground text-background">
+                                Passer au PRO
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
+            )}
 
             {/* --- USER FOOTER --- */}
             <div className="p-3 mt-auto border-t border-sidebar-border">
@@ -196,19 +257,40 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
     )
 }
 
-function NavItem({ item, active, isCollapsed, primaryColor, locked }: any) {
+function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, openUpgradeDialog }: {
+    item: { label: string; href: string; icon: React.ElementType }
+    active: boolean
+    isCollapsed: boolean
+    primaryColor: string
+    locked?: boolean
+    agencyId?: string
+    openUpgradeDialog?: (reason: string, agencyId: string) => void
+}) {
+    function handleLockedClick() {
+        if (openUpgradeDialog && agencyId) {
+            openUpgradeDialog(
+                `Cette fonctionnalité est réservée au plan PRO. Passez au PRO pour y accéder.`,
+                agencyId
+            )
+        }
+    }
+
     const navContent = (
         <Button
             variant="ghost"
             className={cn(
                 "w-full transition-all duration-200 group relative overflow-hidden h-10 flex items-center",
                 isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3",
-                active ? "bg-sidebar-accent/50" : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40"
+                locked
+                    ? "bg-amber-50/60 border border-amber-200/60 text-amber-800/70 hover:bg-amber-100/60 opacity-80"
+                    : active
+                        ? "bg-sidebar-accent/50"
+                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40"
             )}
-            style={active ? { color: primaryColor } : undefined}
+            style={!locked && active ? { color: primaryColor } : undefined}
         >
             {/* Active Indicator Line */}
-            {active && (
+            {active && !locked && (
                 <motion.div
                     layoutId="sidebarActive"
                     className="absolute left-0 w-1 h-5 rounded-r-full"
@@ -221,44 +303,58 @@ function NavItem({ item, active, isCollapsed, primaryColor, locked }: any) {
             <item.icon
                 className={cn(
                     "h-[18px] w-[18px] shrink-0 transition-colors",
-                    !active && "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70"
+                    locked
+                        ? "text-amber-600/50"
+                        : !active && "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70"
                 )}
-                style={active ? { color: primaryColor } : undefined}
+                style={!locked && active ? { color: primaryColor } : undefined}
             />
 
-            {/* Label - Shows only when NOT collapsed */}
+            {/* Label */}
             {!isCollapsed && (
                 <motion.span
                     initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
                     className={cn(
                         "text-sm whitespace-nowrap overflow-hidden flex-1 text-left",
-                        active ? "font-bold" : "font-medium"
+                        active && !locked ? "font-bold" : "font-medium"
                     )}
                 >
                     {item.label}
                 </motion.span>
             )}
 
-            {/* Pro Badge */}
-            {!isCollapsed && locked && (
-                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 shrink-0">
+            {/* Pro Badge or Lock icon */}
+            {locked && !isCollapsed && (
+                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white shrink-0">
                     PRO
                 </span>
             )}
+            {locked && isCollapsed && (
+                <Lock className="absolute bottom-1 right-1 w-2.5 h-2.5 text-amber-600/60" />
+            )}
         </Button>
     )
+
     if (locked) {
         return (
-            <div className="block relative opacity-70">
+            <div className="block relative">
                 {isCollapsed ? (
                     <Tooltip>
-                        <TooltipTrigger asChild>{navContent}</TooltipTrigger>
+                        <TooltipTrigger asChild>
+                            <button onClick={handleLockedClick} className="w-full">
+                                {navContent}
+                            </button>
+                        </TooltipTrigger>
                         <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-foreground text-background">
                             {item.label} — PRO uniquement
                         </TooltipContent>
                     </Tooltip>
-                ) : navContent}
+                ) : (
+                    <button onClick={handleLockedClick} className="w-full">
+                        {navContent}
+                    </button>
+                )}
             </div>
         )
     }
