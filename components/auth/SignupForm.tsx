@@ -186,6 +186,7 @@ export function SignupForm() {
                                     <FormControl>
                                         <Input
                                             placeholder="Jean"
+                                            autoComplete="given-name"
                                             className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
                                             disabled={isPending}
                                             {...field}
@@ -204,6 +205,7 @@ export function SignupForm() {
                                     <FormControl>
                                         <Input
                                             placeholder="Dupont"
+                                            autoComplete="family-name"
                                             className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
                                             disabled={isPending}
                                             {...field}
@@ -225,6 +227,9 @@ export function SignupForm() {
                                     <Input
                                         type="email"
                                         placeholder="jean@agence.com"
+                                        autoComplete="email"
+                                        autoCapitalize="none"
+                                        spellCheck={false}
                                         className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
                                         disabled={isPending}
                                         {...field}
@@ -247,6 +252,8 @@ export function SignupForm() {
                                             <Input
                                                 type={showPassword ? "text" : "password"}
                                                 placeholder="••••••••"
+                                                autoComplete="new-password"
+                                                spellCheck={false}
                                                 className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl pl-4 pr-10 text-[#4C4C4C]"
                                                 disabled={isPending}
                                                 {...field}

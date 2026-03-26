@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useTransition, ReactNode } from 'react'
-import { Zap, FolderKanban, Users, Mail, Sparkles, Globe, X } from 'lucide-react'
+import { Zap, FolderKanban, Users, Mail, Sparkles, Globe, X, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     Dialog,
@@ -10,6 +10,7 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import { createCheckoutSession } from '@/actions/billing.server'
+import { cn } from '@/lib/utils'
 
 type UpgradeDialogState = {
     open: boolean
@@ -50,6 +51,7 @@ export function UpgradeDialogProvider({ children }: { children: ReactNode }) {
     }
 
     function handleClose() {
+        if (isPending) return // Prevent closing while processing
         setState(s => ({ ...s, open: false }))
     }
 
@@ -69,66 +71,80 @@ export function UpgradeDialogProvider({ children }: { children: ReactNode }) {
             {children}
 
             <Dialog open={state.open} onOpenChange={handleClose}>
-                <DialogContent className="sm:max-w-[440px] p-0 gap-0 overflow-hidden rounded-3xl border-0 shadow-2xl">
-                    {/* Header gradient */}
-                    <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 px-8 pt-8 pb-10 text-white overflow-hidden">
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(59,130,246,0.3),_transparent_60%)]" />
-                        <button
-                            onClick={handleClose}
-                            className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-white/10 transition-colors"
-                        >
-                            <X className="w-4 h-4 text-white/60" />
-                        </button>
+                <DialogContent className="sm:max-w-[420px] p-6 gap-6 rounded-[2rem] border border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+                    
+                    {/* Decorative Background Blob */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
-                        <div className="relative z-10">
-                            <div className="w-12 h-12 bg-blue-500/20 border border-blue-400/30 rounded-2xl flex items-center justify-center mb-5">
-                                <Zap className="w-6 h-6 text-blue-400 fill-blue-400" />
-                            </div>
-                            <DialogTitle className="text-2xl font-black text-white leading-tight">
-                                Fonctionnalité PRO
-                            </DialogTitle>
-                            <DialogDescription className="mt-2 text-slate-300 text-sm leading-relaxed">
-                                {state.reason}
-                            </DialogDescription>
+                    {/* Custom Close Button */}
+                    {/* <button
+                        onClick={handleClose}
+                        disabled={isPending}
+                        className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
+                    >
+                        <X className="w-4 h-4" />
+                    </button> */}
+
+                    {/* Header Section */}
+                    <div className="flex flex-col items-center text-center mt-4 relative z-10">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 mb-6 ring-4 ring-indigo-500/10">
+                            <Zap className="w-8 h-8 text-white fill-white/20" />
                         </div>
-
-                        {/* Decorative blur */}
-                        <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl" />
+                        <DialogTitle className="text-2xl font-bold tracking-tight text-foreground mb-2">
+                            Passez au niveau supérieur
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
+                            {state.reason || "Débloquez toute la puissance de notre plateforme."}
+                        </DialogDescription>
                     </div>
 
-                    {/* Body */}
-                    <div className="bg-white px-8 py-6 space-y-6">
-                        <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                                Ce que vous débloquez
-                            </p>
-                            <ul className="space-y-3">
-                                {PRO_FEATURES.map(({ icon: Icon, label }) => (
-                                    <li key={label} className="flex items-center gap-3 text-sm text-slate-700">
-                                        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                                            <Icon className="w-3.5 h-3.5 text-emerald-600" />
-                                        </div>
+                    {/* Features Card */}
+                    <div className="bg-muted/40 border border-border/50 rounded-2xl p-5 relative z-10">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-4 text-center">
+                            Inclus dans le plan Pro
+                        </p>
+                        <ul className="space-y-3.5">
+                            {PRO_FEATURES.map(({ icon: Icon, label }) => (
+                                <li key={label} className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-background border border-border/50 shadow-sm flex items-center justify-center shrink-0">
+                                        <Icon className="w-4 h-4 text-indigo-500" />
+                                    </div>
+                                    <span className="text-sm font-medium text-foreground">
                                         {label}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
 
-                        <div className="space-y-2 pt-2">
-                            <button
-                                onClick={handleUpgrade}
-                                disabled={isPending}
-                                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <Zap className="w-4 h-4 fill-current" />
-                                {isPending ? 'Redirection...' : 'Passer au Plan PRO — 39 €/mois'}
-                            </button>
-                            <button
-                                onClick={handleClose}
-                                className="w-full px-5 py-2.5 text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors"
-                            >
-                                Plus tard
-                            </button>
+                    {/* CTA Section */}
+                    <div className="space-y-3 relative z-10">
+                        <button
+                            onClick={handleUpgrade}
+                            disabled={isPending}
+                            className={cn(
+                                "w-full flex items-center justify-center gap-2 px-5 h-12 bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-semibold rounded-xl transition-all duration-200",
+                                "hover:from-indigo-600 hover:to-violet-700 hover:shadow-lg hover:shadow-indigo-500/25",
+                                "active:scale-[0.98]",
+                                "disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+                            )}
+                        >
+                            {isPending ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Redirection sécurisée...
+                                </>
+                            ) : (
+                                <>
+                                    Débloquer Pro — 39 €/mois
+                                </>
+                            )}
+                        </button>
+                        
+                        {/* Trust Signal */}
+                        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>Paiement sécurisé. Annulable à tout moment.</span>
                         </div>
                     </div>
                 </DialogContent>

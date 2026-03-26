@@ -145,6 +145,8 @@ export function ResetPasswordForm() {
                                                 <Input
                                                     type={showPassword ? "text" : "password"}
                                                     placeholder="••••••••"
+                                                    autoComplete="new-password"
+                                                    spellCheck={false}
                                                     className="h-11 pr-10 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
                                                     disabled={isPending}
                                                     {...field}
@@ -173,6 +175,8 @@ export function ResetPasswordForm() {
                                             <Input
                                                 type={showPassword ? "text" : "password"}
                                                 placeholder="••••••••"
+                                                autoComplete="new-password"
+                                                spellCheck={false}
                                                 className="h-11 bg-slate-50 border-slate-200 focus:bg-white focus:ring-slate-900 focus:border-slate-900 transition-all shadow-sm rounded-xl"
                                                 disabled={isPending}
                                                 {...field}

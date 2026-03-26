@@ -18,7 +18,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -37,11 +36,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Profile } from "@/lib/validators/profile";
+import { isProPlan } from "@/lib/validators/agency";
 import { cn, getInitials } from "@/lib/utils";
 import { Clock, Loader2, Mail, MoreHorizontal, RefreshCw, Send, Shield, ShieldOff, Trash2, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useAgency } from "@/providers/agency-provider";
+import { useUpgradeDialog } from "@/providers/UpgradeDialogProvider";
 
 type TeamMember = {
   id: string;
@@ -137,6 +139,20 @@ export function AgencyTeamCard({
   const [, startRoleTransition] = useTransition();
 
   const isAdmin = profile.role === "agency_admin";
+  const { agency } = useAgency()
+  const { openUpgradeDialog } = useUpgradeDialog()
+
+  function handleInviteClick() {
+    if (!agency) return
+    if (!isProPlan(agency)) {
+      openUpgradeDialog(
+        "Le plan FREE ne permet pas d'inviter des collaborateurs. Passez au plan PRO pour inviter jusqu'à 5 membres.",
+        agency.id
+      )
+      return
+    }
+    setDialogOpen(true)
+  }
 
   useEffect(() => {
     if (!state) return;
@@ -194,11 +210,12 @@ export function AgencyTeamCard({
 
           {isAdmin && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  <UserPlus className="h-3.5 w-3.5" /> Inviter
-                </button>
-              </DialogTrigger>
+              <button
+                onClick={handleInviteClick}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <UserPlus className="h-3.5 w-3.5" /> Inviter
+              </button>
               <DialogContent className="sm:max-w-[420px] rounded-2xl p-6">
                 <DialogHeader className="mb-4">
                   <DialogTitle className="text-xl font-semibold tracking-tight">Inviter un membre</DialogTitle>

@@ -20,6 +20,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+type LoginValues = z.infer<typeof loginSchema>;
 
 function GoogleIcon() {
     return (
@@ -35,20 +38,20 @@ function GoogleIcon() {
 export function LoginForm() {
     const searchParams = useSearchParams();
     const next = searchParams.get("next");
-    const urlError = searchParams.get("error");
+    const _urlError = searchParams.get("error");
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const router = useRouter();
 
-    const form = useForm({
+    const form = useForm<LoginValues>({
         resolver: zodResolver(loginSchema),
         defaultValues: { email: "", password: "" }
     });
     const supabase = createSupabaseBrowserClient();
 
-    async function onSubmit(values: any) {
+    async function onSubmit(values: LoginValues) {
         setLoading(true);
         setSubmitError(null);
         const { error } = await supabase.auth.signInWithPassword(values);
@@ -134,6 +137,9 @@ export function LoginForm() {
                                     <Input
                                         placeholder="exemple@agence.com"
                                         type="email"
+                                        autoComplete="email"
+                                        autoCapitalize="none"
+                                        spellCheck={false}
                                         className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
                                         {...field}
                                     />
@@ -158,6 +164,8 @@ export function LoginForm() {
                                     <div className="relative">
                                         <Input
                                             type={showPassword ? "text" : "password"}
+                                            autoComplete="current-password"
+                                            spellCheck={false}
                                             className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
                                             {...field}
                                         />
