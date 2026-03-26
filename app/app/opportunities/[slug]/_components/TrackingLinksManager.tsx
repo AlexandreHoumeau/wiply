@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAgency } from "@/providers/agency-provider";
+import { useUpgradeDialog } from "@/providers/UpgradeDialogProvider";
 import {
     Activity,
     Check,
@@ -21,6 +22,7 @@ import { toast } from "sonner";
 
 export function TrackingLinksManager({ opportunityId, agencyId }: { opportunityId: string, agencyId: string }) {
     const { agency } = useAgency();
+    const { openUpgradeDialog } = useUpgradeDialog();
     const [links, setLinks] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
@@ -67,7 +69,12 @@ export function TrackingLinksManager({ opportunityId, agencyId }: { opportunityI
             setShowInput(false);
             await loadLinks();
         } else {
-            toast.error("Erreur lors de la création du lien");
+            const isLimitError = result.error?.includes('limite') || result.error?.includes('plan FREE')
+            if (isLimitError && agencyId) {
+                openUpgradeDialog(result.error ?? "Limite atteinte sur le plan FREE.", agencyId)
+            } else {
+                toast.error(result.error ?? "Erreur lors de la création du lien")
+            }
         }
         setIsCreating(false);
     };
