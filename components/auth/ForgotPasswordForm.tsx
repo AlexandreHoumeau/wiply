@@ -112,6 +112,9 @@ export function ForgotPasswordForm() {
                                     <Input
                                         type="email"
                                         placeholder="exemple@agence.com"
+                                        autoComplete="email"
+                                        autoCapitalize="none"
+                                        spellCheck={false}
                                         className="h-12 bg-[#F8F9FF] border-[#EBF0FE] focus:border-[#967CFB] focus:ring-0 transition-all rounded-xl px-4 text-[#4C4C4C]"
                                         disabled={isPending}
                                         {...field}

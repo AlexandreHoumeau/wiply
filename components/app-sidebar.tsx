@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useEffect, useSyncExternalStore, useTransition } from "react"
 import { useUpgradeDialog } from '@/providers/UpgradeDialogProvider'
 import { createCheckoutSession } from '@/actions/billing.server'
 import { toast } from 'sonner'
@@ -28,14 +28,21 @@ import { isProPlan } from "@/lib/validators/agency"
 import { signOut } from "@/actions/auth.actions"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
-const mainNav = [
+type NavConfigItem = {
+    label: string
+    href: string
+    icon: React.ElementType
+    proOnly?: boolean
+}
+
+const mainNav: NavConfigItem[] = [
     { label: "Tableau de bord", href: "/app", icon: LayoutDashboard },
     { label: "Opportunités", href: "/app/opportunities", icon: Briefcase },
     { label: "Devis", href: "/app/quotes", icon: FileText, proOnly: true },
     { label: "Projets", href: "/app/projects", icon: Kanban },
 ]
 
-const secondaryNav = [
+const secondaryNav: NavConfigItem[] = [
     { label: "Clients", href: "/app/companies", icon: Building2 },
     { label: "Agence", href: "/app/agency", icon: Users },
     { label: "Espace interne", href: "/app/workspace", icon: Layers },
@@ -49,15 +56,18 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }: AppSidebarProps) {
+    const mounted = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false
+    )
     const pathname = usePathname()
     const router = useRouter()
     const { agency, first_name, last_name, email, role } = useAgency()
     const { openUpgradeDialog } = useUpgradeDialog()
-    const [mounted, setMounted] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [isCheckoutPending, startCheckout] = useTransition()
 
-    useEffect(() => setMounted(true), [])
     useEffect(() => setIsMobileOpen(false), [pathname, setIsMobileOpen])
 
     function handleSignOut() {
@@ -123,7 +133,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                                 active={isLinkActive(item.href)}
                                 isCollapsed={!isMobile && isCollapsed}
                                 primaryColor={primaryColor}
-                                locked={(item as any).proOnly && (!agency || !isProPlan(agency))}
+                                locked={!!item.proOnly && (!agency || !isProPlan(agency))}
                                 agencyId={agency?.id ?? ''}
                                 openUpgradeDialog={openUpgradeDialog}
                             />
@@ -298,7 +308,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
 }
 
 function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, openUpgradeDialog }: {
-    item: { label: string; href: string; icon: React.ElementType }
+    item: NavConfigItem
     active: boolean
     isCollapsed: boolean
     primaryColor: string
@@ -315,9 +325,12 @@ function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, op
         }
     }
 
-    const navContent = (
+    function renderNavContent(onClick?: () => void) {
+        return (
         <Button
+            type="button"
             variant="ghost"
+            onClick={onClick}
             className={cn(
                 "w-full transition-all duration-200 group relative overflow-hidden h-10 flex items-center",
                 isCollapsed ? "justify-center px-0 w-10 mx-auto" : "justify-start gap-3 px-3",
@@ -374,7 +387,8 @@ function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, op
                 <Lock className="absolute bottom-1 right-1 w-2.5 h-2.5 text-amber-600/60" />
             )}
         </Button>
-    )
+        )
+    }
 
     if (locked) {
         return (
@@ -382,18 +396,14 @@ function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, op
                 {isCollapsed ? (
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <button onClick={handleLockedClick} className="w-full">
-                                {navContent}
-                            </button>
+                            {renderNavContent(handleLockedClick)}
                         </TooltipTrigger>
                         <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-foreground text-background">
                             {item.label} — PRO uniquement
                         </TooltipContent>
                     </Tooltip>
                 ) : (
-                    <button onClick={handleLockedClick} className="w-full">
-                        {navContent}
-                    </button>
+                    renderNavContent(handleLockedClick)
                 )}
             </div>
         )
@@ -403,10 +413,10 @@ function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, op
         <Link href={item.href} className="block relative">
             {isCollapsed ? (
                 <Tooltip>
-                    <TooltipTrigger asChild>{navContent}</TooltipTrigger>
+                    <TooltipTrigger asChild>{renderNavContent()}</TooltipTrigger>
                     <TooltipContent side="right" sideOffset={10} className="font-semibold rounded-lg bg-foreground text-background">{item.label}</TooltipContent>
                 </Tooltip>
-            ) : navContent}
+            ) : renderNavContent()}
         </Link>
     )
 }

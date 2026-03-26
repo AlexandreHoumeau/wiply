@@ -55,3 +55,6 @@ posthog-setup-report.md
 # Sentry Config File
 .env.sentry-build-plugin
 .worktrees
+AGENTS.md
+GEMINI.md
+.superpowers/
