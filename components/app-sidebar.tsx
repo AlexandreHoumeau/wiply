@@ -3,7 +3,8 @@
 import { useState, useEffect, useTransition } from "react"
 import { useUpgradeDialog } from '@/providers/UpgradeDialogProvider'
 import { createCheckoutSession } from '@/actions/billing.server'
-import { motion, AnimatePresence } from "framer-motion"
+import { toast } from 'sonner'
+import { motion } from "framer-motion"
 import {
     Briefcase, Building2, ChevronsUpDown, FileText, Kanban, LayoutDashboard,
     Lock, LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers, Zap
@@ -154,6 +155,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                                         startCheckout(async () => {
                                             const result = await createCheckoutSession(agency.id)
                                             if ('url' in result) window.location.href = result.url
+                                            else toast.error(result.error)
                                         })
                                     }}
                                     disabled={isCheckoutPending}
@@ -172,6 +174,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                                         startCheckout(async () => {
                                             const result = await createCheckoutSession(agency.id)
                                             if ('url' in result) window.location.href = result.url
+                                            else toast.error(result.error)
                                         })
                                     }}
                                     disabled={isCheckoutPending}
