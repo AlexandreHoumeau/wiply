@@ -7,7 +7,7 @@ import { isProPlan } from "@/lib/validators/agency"
 export default async function AISettingsPage() {
     const { agency } = await fetchSettingsData()
 
-    if (!isProPlan(agency)) {
+    if (!agency || !isProPlan(agency)) {
         return <ProPageGate feature="ai" />
     }
 

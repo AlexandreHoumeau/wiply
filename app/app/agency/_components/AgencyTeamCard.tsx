@@ -143,10 +143,11 @@ export function AgencyTeamCard({
   const { openUpgradeDialog } = useUpgradeDialog()
 
   function handleInviteClick() {
-    if (!agency || !isProPlan(agency)) {
+    if (!agency) return
+    if (!isProPlan(agency)) {
       openUpgradeDialog(
         "Le plan FREE ne permet pas d'inviter des collaborateurs. Passez au plan PRO pour inviter jusqu'à 5 membres.",
-        agency?.id ?? ''
+        agency.id
       )
       return
     }
