@@ -364,7 +364,13 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="flex-1 bg-transparent text-base font-semibold outline-none placeholder:text-muted-foreground/50 min-w-0"
+          onBlur={async () => {
+            if (title !== quote.title && title.trim()) {
+              const result = await updateQuote.mutateAsync({ title })
+              if ("error" in result && result.error) toast.error(result.error)
+            }
+          }}
+          className="flex-1 bg-transparent text-base font-semibold outline-none placeholder:text-muted-foreground/50 min-w-0 px-2 py-1 rounded-md hover:bg-muted/50 focus:bg-muted/60 transition-colors cursor-text"
           placeholder="Titre du devis"
         />
 
