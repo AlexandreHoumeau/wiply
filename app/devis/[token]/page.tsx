@@ -8,11 +8,7 @@ function fmt(amount: number, currency = "EUR") {
 }
 
 function fmtDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
-}
-
-const TYPE_LABELS: Record<string, string> = {
-  fixed: "Forfait", hourly: "Taux horaire", expense: "Frais",
+  return new Date(dateStr).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })
 }
 
 export default async function PublicQuotePage({
@@ -35,20 +31,22 @@ export default async function PublicQuotePage({
     items: items.map((i: any) => ({ quantity: i.quantity, unit_price: i.unit_price })),
   })
 
-  const primary = agency?.primary_color || "#1a1a2e"
   const isExpired = quote.valid_until && new Date(quote.valid_until) < new Date()
+  const hasConditions = quote.payment_terms_preset || quote.payment_terms_notes || quote.service_start_date || quote.notes
+
+  const validityDays = quote.valid_until && quote.created_at
+    ? Math.round((new Date(quote.valid_until).getTime() - new Date(quote.created_at).getTime()) / (1000 * 60 * 60 * 24))
+    : null
+
+  const hasTotalsBreakdown = totals.discountAmount > 0 || (quote.tax_rate != null && quote.tax_rate > 0)
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', -apple-system, sans-serif; background: #f4f4f0; }
-
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f0ec; color: #1a1a1a; -webkit-font-smoothing: antialiased; }
         .doc { background: white; }
-        .mono { font-family: 'DM Mono', 'Courier New', monospace; }
-
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; }
@@ -57,236 +55,267 @@ export default async function PublicQuotePage({
         }
       `}</style>
 
-      <div className="page-container" style={{ minHeight: "100vh", background: "#f4f4f0", padding: "2.5rem 1rem" }}>
+      <div className="page-container" style={{ minHeight: "100vh", padding: "2.5rem 1rem" }}>
         <div className="doc" style={{
-          maxWidth: "780px",
+          maxWidth: "820px",
           margin: "0 auto",
-          borderRadius: "16px",
-          overflow: "hidden",
-          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04)",
+          padding: "56px 64px",
+          boxShadow: "0 12px 48px -8px rgba(0,0,0,0.10), 0 2px 8px -2px rgba(0,0,0,0.04)",
         }}>
 
-          {/* Expiry banner */}
           {isExpired && (
             <div className="no-print" style={{
-              background: "#fffbeb", borderBottom: "1px solid #fde68a",
-              padding: "10px 32px", fontSize: "13px", color: "#92400e", fontWeight: 500
+              background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "4px",
+              padding: "10px 16px", fontSize: "13px", color: "#92400e",
+              fontWeight: 500, marginBottom: "32px",
             }}>
-              ⚠️ Ce devis a expiré le {fmtDate(quote.valid_until!)}.
+              ⚠️ Ce devis a expiré le {new Date(quote.valid_until!).toLocaleDateString("fr-FR")}.
             </div>
           )}
 
-          {/* Header: color bar + agency + ref */}
-          <div style={{ borderTop: `5px solid ${primary}` }}>
-            <div style={{ padding: "36px 40px 32px", borderBottom: "1px solid #f0f0f0" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
-
-                {/* Agency brand */}
-                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                  {agency?.logo_url ? (
-                    <img src={agency.logo_url} alt={agency.name} style={{ height: "44px", width: "auto", objectFit: "contain" }} />
-                  ) : (
-                    <div style={{
-                      width: "44px", height: "44px", borderRadius: "12px",
-                      background: primary, display: "flex", alignItems: "center",
-                      justifyContent: "center", color: "white", fontWeight: 700, fontSize: "18px"
-                    }}>
-                      {agency?.name?.charAt(0)?.toUpperCase() || "A"}
-                    </div>
-                  )}
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: "16px", color: "#0f0f0f" }}>{agency?.name}</div>
-                    {agency?.legal_name && agency.legal_name !== agency.name && (
-                      <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>{agency.legal_name}</div>
-                    )}
-                    {(agency?.legal_form || agency?.rcs_number || agency?.vat_number) && (
-                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>
-                        {[agency?.legal_form, agency?.rcs_number && `RCS ${agency.rcs_number}`, agency?.vat_number && `TVA ${agency.vat_number}`].filter(Boolean).join(" · ")}
-                      </div>
-                    )}
-                    {(agency?.address || agency?.phone || agency?.email) && (
-                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
-                        {[agency?.address, agency?.phone, agency?.email].filter(Boolean).join(" · ")}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Document info */}
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "28px", fontWeight: 800, color: "#0f0f0f", letterSpacing: "-0.5px" }}>DEVIS</div>
-                  <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>
-                    Émis le {quote.created_at ? fmtDate(quote.created_at) : "—"}
-                  </div>
-                  {quote.valid_until && (
-                    <div style={{ fontSize: "12px", color: isExpired ? "#ef4444" : "#9ca3af" }}>
-                      Valable jusqu&apos;au {fmtDate(quote.valid_until)}
-                    </div>
-                  )}
-                </div>
+          {/* ── HEADER ── */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
+            {/* Agency */}
+            <div style={{ fontSize: "13px", lineHeight: "1.65", color: "#444" }}>
+              <div style={{ fontWeight: 700, fontSize: "15px", color: "#1a1a1a", marginBottom: "2px" }}>
+                {agency?.name || "Agence"}
               </div>
+              {agency?.email && <div>{agency.email}</div>}
+              {agency?.phone && <div>{agency.phone}</div>}
+              {agency?.address && <div style={{ whiteSpace: "pre-wrap" }}>{agency.address}</div>}
+              {(agency?.rcs_number || agency?.vat_number) && (
+                <div style={{ marginTop: "6px", color: "#999", fontSize: "11px" }}>
+                  {[agency?.rcs_number && `RCS ${agency.rcs_number}`, agency?.vat_number && `TVA ${agency.vat_number}`].filter(Boolean).join(" · ")}
+                </div>
+              )}
+            </div>
 
-              {/* Client */}
-              {company?.name && (
-                <div style={{
-                  marginTop: "28px",
-                  padding: "16px 20px",
-                  background: "#fafafa",
-                  borderRadius: "10px",
-                  borderLeft: `3px solid ${primary}`
-                }}>
-                  <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#9ca3af", marginBottom: "4px" }}>
-                    À l&apos;attention de
-                  </div>
-                  <div style={{ fontSize: "17px", fontWeight: 700, color: "#0f0f0f" }}>{company.name}</div>
-                  {company.billing_address && (
-                    <div style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px", whiteSpace: "pre-wrap" }}>
-                      {company.billing_address}
-                    </div>
-                  )}
+            {/* Quote reference */}
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#999", marginBottom: "6px" }}>
+                Devis
+              </div>
+              <div style={{ fontSize: "30px", fontWeight: 800, letterSpacing: "-0.5px", color: "#1a1a1a", lineHeight: 1 }}>
+                {quote.title}
+              </div>
+              {quote.created_at && (
+                <div style={{ fontSize: "13px", color: "#666", marginTop: "8px" }}>
+                  Émis le {fmtDate(quote.created_at)}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Title + description */}
-          <div style={{ padding: "28px 40px 24px" }}>
-            <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#0f0f0f", letterSpacing: "-0.3px" }}>{quote.title}</h1>
-            {quote.description && (
-              <p style={{ marginTop: "10px", fontSize: "14px", lineHeight: 1.7, color: "#4b5563", whiteSpace: "pre-wrap" }}>
-                {quote.description}
-              </p>
+          {/* Heavy rule */}
+          <hr style={{ border: "none", borderTop: "1.5px solid #1a1a1a", marginBottom: "32px" }} />
+
+          {/* ── CLIENT + DATES ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px", marginBottom: "32px" }}>
+            <div>
+              <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#999", marginBottom: "10px" }}>
+                Client
+              </div>
+              <div style={{ fontWeight: 700, fontSize: "18px", color: "#1a1a1a", marginBottom: "6px" }}>
+                {company?.name || "—"}
+              </div>
+              <div style={{ fontSize: "13px", color: "#555", lineHeight: "1.65" }}>
+                {company?.contact_name && <div>{company.contact_name}</div>}
+                {company?.email && <div>{company.email}</div>}
+                {company?.billing_address && <div style={{ whiteSpace: "pre-wrap", marginTop: "2px" }}>{company.billing_address}</div>}
+                {company?.business_sector && <div style={{ marginTop: "4px", color: "#777" }}>{company.business_sector}</div>}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "#1a1a1a", marginBottom: "2px" }}>Date d'émission</div>
+                <div style={{ fontSize: "13px", color: "#555" }}>
+                  {quote.created_at ? fmtDate(quote.created_at) : "—"}
+                </div>
+              </div>
+              {quote.valid_until && (
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "#1a1a1a", marginBottom: "2px" }}>Validité</div>
+                  <div style={{ fontSize: "13px", color: "#555" }}>
+                    {validityDays != null ? `${validityDays} jours — jusqu'au ` : "Jusqu'au "}
+                    {fmtDate(quote.valid_until)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Light rule */}
+          <hr style={{ border: "none", borderTop: "1px solid #e8e8e8", marginBottom: "32px" }} />
+
+          {/* ── DESCRIPTION ── */}
+          {quote.description && (
+            <p style={{ fontSize: "14px", lineHeight: "1.75", marginBottom: "40px", color: "#333", whiteSpace: "pre-wrap" }}>
+              {quote.description}
+            </p>
+          )}
+
+          {/* ── PRESTATIONS TABLE ── */}
+          <div style={{ marginBottom: "0" }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#999", marginBottom: "14px" }}>
+              Détail des prestations
+            </div>
+
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#1a1a1a", color: "#fff" }}>
+                  <th style={{ textAlign: "left", padding: "13px 16px", fontWeight: 600, fontSize: "12px", letterSpacing: "0.2px" }}>
+                    Prestation
+                  </th>
+                  <th style={{ textAlign: "center", padding: "13px 12px", fontWeight: 600, fontSize: "12px", width: "90px" }}>
+                    Jours / Qté
+                  </th>
+                  <th style={{ textAlign: "center", padding: "13px 12px", fontWeight: 600, fontSize: "12px", width: "110px" }}>
+                    TJM / P.U.
+                  </th>
+                  <th style={{ textAlign: "right", padding: "13px 16px", fontWeight: 600, fontSize: "12px", width: "110px" }}>
+                    Total HT
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item: any, i: number) => (
+                  <tr key={item.id} style={{ background: i % 2 === 0 ? "#fff" : "#f7f7f5" }}>
+                    <td style={{ padding: "16px 16px", verticalAlign: "top" }}>
+                      <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a1a" }}>{item.label}</div>
+                      {item.description && (
+                        <div style={{ fontSize: "12.5px", color: "#666", marginTop: "4px", lineHeight: "1.55", whiteSpace: "pre-wrap" }}>
+                          {item.description}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ textAlign: "center", padding: "16px 12px", fontSize: "14px", color: "#333", verticalAlign: "top" }}>
+                      {item.quantity}{item.type !== "expense" ? "j" : ""}
+                    </td>
+                    <td style={{ textAlign: "center", padding: "16px 12px", fontSize: "14px", color: "#333", verticalAlign: "top" }}>
+                      {fmt(item.unit_price, quote.currency)}
+                    </td>
+                    <td style={{ textAlign: "right", padding: "16px 16px", fontSize: "14px", fontWeight: 700, color: "#1a1a1a", verticalAlign: "top" }}>
+                      {fmt(item.quantity * item.unit_price, quote.currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Sub-totals (only when tax/discount applies) */}
+            {hasTotalsBreakdown && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ width: "240px", borderLeft: "1px solid #ebebeb" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 16px", fontSize: "13px", color: "#555", borderBottom: "1px solid #ebebeb" }}>
+                    <span>Sous-total HT</span>
+                    <span>{fmt(totals.subtotal, quote.currency)}</span>
+                  </div>
+                  {totals.discountAmount > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 16px", fontSize: "13px", color: "#555", borderBottom: "1px solid #ebebeb" }}>
+                      <span>Remise {quote.discount_type === "percentage" ? `(${quote.discount_value}%)` : ""}</span>
+                      <span>−{fmt(totals.discountAmount, quote.currency)}</span>
+                    </div>
+                  )}
+                  {quote.tax_rate != null && quote.tax_rate > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 16px", fontSize: "13px", color: "#555" }}>
+                      <span>TVA ({quote.tax_rate}%)</span>
+                      <span>{fmt(totals.taxAmount, quote.currency)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Line items */}
-          {items.length > 0 && (
-            <div style={{ padding: "0 40px 28px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ textAlign: "left", padding: "8px 0", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9ca3af" }}>Prestation</th>
-                    <th style={{ textAlign: "center", padding: "8px 8px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9ca3af", width: "90px" }}>Type</th>
-                    <th style={{ textAlign: "right", padding: "8px 0", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9ca3af", width: "50px" }}>Qté</th>
-                    <th style={{ textAlign: "right", padding: "8px 0 8px 12px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9ca3af", width: "110px" }}>P.U. HT</th>
-                    <th style={{ textAlign: "right", padding: "8px 0 8px 12px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9ca3af", width: "110px" }}>Total HT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item: any) => (
-                    <tr key={item.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                      <td style={{ padding: "14px 0" }}>
-                        <div style={{ fontWeight: 600, color: "#0f0f0f" }}>{item.label}</div>
-                        {item.description && <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "2px" }}>{item.description}</div>}
-                      </td>
-                      <td style={{ textAlign: "center", padding: "14px 8px" }}>
-                        <span style={{
-                          display: "inline-block",
-                          padding: "2px 8px",
-                          borderRadius: "100px",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          background: item.type === "fixed" ? "#f1f5f9" : item.type === "hourly" ? "#f5f3ff" : "#fffbeb",
-                          color: item.type === "fixed" ? "#475569" : item.type === "hourly" ? "#7c3aed" : "#d97706",
-                        }}>
-                          {TYPE_LABELS[item.type]}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: "right", padding: "14px 0", color: "#4b5563", fontFamily: "'DM Mono', 'Courier New', monospace" }}>
-                        {item.quantity}
-                      </td>
-                      <td style={{ textAlign: "right", padding: "14px 0 14px 12px", color: "#4b5563", fontFamily: "'DM Mono', 'Courier New', monospace" }}>
-                        {fmt(item.unit_price, quote.currency)}
-                      </td>
-                      <td style={{ textAlign: "right", padding: "14px 0 14px 12px", fontWeight: 700, color: "#0f0f0f", fontFamily: "'DM Mono', 'Courier New', monospace" }}>
-                        {fmt(item.quantity * item.unit_price, quote.currency)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {/* ── TOTAL TTC — full-width dark band ── */}
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            background: "#1a1a1a", color: "#fff",
+            padding: "15px 16px",
+            marginBottom: "48px",
+          }}>
+            <span style={{ fontWeight: 700, fontSize: "12px", letterSpacing: "1px", textTransform: "uppercase" }}>
+              Total TTC
+            </span>
+            <span style={{ fontWeight: 800, fontSize: "22px", letterSpacing: "-0.3px" }}>
+              {fmt(totals.total, quote.currency)}
+            </span>
+          </div>
+
+          {/* ── CONDITIONS ── */}
+          {hasConditions && (
+            <>
+              <hr style={{ border: "none", borderTop: "1px solid #e8e8e8", marginBottom: "24px" }} />
+              <div style={{ marginBottom: "40px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase", color: "#999", marginBottom: "18px" }}>
+                  Conditions
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px", fontSize: "13px", lineHeight: "1.65" }}>
+                  {(quote.payment_terms_preset || quote.payment_terms_notes) && (
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#1a1a1a", marginBottom: "6px" }}>Modalités de paiement</div>
+                      <div style={{ color: "#555" }}>
+                        {quote.payment_terms_preset && (
+                          <div>{PAYMENT_TERMS_LABELS[quote.payment_terms_preset] ?? quote.payment_terms_preset}</div>
+                        )}
+                        {quote.payment_terms_notes && (
+                          <div style={{ whiteSpace: "pre-wrap", marginTop: quote.payment_terms_preset ? "4px" : 0 }}>
+                            {quote.payment_terms_notes}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {quote.service_start_date && (
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#1a1a1a", marginBottom: "6px" }}>Délai de réalisation</div>
+                      <div style={{ color: "#555" }}>
+                        Début : {new Date(quote.service_start_date).toLocaleDateString("fr-FR")}
+                      </div>
+                    </div>
+                  )}
+                  {quote.notes && (
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#1a1a1a", marginBottom: "6px" }}>Inclus dans ce devis</div>
+                      <div style={{ color: "#555", whiteSpace: "pre-wrap" }}>{quote.notes}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <hr style={{ border: "none", borderTop: "1px solid #e8e8e8", marginBottom: "40px" }} />
+            </>
           )}
 
-          {/* Totals */}
-          <div style={{ padding: "0 40px 32px" }}>
-            <div style={{ marginLeft: "auto", maxWidth: "280px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px", color: "#6b7280" }}>
-                <span>Sous-total HT</span>
-                <span style={{ fontFamily: "'DM Mono', 'Courier New', monospace" }}>{fmt(totals.subtotal, quote.currency)}</span>
+          {/* ── SIGNATURE ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px", marginBottom: "48px" }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "6px" }}>Bon pour accord</div>
+              <div style={{ fontSize: "12.5px", color: "#666", lineHeight: "1.6", marginBottom: "52px" }}>
+                Date et signature précédées de la mention<br />
+                <span style={{ fontStyle: "italic" }}>« Bon pour accord »</span>
               </div>
-
-              {totals.discountAmount > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px", color: "#059669" }}>
-                  <span>Remise {quote.discount_type === "percentage" ? `(${quote.discount_value}%)` : ""}</span>
-                  <span style={{ fontFamily: "'DM Mono', 'Courier New', monospace" }}>−{fmt(totals.discountAmount, quote.currency)}</span>
-                </div>
-              )}
-
-              {quote.tax_rate != null && quote.tax_rate > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: "13px", color: "#6b7280" }}>
-                  <span>TVA ({quote.tax_rate}%)</span>
-                  <span style={{ fontFamily: "'DM Mono', 'Courier New', monospace" }}>{fmt(totals.taxAmount, quote.currency)}</span>
-                </div>
-              )}
-
-              <div style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                marginTop: "8px", paddingTop: "14px",
-                borderTop: "2px solid #e5e7eb"
-              }}>
-                <span style={{ fontSize: "15px", fontWeight: 700, color: "#0f0f0f" }}>Total TTC</span>
-                <span style={{ fontSize: "26px", fontWeight: 800, color: primary, letterSpacing: "-0.5px", fontFamily: "'DM Mono', 'Courier New', monospace" }}>
-                  {fmt(totals.total, quote.currency)}
-                </span>
+              <div style={{ borderTop: "1px solid #bbb", paddingTop: "7px", fontSize: "12px", color: "#666" }}>
+                {company?.name}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "6px" }}>Établi par</div>
+              <div style={{ fontSize: "13px", color: "#555", lineHeight: "1.65", marginBottom: "52px" }}>
+                {agency?.name && <div>{agency.name}</div>}
+                {agency?.email && <div>{agency.email}</div>}
+              </div>
+              <div style={{ borderTop: "1px solid #bbb", paddingTop: "7px", fontSize: "12px", color: "#666" }}>
+                {agency?.name}
               </div>
             </div>
           </div>
 
-          {/* Notes */}
-          {quote.notes && (
-            <div style={{ padding: "20px 40px", background: "#fafafa", borderTop: "1px solid #f0f0f0" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#9ca3af", marginBottom: "8px" }}>
-                Notes &amp; Conditions
-              </div>
-              <p style={{ fontSize: "13px", color: "#4b5563", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                {quote.notes}
-              </p>
-            </div>
-          )}
-
-          {/* Conditions */}
-          {(quote.service_start_date || quote.payment_terms_preset || quote.payment_terms_notes) && (
-            <div style={{ padding: "20px 40px", background: "#fafafa", borderTop: "1px solid #f0f0f0" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: "#9ca3af", marginBottom: "8px" }}>
-                Conditions
-              </div>
-              <div style={{ fontSize: "13px", color: "#4b5563", lineHeight: 1.8 }}>
-                {quote.service_start_date && (
-                  <div>Début de prestation : <strong>{fmtDate(quote.service_start_date)}</strong></div>
-                )}
-                {quote.payment_terms_preset && (
-                  <div>
-                    Modalités de paiement : <strong>{PAYMENT_TERMS_LABELS[quote.payment_terms_preset] ?? quote.payment_terms_preset}</strong>
-                    {quote.payment_terms_notes && ` — ${quote.payment_terms_notes}`}
-                  </div>
-                )}
-                {!quote.payment_terms_preset && quote.payment_terms_notes && (
-                  <div>{quote.payment_terms_notes}</div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="no-print" style={{
-            padding: "16px 40px",
-            borderTop: "1px solid #f0f0f0",
-            display: "flex",
-            justifyContent: "flex-end"
-          }}>
+          {/* Print button */}
+          <div className="no-print" style={{ display: "flex", justifyContent: "center", paddingTop: "8px" }}>
             <PrintButton />
           </div>
+
         </div>
       </div>
     </>

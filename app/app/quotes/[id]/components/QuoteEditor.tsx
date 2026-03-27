@@ -18,6 +18,9 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useAgency } from "@/providers/agency-provider"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core"
+import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 type OpportunityOption = { id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }
 
@@ -54,6 +57,89 @@ const AGENCY_FIELDS: { key: string; label: string }[] = [
   { key: "rcs_number", label: "N° RCS" },
   { key: "vat_number", label: "N° TVA intracommunautaire" },
 ]
+
+function SortableItemRow({
+  item, index, currency, handleUpdateItem, handleDeleteItem,
+}: {
+  item: any; index: number; currency: string
+  handleUpdateItem: (id: string, field: string, value: any) => void
+  handleDeleteItem: (id: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
+  const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 1 : undefined }
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={cn("group", index !== 0 && "border-t border-border", isDragging && "opacity-50 bg-muted/30")}
+    >
+      <td className="pl-3 pr-1 py-2 text-muted-foreground/40 cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+        <GripVertical className="w-3.5 h-3.5" />
+      </td>
+      <td className="px-2 py-1.5">
+        <Select value={item.type} onValueChange={v => handleUpdateItem(item.id, "type", v)}>
+          <SelectTrigger className="h-7 text-xs border-transparent bg-muted/50 hover:bg-muted focus:bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(ITEM_TYPE_LABELS).map(([v, l]) => (
+              <SelectItem key={v} value={v}>{l}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </td>
+      <td className="px-2 py-1.5">
+        <input
+          key={`label-${item.id}-${item.label}`}
+          defaultValue={item.label}
+          onBlur={e => { if (e.target.value !== item.label) handleUpdateItem(item.id, "label", e.target.value) }}
+          className="w-full h-7 px-2 rounded-md text-sm bg-transparent hover:bg-muted/50 focus:bg-background focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors"
+          placeholder="Libellé"
+        />
+        <textarea
+          key={`desc-${item.id}-${item.description}`}
+          defaultValue={item.description ?? ""}
+          onBlur={e => { if (e.target.value !== (item.description ?? "")) handleUpdateItem(item.id, "description", e.target.value || null) }}
+          className="w-full px-2 py-0.5 rounded-md text-xs text-muted-foreground bg-transparent hover:bg-muted/50 focus:bg-background focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors resize-none"
+          placeholder="Description (optionnel)"
+          rows={2}
+        />
+      </td>
+      <td className="px-2 py-1.5">
+        <input
+          key={`qty-${item.id}-${item.quantity}`}
+          type="number"
+          defaultValue={item.quantity}
+          onBlur={e => { const v = parseFloat(e.target.value) || 0; if (v !== item.quantity) handleUpdateItem(item.id, "quantity", v) }}
+          className="w-full h-7 px-2 rounded-md text-sm text-center bg-transparent hover:bg-muted/50 focus:bg-background focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors"
+          min={0} step={0.5}
+        />
+      </td>
+      <td className="px-2 py-1.5">
+        <input
+          key={`price-${item.id}-${item.unit_price}`}
+          type="number"
+          defaultValue={item.unit_price}
+          onBlur={e => { const v = parseFloat(e.target.value) || 0; if (v !== item.unit_price) handleUpdateItem(item.id, "unit_price", v) }}
+          className="w-full h-7 px-2 rounded-md text-sm text-center font-mono bg-transparent hover:bg-muted/50 focus:bg-background focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors"
+          min={0} step={0.01}
+        />
+      </td>
+      <td className="px-2 py-2 text-center font-mono font-semibold text-sm tabular-nums">
+        {new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(item.quantity * item.unit_price)}
+      </td>
+      <td className="pl-1 pr-3 py-2">
+        <button
+          onClick={() => handleDeleteItem(item.id)}
+          className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-red-500 hover:bg-red-50 transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </td>
+    </tr>
+  )
+}
 
 export function QuoteEditor({ quote }: { quote: QuoteData }) {
   const router = useRouter()
@@ -130,7 +216,21 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
     items: Array<{ type: string; label: string; description?: string; quantity: number; unit_price: number }>
   } | null>(null)
 
-  const items = (quote.items ?? []).sort((a: any, b: any) => a.order - b.order)
+  const sortedFromServer = (quote.items ?? []).slice().sort((a: any, b: any) => a.order - b.order)
+  const [itemIds, setItemIds] = useState<string[]>(() => sortedFromServer.map((i: any) => i.id))
+  const [isDragging, setIsDragging] = useState(false)
+
+  useEffect(() => {
+    if (!isDragging) {
+      setItemIds(sortedFromServer.map((i: any) => i.id))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quote.items])
+
+  const itemsById = Object.fromEntries((quote.items ?? []).map((i: any) => [i.id, i]))
+  const items = itemIds.map(id => itemsById[id]).filter(Boolean)
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const totals = computeQuoteTotals({
     discount_type: discountType !== "none" ? (discountType as any) : null,
@@ -193,6 +293,19 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   const handleDeleteItem = async (id: string) => {
     const result = await deleteItem.mutateAsync(id)
     if ("error" in result && result.error) toast.error(result.error)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setIsDragging(false)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = itemIds.indexOf(active.id as string)
+    const newIndex = itemIds.indexOf(over.id as string)
+    const newIds = arrayMove(itemIds, oldIndex, newIndex)
+    setItemIds(newIds)
+    newIds.forEach((id, index) => {
+      if (itemsById[id]?.order !== index) handleUpdateItem(id, "order", index)
+    })
   }
 
   const handleGenerate = async () => {
@@ -597,80 +710,40 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                   </button>
                 </div>
               ) : (
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/30 border-b border-border">
-                    <tr className="text-left">
-                      <th className="pl-3 pr-1 py-2 w-5" />
-                      <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-24">Type</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Libellé</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-16">Qté</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-28">Prix unit.</th>
-                      <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-24">Total</th>
-                      <th className="pl-1 pr-3 py-2 w-8" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item: any, i: number) => (
-                      <tr key={item.id} className={cn("group", i !== 0 && "border-t border-border")}>
-                        <td className="pl-3 pr-1 py-2 text-muted-foreground/30 cursor-grab">
-                          <GripVertical className="w-3.5 h-3.5" />
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <Select value={item.type} onValueChange={v => handleUpdateItem(item.id, "type", v)}>
-                            <SelectTrigger className="h-7 text-xs border-transparent bg-muted/50 hover:bg-muted focus:bg-background">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.entries(ITEM_TYPE_LABELS).map(([v, l]) => (
-                                <SelectItem key={v} value={v}>{l}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <input
-                            key={`label-${item.id}-${item.label}`}
-                            defaultValue={item.label}
-                            onBlur={e => { if (e.target.value !== item.label) handleUpdateItem(item.id, "label", e.target.value) }}
-                            className="w-full h-7 px-2 rounded-md text-sm bg-transparent hover:bg-muted/50 focus:bg-background focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors"
-                            placeholder="Libellé"
-                          />
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <input
-                            key={`qty-${item.id}-${item.quantity}`}
-                            type="number"
-                            defaultValue={item.quantity}
-                            onBlur={e => { const v = parseFloat(e.target.value) || 0; if (v !== item.quantity) handleUpdateItem(item.id, "quantity", v) }}
-                            className="w-full h-7 px-2 rounded-md text-sm text-right bg-transparent hover:bg-muted/50 focus:bg-background focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors"
-                            min={0}
-                          />
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <input
-                            key={`price-${item.id}-${item.unit_price}`}
-                            type="number"
-                            defaultValue={item.unit_price}
-                            onBlur={e => { const v = parseFloat(e.target.value) || 0; if (v !== item.unit_price) handleUpdateItem(item.id, "unit_price", v) }}
-                            className="w-full h-7 px-2 rounded-md text-sm text-right font-mono bg-transparent hover:bg-muted/50 focus:bg-background focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors"
-                            min={0} step={0.01}
-                          />
-                        </td>
-                        <td className="px-2 py-2 text-right font-mono font-semibold text-sm tabular-nums">
-                          {fmt(item.quantity * item.unit_price, currency)}
-                        </td>
-                        <td className="pl-1 pr-3 py-2">
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-red-500 hover:bg-red-50 transition-all"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={() => setIsDragging(true)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/30 border-b border-border">
+                      <tr className="text-left">
+                        <th className="pl-3 pr-1 py-2 w-5" />
+                        <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider w-24">Type</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Libellé</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-24">Qté</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-28">Prix unit.</th>
+                        <th className="px-2 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider text-center w-24">Total</th>
+                        <th className="pl-1 pr-3 py-2 w-8" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                      <tbody>
+                        {items.map((item: any, i: number) => (
+                          <SortableItemRow
+                            key={item.id}
+                            item={item}
+                            index={i}
+                            currency={currency}
+                            handleUpdateItem={handleUpdateItem}
+                            handleDeleteItem={handleDeleteItem}
+                          />
+                        ))}
+                      </tbody>
+                    </SortableContext>
+                  </table>
+                </DndContext>
               )}
             </div>
           </div>
