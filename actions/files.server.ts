@@ -242,7 +242,7 @@ export async function addLink(
 ): Promise<{ success: boolean; data?: FileRecord; error?: string }> {
     try {
         const parsed = AddLinkSchema.safeParse({ projectId, name, url, taskId });
-        if (!parsed.success) return { success: false, error: parsed.error.errors[0]?.message };
+        if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message };
 
         const { supabase, userId, agencyId } = await getAuthContext();
 
