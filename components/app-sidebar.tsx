@@ -40,13 +40,13 @@ const mainNav: NavConfigItem[] = [
     { label: "Opportunités", href: "/app/opportunities", icon: Briefcase },
     { label: "Devis", href: "/app/quotes", icon: FileText, proOnly: true },
     { label: "Projets", href: "/app/projects", icon: Kanban },
-    { label: "Fichiers", href: "/app/files", icon: FolderOpen, proOnly: true },
 ]
 
 const secondaryNav: NavConfigItem[] = [
     { label: "Clients", href: "/app/companies", icon: Building2 },
     { label: "Agence", href: "/app/agency", icon: Users },
     { label: "Espace interne", href: "/app/workspace", icon: Layers },
+    { label: "Fichiers", href: "/app/files", icon: FolderOpen, proOnly: true },
 ]
 
 interface AppSidebarProps {

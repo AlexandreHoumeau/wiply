@@ -25,6 +25,7 @@ function makeChain(result: any) {
         update: vi.fn(() => chain),
         delete: vi.fn(() => chain),
         eq: vi.fn(() => chain),
+        is: vi.fn(() => chain),
         order: vi.fn(() => chain),
         single: vi.fn(() => Promise.resolve(result)),
     };
@@ -139,7 +140,7 @@ describe("moveFileToFolder", () => {
         expect(result.success).toBe(false);
     });
 
-    it("rejects move for project-scoped file", async () => {
+    it("allows move for project-scoped file", async () => {
         vi.mocked(createClient).mockResolvedValue(
             makeSupabase({
                 tableResults: {
@@ -148,8 +149,7 @@ describe("moveFileToFolder", () => {
             }) as any
         );
         const result = await moveFileToFolder("file-1", "folder-1");
-        expect(result.success).toBe(false);
-        expect(result.error).toContain("projet");
+        expect(result.success).toBe(true);
     });
 });
 

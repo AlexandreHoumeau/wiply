@@ -164,6 +164,7 @@ export function FilesTable({ initialFiles, projectId }: FilesTableProps) {
                 </div>
             )}
 
+
             <UploadFileDialog
                 open={uploadOpen}
                 onOpenChange={setUploadOpen}

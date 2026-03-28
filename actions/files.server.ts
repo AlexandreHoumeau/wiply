@@ -50,6 +50,16 @@ export type FolderRecord = {
     created_at: string;
 };
 
+export type ClientUpload = {
+    id: string;
+    title: string;
+    description: string | null;
+    expected_type: string;
+    client_response: string | null;
+    file_url: string | null;
+    updated_at: string;
+};
+
 // ─── Read actions ────────────────────────────────────────────────────────────
 
 export async function getAgencyFiles(): Promise<{ success: boolean; data?: FileRecord[]; error?: string }> {
@@ -89,6 +99,23 @@ export async function getProjectFiles(projectId: string): Promise<{ success: boo
 
         if (error) throw error;
         return { success: true, data: (data ?? []) as FileRecord[] };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function getProjectClientUploads(projectId: string): Promise<{ success: boolean; data?: ClientUpload[]; error?: string }> {
+    try {
+        const { supabase } = await getAuthContext();
+        const { data, error } = await supabase
+            .from("project_checklists")
+            .select("id, title, description, expected_type, client_response, file_url, updated_at")
+            .eq("project_id", projectId)
+            .eq("status", "uploaded")
+            .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        return { success: true, data: (data ?? []) as ClientUpload[] };
     } catch (err: any) {
         return { success: false, error: err.message };
     }
@@ -340,14 +367,16 @@ export async function getSignedUrl(storagePath: string): Promise<{ success: bool
 
 // ─── Folders ─────────────────────────────────────────────────────────────────
 
-export async function getFolders(): Promise<{ success: boolean; data?: FolderRecord[]; error?: string }> {
+export async function getFolders(projectId?: string | null): Promise<{ success: boolean; data?: FolderRecord[]; error?: string }> {
     try {
         const { supabase, agencyId } = await getAuthContext();
-        const { data, error } = await supabase
+        let query = supabase
             .from("folders")
             .select("*")
             .eq("agency_id", agencyId)
             .order("name", { ascending: true });
+        query = projectId ? query.eq("project_id", projectId) : query.is("project_id", null);
+        const { data, error } = await query;
         if (error) throw error;
         return { success: true, data: (data ?? []) as FolderRecord[] };
     } catch (err: any) {
@@ -355,14 +384,14 @@ export async function getFolders(): Promise<{ success: boolean; data?: FolderRec
     }
 }
 
-export async function createFolder(name: string): Promise<{ success: boolean; data?: FolderRecord; error?: string }> {
+export async function createFolder(name: string, projectId?: string | null): Promise<{ success: boolean; data?: FolderRecord; error?: string }> {
     try {
         const trimmed = name.trim();
         if (!trimmed) return { success: false, error: "Le nom du dossier ne peut pas être vide" };
         const { supabase, agencyId } = await getAuthContext();
         const { data, error } = await supabase
             .from("folders")
-            .insert({ agency_id: agencyId, name: trimmed })
+            .insert({ agency_id: agencyId, name: trimmed, project_id: projectId ?? null })
             .select("*")
             .single();
         if (error) throw error;
@@ -406,7 +435,6 @@ export async function moveFileToFolder(fileId: string, folderId: string | null):
         const { supabase, agencyId } = await getAuthContext();
         const { data: file } = await supabase.from("files").select("agency_id, project_id").eq("id", fileId).single();
         if (!file || file.agency_id !== agencyId) return { success: false, error: "Fichier introuvable" };
-        if (file.project_id !== null) return { success: false, error: "Impossible de déplacer un fichier lié à un projet dans un dossier" };
         const { error } = await supabase.from("files").update({ folder_id: folderId }).eq("id", fileId);
         if (error) throw error;
         return { success: true };

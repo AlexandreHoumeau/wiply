@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
     ChevronDown, ChevronRight, Folder, Link2, FileUp,
     Download, ExternalLink, MoreHorizontal, GripVertical, Search,
-    ArrowUp, ArrowDown, ArrowUpDown
+    ArrowUp, ArrowDown, ArrowUpDown, User, MessageSquare, Copy, Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import {
     DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, formatBytes } from "@/lib/utils";
-import type { FileRecord, FolderRecord } from "@/actions/files.server";
+import type { FileRecord, FolderRecord, ClientUpload } from "@/actions/files.server";
 import { filterFiles, sortFiles, type SortKey, type TypeFilter } from "./driveUtils";
 
 const TYPE_LABELS: Record<TypeFilter, string> = {
@@ -32,6 +32,8 @@ interface DriveListViewProps {
     onMoveFile: (fileId: string, folderId: string | null) => void;
     onRenameFolder: (folder: FolderRecord) => void;
     onDeleteFolder: (folderId: string) => void;
+    clientUploads?: ClientUpload[];
+    disableDrag?: boolean;
 }
 
 // Helper to determine the file type
@@ -141,6 +143,7 @@ function FileRow({
 export function DriveListView({
     files: serverFiles, folders, expandedFolders,
     onToggleFolder, onDownload, onDeleteFile, onMoveFile, onRenameFolder, onDeleteFolder,
+    clientUploads = [], disableDrag = false,
 }: DriveListViewProps) {
     const [localFiles, setLocalFiles] = useState<FileRecord[]>(serverFiles);
 
@@ -153,8 +156,16 @@ export function DriveListView({
     const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
     const [draggingId, setDraggingId] = useState<string | null>(null);
     const [overTarget, setOverTarget] = useState<string | null>(null);
+    const [clientFolderExpanded, setClientFolderExpanded] = useState(true);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    const isFiltered = search.trim() !== "" || typeFilter !== "all";
+    const handleCopy = (id: string, text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    const isFiltered = disableDrag || search.trim() !== "" || typeFilter !== "all";
 
     const filteredFiles = filterFiles(localFiles, search, typeFilter);
     const rootFiles = sortFiles(filteredFiles.filter((f) => f.folder_id === null), sort);
@@ -294,6 +305,26 @@ export function DriveListView({
                             />
                         ))}
 
+                        {/* Root drop zone row — always rendered when no root files, opacity-only changes to avoid layout shifts during drag */}
+                        {!isFiltered && rootFiles.length === 0 && (
+                            <tr
+                                className={cn(
+                                    "border-b border-dashed transition-colors",
+                                    overTarget === "root" ? "bg-primary/10" : "bg-muted/5"
+                                )}
+                                onDragOver={(e) => { e.stopPropagation(); handleDragOver(e, "root"); }}
+                                onDragLeave={handleDragLeave}
+                                onDrop={(e) => { e.stopPropagation(); handleDrop(e, null); }}
+                            >
+                                <td colSpan={5} className={cn(
+                                    "px-4 py-4 text-sm text-muted-foreground text-center transition-opacity",
+                                    draggingId ? "opacity-100" : "opacity-0"
+                                )}>
+                                    Déposer ici pour retirer du dossier
+                                </td>
+                            </tr>
+                        )}
+
                         {/* Folders */}
                         {visibleFolders.map((folder) => {
                             const folderFiles = sortFiles(filteredFiles.filter((f) => f.folder_id === folder.id), sort);
@@ -353,10 +384,78 @@ export function DriveListView({
                                 </React.Fragment>
                             );
                         })}
+                        {/* Virtual "Client" folder */}
+                        {clientUploads.length > 0 && (
+                            <React.Fragment>
+                                <tr
+                                    className="border-b hover:bg-muted/30 cursor-pointer group bg-card"
+                                    onClick={() => setClientFolderExpanded((v) => !v)}
+                                >
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-3">
+                                            {clientFolderExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                                            <User className={cn("w-4 h-4", clientFolderExpanded ? "text-blue-500" : "text-muted-foreground")} />
+                                            <span className="font-medium text-sm">Livrables clients</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">Dossier</td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">—</td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">{clientUploads.length} élément{clientUploads.length !== 1 ? "s" : ""}</td>
+                                    <td className="px-4 py-3" />
+                                </tr>
+                                {clientFolderExpanded && clientUploads.map((item) => (
+                                    <tr key={item.id} className="border-b border-border hover:bg-muted/40 transition-colors group">
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-4 shrink-0" />
+                                                {item.file_url
+                                                    ? <FileUp className="w-4 h-4 text-blue-400 shrink-0" />
+                                                    : <MessageSquare className="w-4 h-4 text-emerald-500 shrink-0" />
+                                                }
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium truncate max-w-[200px]">{item.title}</p>
+                                                    {!item.file_url && item.client_response && (
+                                                        <p className="text-xs text-muted-foreground line-clamp-2 max-w-[300px]">{item.client_response}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                                            {item.file_url ? (item.client_response ?? "—") : "Texte"}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-muted-foreground">—</td>
+                                        <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
+                                            {new Date(item.updated_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            {item.file_url ? (
+                                                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                                                    <a href={item.file_url} target="_blank" rel="noopener noreferrer">
+                                                        <Download className="w-3.5 h-3.5" />
+                                                    </a>
+                                                </Button>
+                                            ) : item.client_response ? (
+                                                <Button
+                                                    variant="ghost" size="icon" className="h-7 w-7"
+                                                    onClick={() => handleCopy(item.id, item.client_response!)}
+                                                >
+                                                    {copiedId === item.id
+                                                        ? <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                                        : <Copy className="w-3.5 h-3.5" />
+                                                    }
+                                                </Button>
+                                            ) : (
+                                                <div className="w-7" />
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </React.Fragment>
+                        )}
                     </tbody>
                 </table>
 
-                {rootFiles.length === 0 && visibleFolders.length === 0 && (
+                {rootFiles.length === 0 && visibleFolders.length === 0 && clientUploads.length === 0 && (
                     <div className="text-center py-16 text-muted-foreground text-sm border-t">
                         {isFiltered ? "Aucun fichier ne correspond à votre recherche." : "Aucun fichier pour l’instant."}
                     </div>
