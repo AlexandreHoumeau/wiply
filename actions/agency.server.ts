@@ -461,6 +461,12 @@ export async function getAgencyMembers(): Promise<AgencyMember[]> {
     return (data ?? []) as AgencyMember[]
 }
 
+type AgencyBrandingUpdate = {
+    primary_color: string
+    secondary_color: string
+    logo_url?: string
+}
+
 // Add this new validator
 const updateBrandingSchema = z.object({
     primaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Couleur invalide"),
@@ -470,7 +476,7 @@ const updateBrandingSchema = z.object({
 });
 
 export async function updateAgencyBranding(
-    prevState: any,
+    _prevState: unknown,
     formData: FormData
 ) {
     try {
@@ -522,7 +528,7 @@ export async function updateAgencyBranding(
         }
 
         // Update the agency record
-        const updateData: any = {
+        const updateData: AgencyBrandingUpdate = {
             primary_color: validatedFields.data.primaryColor,
             secondary_color: validatedFields.data.secondaryColor,
         };

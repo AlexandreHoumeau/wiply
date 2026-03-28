@@ -15,7 +15,7 @@ import { AddLinkDialog } from "@/components/files/AddLinkDialog";
 import { formatBytes } from "@/lib/utils";
 
 interface TaskFilesProps {
-    task: any; // task with .id, .project_id
+    task: { id: string } | null;
     projectId: string;
 }
 
@@ -29,12 +29,26 @@ export function TaskFiles({ task, projectId }: TaskFilesProps) {
     const [linkOpen, setLinkOpen] = useState(false);
 
     useEffect(() => {
-        if (!task?.id) { setFiles([]); return; }
-        setIsLoading(true);
-        getTaskFiles(task.id).then((r) => {
-            if (r.success && r.data) setFiles(r.data);
-            setIsLoading(false);
-        });
+        if (!task?.id) return;
+
+        let cancelled = false;
+
+        const fetchFiles = async () => {
+            setIsLoading(true);
+            const result = await getTaskFiles(task.id);
+            if (!cancelled && result.success && result.data) {
+                setFiles(result.data);
+            }
+            if (!cancelled) {
+                setIsLoading(false);
+            }
+        };
+
+        void fetchFiles();
+
+        return () => {
+            cancelled = true;
+        };
     }, [task?.id]);
 
     const openAddModal = () => {

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -105,8 +105,8 @@ export function OpportunityDialog({
 	});
 
 	// Watch contact_via to show conditional required fields
-	const contactVia = form.watch("contact_via");
-	const companyWebsite = form.watch("company_website");
+	const contactVia = useWatch({ control: form.control, name: "contact_via" });
+	const companyWebsite = useWatch({ control: form.control, name: "company_website" });
 
 	const { openUpgradeDialog } = useUpgradeDialog();
 

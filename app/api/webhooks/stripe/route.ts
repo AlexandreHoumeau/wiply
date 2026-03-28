@@ -3,6 +3,37 @@ import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : 'Unknown error'
+}
+
+async function resolveAgencyId(eventObject: Stripe.Checkout.Session | Stripe.Subscription): Promise<string | null> {
+    const metadataAgencyId = eventObject.metadata?.agency_id
+    if (metadataAgencyId) return metadataAgencyId
+
+    const customerId = typeof eventObject.customer === 'string' ? eventObject.customer : eventObject.customer?.id
+    if (!customerId) return null
+
+    const { data: agency } = await supabaseAdmin
+        .from('agencies')
+        .select('id')
+        .eq('stripe_customer_id', customerId)
+        .maybeSingle()
+
+    return agency?.id ?? null
+}
+
+async function updateAgencyBilling(
+    agencyId: string,
+    updates: { plan?: 'FREE' | 'PRO'; subscription_status?: string; stripe_customer_id?: string }
+) {
+    const { error } = await supabaseAdmin
+        .from('agencies')
+        .update(updates)
+        .eq('id', agencyId)
+
+    if (error) console.error('Stripe webhook agency update error:', error)
+}
 
 export async function POST(req: NextRequest) {
     const body = await req.text()
@@ -19,58 +50,48 @@ export async function POST(req: NextRequest) {
             signature,
             process.env.STRIPE_WEBHOOK_SECRET!
         )
-    } catch (err: any) {
-        console.error('Webhook signature verification failed:', err.message)
-        return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
+    } catch (error: unknown) {
+        const message = getErrorMessage(error)
+        console.error('Webhook signature verification failed:', message)
+        return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 })
     }
 
     try {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object as Stripe.Checkout.Session
-                const agencyId = session.metadata?.agency_id
+                const agencyId = await resolveAgencyId(session)
+                const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id
 
-                if (agencyId && session.customer) {
-                    const { error } = await supabaseAdmin
-                        .from('agencies')
-                        .update({
-                            plan: 'PRO',
-                            stripe_customer_id: session.customer as string,
-                            subscription_status: 'active',
-                        })
-                        .eq('id', agencyId)
-
-                    if (error) console.error('checkout.session.completed update error:', error)
+                if (agencyId && customerId) {
+                    await updateAgencyBilling(agencyId, {
+                        plan: 'PRO',
+                        stripe_customer_id: customerId,
+                        subscription_status: 'active',
+                    })
                 }
                 break
             }
 
             case 'customer.subscription.updated': {
                 const subscription = event.data.object as Stripe.Subscription
-                const agencyId = subscription.metadata?.agency_id
+                const agencyId = await resolveAgencyId(subscription)
 
                 if (agencyId) {
-                    const { error } = await supabaseAdmin
-                        .from('agencies')
-                        .update({ subscription_status: subscription.status })
-                        .eq('id', agencyId)
-
-                    if (error) console.error('customer.subscription.updated error:', error)
+                    await updateAgencyBilling(agencyId, {
+                        plan: subscription.status === 'active' || subscription.status === 'trialing' ? 'PRO' : undefined,
+                        subscription_status: subscription.status,
+                    })
                 }
                 break
             }
 
             case 'customer.subscription.deleted': {
                 const subscription = event.data.object as Stripe.Subscription
-                const agencyId = subscription.metadata?.agency_id
+                const agencyId = await resolveAgencyId(subscription)
 
                 if (agencyId) {
-                    const { error } = await supabaseAdmin
-                        .from('agencies')
-                        .update({ plan: 'FREE', subscription_status: 'inactive' })
-                        .eq('id', agencyId)
-
-                    if (error) console.error('customer.subscription.deleted error:', error)
+                    await updateAgencyBilling(agencyId, { plan: 'FREE', subscription_status: 'inactive' })
                 }
                 break
             }
@@ -79,8 +100,8 @@ export async function POST(req: NextRequest) {
                 // Ignorer les autres events
                 break
         }
-    } catch (err: any) {
-        console.error('Webhook handler error:', err)
+    } catch (error: unknown) {
+        console.error('Webhook handler error:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 

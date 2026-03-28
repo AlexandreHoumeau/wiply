@@ -9,13 +9,14 @@ import { type AgencyMember } from "@/actions/agency.server";
 import { type ProjectVersion } from "@/actions/version.server";
 import { TYPE_CONFIG, PRIORITY_CONFIG, STATUS_CONFIG } from "./task-config";
 import { SidebarSection, SidebarLabel, SidebarPropRow } from "./task-shared";
+import type { ProjectTask } from "./types";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 
 interface TaskSidebarProps {
-    task: any | null;
+    task: ProjectTask | null;
     taskPrefix: string;
-    parentTask: any | null;
+    parentTask: ProjectTask | null;
     status: string;
     priority: string;
     type: string;
@@ -25,7 +26,7 @@ interface TaskSidebarProps {
     members: AgencyMember[];
     versions: ProjectVersion[];
     isOverdue: boolean;
-    onOpenTask?: (task: any) => void;
+    onOpenTask?: (task: ProjectTask) => void;
     onStatusChange: (v: string) => void;
     onPriorityChange: (v: string) => void;
     onTypeChange: (v: string) => void;

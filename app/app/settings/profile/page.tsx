@@ -27,7 +27,6 @@ import { Loader2, CheckCircle2, AlertCircle, User, Lock, Mail, Phone, Briefcase,
 import { updateProfile, updateNotificationPreferences } from '@/actions/profile.server'
 import { deleteAccount, exportAccountData } from '@/actions/account.server'
 import { mapRoleToPosition, NotificationPreferences } from '@/lib/validators/profile'
-import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 
 const NOTIF_OPTIONS: { key: keyof NotificationPreferences; label: string; description: string }[] = [

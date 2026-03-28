@@ -43,7 +43,7 @@ function formatDate(dateStr: string): string {
 type EventConfig = {
     icon: React.ReactNode;
     color: string;
-    label: (metadata: Record<string, any>) => React.ReactNode;
+    label: (metadata: Record<string, unknown>) => React.ReactNode;
 };
 
 const STATUS_BADGE_COLOR: Record<string, string> = {

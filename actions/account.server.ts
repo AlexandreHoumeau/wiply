@@ -6,7 +6,17 @@ import { stripe } from "@/lib/stripe"
 import { sendEmail } from "@/lib/email"
 import { AccountDeletionEmail } from "@/emails/account-deletion-confirmation"
 import React from "react"
-import { redirect } from "next/navigation"
+
+type AccountProfile = {
+    id: string
+    agency_id: string | null
+    role: string | null
+    first_name: string | null
+    last_name: string | null
+    email: string | null
+    phone: string | null
+    created_at: string
+}
 
 // ─── deleteAccount ──────────────────────────────────────────────────────────
 
@@ -27,17 +37,19 @@ export async function deleteAccount(
 
     const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("id, agency_id, role")
+        .select("id, agency_id, role, first_name")
         .eq("id", user.id)
         .single()
 
-    if (!profile) {
+    const typedProfile = profile as Pick<AccountProfile, "id" | "agency_id" | "role" | "first_name"> | null
+
+    if (!typedProfile) {
         // No profile — just delete auth user
         await supabaseAdmin.auth.admin.deleteUser(user.id)
         return { success: true, message: "Compte supprimé." }
     }
 
-    const agencyId = profile.agency_id
+    const agencyId = typedProfile.agency_id
 
     if (!agencyId) {
         // Orphaned member — delete profile + auth user
@@ -97,7 +109,7 @@ export async function deleteAccount(
         await sendEmail({
             to: user.email!,
             subject: "Votre compte Wiply a été supprimé",
-            template: React.createElement(AccountDeletionEmail, { firstName: (profile as any).first_name }),
+            template: React.createElement(AccountDeletionEmail, { firstName: typedProfile.first_name ?? undefined }),
         })
     } catch {
         // Don't block deletion if email fails
@@ -314,15 +326,17 @@ export async function exportAccountData(): Promise<{ success: boolean; data?: ob
 
     const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("id, first_name, last_name, email, phone, role, created_at")
+        .select("id, agency_id, first_name, last_name, email, phone, role, created_at")
         .eq("id", user.id)
         .single()
 
-    if (!profile) {
+    const typedProfile = profile as AccountProfile | null
+
+    if (!typedProfile) {
         return { success: false, message: "Profil introuvable" }
     }
 
-    const agencyId = (profile as any).agency_id
+    const agencyId = typedProfile.agency_id
 
     // Fetch all data in parallel
     const [
@@ -378,12 +392,12 @@ export async function exportAccountData(): Promise<{ success: boolean; data?: ob
     const exportData = {
         exported_at: new Date().toISOString(),
         profile: {
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            email: profile.email,
-            phone: (profile as any).phone,
-            role: profile.role,
-            created_at: profile.created_at,
+            first_name: typedProfile.first_name,
+            last_name: typedProfile.last_name,
+            email: typedProfile.email,
+            phone: typedProfile.phone,
+            role: typedProfile.role,
+            created_at: typedProfile.created_at,
         },
         agency: agencyResult.data ?? null,
         projects: projectsResult.data ?? [],

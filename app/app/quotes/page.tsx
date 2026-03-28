@@ -77,9 +77,9 @@ export default function QuotesPage() {
 
   // Compute stats from all quotes
   const statData = STAT_CARDS.map(card => {
-    const filtered = (allQuotes ?? []).filter(q => q.status === card.status)
+    const filtered = (allQuotes ?? []).filter((quote) => quote.status === card.status)
     const total = filtered.reduce((sum, q) => {
-      const t = computeQuoteTotals({ discount_type: q.discount_type as any, discount_value: q.discount_value, tax_rate: q.tax_rate, items: (q as any).items ?? [] })
+      const t = computeQuoteTotals({ discount_type: q.discount_type, discount_value: q.discount_value, tax_rate: q.tax_rate, items: q.items ?? [] })
       return sum + t.total
     }, 0)
     return { ...card, count: filtered.length, total }
@@ -108,7 +108,6 @@ export default function QuotesPage() {
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {statData.map(({ status, label, icon: Icon, count, total }) => {
-          const style = STATUS_STYLES[status]
           return (
             <button
               key={status}
@@ -195,7 +194,7 @@ export default function QuotesPage() {
             <tbody>
               {quotes.map((quote, i) => {
                 const style = STATUS_STYLES[quote.status] ?? STATUS_STYLES.draft
-                const { total } = computeQuoteTotals({ discount_type: quote.discount_type as any, discount_value: quote.discount_value, tax_rate: quote.tax_rate, items: (quote as any).items ?? [] })
+                const { total } = computeQuoteTotals({ discount_type: quote.discount_type, discount_value: quote.discount_value, tax_rate: quote.tax_rate, items: quote.items ?? [] })
                 return (
                   <tr
                     key={quote.id}
@@ -209,7 +208,7 @@ export default function QuotesPage() {
                       <span className="font-medium text-foreground">{quote.title}</span>
                     </td>
                     <td className="px-4 py-3.5 text-muted-foreground">
-                      {(quote.company as any)?.name ?? (
+                      {quote.company?.name ?? (
                         <span className="text-muted-foreground/40">—</span>
                       )}
                     </td>

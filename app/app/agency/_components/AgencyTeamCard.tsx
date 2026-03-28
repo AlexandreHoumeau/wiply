@@ -40,7 +40,7 @@ import { isProPlan } from "@/lib/validators/agency";
 import { cn, getInitials } from "@/lib/utils";
 import { Clock, Loader2, Mail, MoreHorizontal, RefreshCw, Send, Shield, ShieldOff, Trash2, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useEffectEvent, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useAgency } from "@/providers/agency-provider";
 import { useUpgradeDialog } from "@/providers/UpgradeDialogProvider";
@@ -51,6 +51,11 @@ type TeamMember = {
   last_name: string;
   email: string;
   role: string;
+};
+
+type PendingInvite = {
+  id: string;
+  email: string;
 };
 
 function ResendInviteButton({ inviteId }: { inviteId: string }) {
@@ -128,7 +133,7 @@ export function AgencyTeamCard({
   profile,
 }: {
   team: TeamMember[];
-  invites: any[];
+  invites: PendingInvite[];
   profile: Profile;
 }) {
   const router = useRouter();
@@ -141,6 +146,12 @@ export function AgencyTeamCard({
   const isAdmin = profile.role === "agency_admin";
   const { agency } = useAgency()
   const { openUpgradeDialog } = useUpgradeDialog()
+
+  const handleInviteSuccess = useEffectEvent(() => {
+    toast.success(state?.message ?? "Invitation envoyée avec succès");
+    setDialogOpen(false);
+    router.refresh();
+  });
 
   function handleInviteClick() {
     if (!agency) return
@@ -157,9 +168,7 @@ export function AgencyTeamCard({
   useEffect(() => {
     if (!state) return;
     if (state.success) {
-      toast.success(state.message ?? "Invitation envoyée avec succès");
-      setDialogOpen(false);
-      router.refresh();
+      handleInviteSuccess();
     } else if (state.message) {
       toast.error(state.message);
     }
@@ -353,7 +362,7 @@ export function AgencyTeamCard({
               </p>
             </div>
             <div className="space-y-2">
-              {invites.slice(0, 3).map((invite: any) => (
+              {invites.slice(0, 3).map((invite) => (
                 <div
                   key={invite.id}
                   className="flex items-center gap-3 rounded-xl border bg-card p-3"

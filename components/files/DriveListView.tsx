@@ -15,6 +15,7 @@ import {
 import { cn, formatBytes } from "@/lib/utils";
 import type { FileRecord, FolderRecord, ClientUpload } from "@/actions/files.server";
 import { filterFiles, sortFiles, type SortKey, type TypeFilter } from "./driveUtils";
+import { PortalUploadAccessButton } from "./PortalUploadAccessButton";
 
 const TYPE_LABELS: Record<TypeFilter, string> = {
     all: "Tous",
@@ -429,11 +430,7 @@ export function DriveListView({
                                         </td>
                                         <td className="px-4 py-3 text-right">
                                             {item.file_url ? (
-                                                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                                                    <a href={item.file_url} target="_blank" rel="noopener noreferrer">
-                                                        <Download className="w-3.5 h-3.5" />
-                                                    </a>
-                                                </Button>
+                                                <PortalUploadAccessButton itemId={item.id} variant="icon" />
                                             ) : item.client_response ? (
                                                 <Button
                                                     variant="ghost" size="icon" className="h-7 w-7"

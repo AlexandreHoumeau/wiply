@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useEffectEvent, useState } from "react";
 import { toast } from "sonner";
 
 const TONE_OPTIONS = [
@@ -39,12 +39,16 @@ export function AgencyAICard({ ai }: { ai: AgencyAiConfig | null }) {
   const isConfigured = !!(ai?.ai_context || ai?.key_points);
   const toneData = TONE_OPTIONS.find((t) => t.value === (ai?.tone ?? "professional"));
 
+  const handleSuccess = useEffectEvent(() => {
+    toast.success(state?.message ?? "Configuration IA enregistrée");
+    setIsEditing(false);
+    router.refresh();
+  });
+
   useEffect(() => {
     if (!state) return;
     if (state.success) {
-      toast.success(state.message ?? "Configuration IA enregistrée");
-      setIsEditing(false);
-      router.refresh();
+      handleSuccess();
     } else if (state.error) {
       toast.error(state.error);
     }

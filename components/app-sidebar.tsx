@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useSyncExternalStore, useTransition } from "react"
 import { useUpgradeDialog } from '@/providers/UpgradeDialogProvider'
 import { createCheckoutSession } from '@/actions/billing.server'
@@ -100,7 +101,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                 )}>
                     <div className="flex shrink-0 aspect-square size-8 items-center justify-center rounded-xl text-white overflow-hidden" style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}55` }}>
                         {agency?.logo_url ? (
-                            <img src={agency.logo_url} alt={agency.name} className="w-full h-full object-contain p-0.5" />
+                            <Image src={agency.logo_url} alt={agency.name ?? "Agence"} width={32} height={32} unoptimized className="w-full h-full object-contain p-0.5" />
                         ) : (
                             <span className="text-xs font-bold">{agency?.name?.charAt(0)?.toUpperCase() || "A"}</span>
                         )}

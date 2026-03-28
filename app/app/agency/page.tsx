@@ -19,6 +19,7 @@ import {
 
 import Link from "next/link";
 import { AgencyBrandingDialog } from "./_components/AgencyBrandingDialog";
+import type { InviteAgencyMemberInput } from "@/lib/validators/agency";
 
 export default async function AgencyOverviewPage() {
   const { agency, team, invites = [], ai, profile, billing } = await fetchSettingsData();
@@ -209,7 +210,7 @@ export default async function AgencyOverviewPage() {
 
           {/* ── Right column (2/5) ── */}
           <div className="space-y-8 lg:col-span-2">
-            <AgencyTeamCard team={team} invites={invites as any[]} profile={profile} />
+            <AgencyTeamCard team={team} invites={invites as InviteAgencyMemberInput[]} profile={profile} />
             <AgencyTrackingCard stats={trackingStats} />
           </div>
         </div>

@@ -36,7 +36,7 @@ export default function NewQuotePage() {
         if (opp) setSelectedOpp(opp)
       })
     }
-  }, [])
+  }, [searchParams])
 
   // Fetch on dropdown open (initial load)
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function NewQuotePage() {
         setIsSearching(false)
       })
     }
-  }, [dropdownOpen])
+  }, [dropdownOpen, search])
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value)

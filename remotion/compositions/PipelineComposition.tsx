@@ -3,7 +3,6 @@ import React from "react";
 
 // ── Colors & Theme ───────────────────────────────────────────────────────────
 const PRIMARY = "#2563EB";
-const BG = "#F8FAFC";
 const SLATE_900 = "#0F172A";
 const SLATE_500 = "#64748B";
 const SLATE_400 = "#94A3B8";

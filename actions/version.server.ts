@@ -4,6 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/lib/validators/project";
 
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return "Une erreur inattendue est survenue";
+}
+
 export type ProjectVersion = {
     id: string;
     project_id: string;
@@ -29,8 +37,8 @@ export async function getProjectVersions(
 
         if (error) throw error;
         return { success: true, data: (data ?? []) as ProjectVersion[] };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -50,8 +58,8 @@ export async function createVersion(
         if (error) throw error;
         revalidatePath(`/app/projects`);
         return { success: true, data: data as ProjectVersion };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -66,8 +74,8 @@ export async function releaseVersion(versionId: string): Promise<ActionResult<vo
         if (error) throw error;
         revalidatePath(`/app/projects`);
         return { success: true, data: undefined };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -85,7 +93,7 @@ export async function deleteVersion(versionId: string): Promise<ActionResult<voi
         if (error) throw error;
         revalidatePath(`/app/projects`);
         return { success: true, data: undefined };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }

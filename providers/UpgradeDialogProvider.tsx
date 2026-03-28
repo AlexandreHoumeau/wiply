@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useTransition, ReactNode } from 'react'
-import { Zap, FolderKanban, Users, Mail, Sparkles, Globe, X, ShieldCheck } from 'lucide-react'
+import { Zap, FolderKanban, Users, Mail, Sparkles, Globe, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     Dialog,

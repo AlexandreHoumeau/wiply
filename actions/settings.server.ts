@@ -66,7 +66,15 @@ export async function fetchSettingsData(): Promise<SettingsData> {
     if (profileError || !profile) throw new Error('Profile not found')
 
     if (!profile.agency_id) {
-        return { profile, agency: null as any, team: [], invites: [], ai: null, tracking: null, billing: null }
+        return {
+            profile,
+            agency: null as unknown as SettingsData["agency"],
+            team: [],
+            invites: [],
+            ai: null,
+            tracking: null,
+            billing: null
+        }
     }
 
     // Agency data — cached per user, invalidated by mutations via revalidateTag(`settings-${user.id}`)

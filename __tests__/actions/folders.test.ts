@@ -27,6 +27,7 @@ function makeChain(result: any) {
         eq: vi.fn(() => chain),
         is: vi.fn(() => chain),
         order: vi.fn(() => chain),
+        maybeSingle: vi.fn(() => Promise.resolve(result)),
         single: vi.fn(() => Promise.resolve(result)),
     };
     const p = Promise.resolve(result);
@@ -145,6 +146,7 @@ describe("moveFileToFolder", () => {
             makeSupabase({
                 tableResults: {
                     files: { data: { agency_id: "agency-1", project_id: "proj-1" }, error: null },
+                    folders: { data: { agency_id: "agency-1", project_id: "proj-1" }, error: null },
                 },
             }) as any
         );

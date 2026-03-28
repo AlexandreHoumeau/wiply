@@ -5,6 +5,29 @@ import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe'
 import { PLANS } from '@/lib/config/plans'
 
+async function getAuthorizedAgencyBillingContext(agencyId: string) {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Non authentifié' as const }
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('agency_id, role')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.agency_id || profile.agency_id !== agencyId) {
+        return { error: 'Accès non autorisé' as const }
+    }
+
+    if (profile.role !== 'agency_admin') {
+        return { error: 'Seul un administrateur peut gérer la facturation.' as const }
+    }
+
+    return { supabase, user }
+}
+
 async function getBaseUrl(): Promise<string> {
     if (process.env.NEXT_PUBLIC_SITE_URL) {
         return process.env.NEXT_PUBLIC_SITE_URL
@@ -18,10 +41,9 @@ async function getBaseUrl(): Promise<string> {
 export async function createCheckoutSession(
     agencyId: string
 ): Promise<{ url: string } | { error: string }> {
-    const supabase = await createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Non authentifié' }
+    const context = await getAuthorizedAgencyBillingContext(agencyId)
+    if ('error' in context) return { error: context.error }
+    const { supabase, user } = context
 
     const { data: agency } = await supabase
         .from('agencies')
@@ -54,10 +76,9 @@ export async function createCheckoutSession(
 export async function createPortalSession(
     agencyId: string
 ): Promise<{ url: string } | { error: string }> {
-    const supabase = await createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Non authentifié' }
+    const context = await getAuthorizedAgencyBillingContext(agencyId)
+    if ('error' in context) return { error: context.error }
+    const { supabase } = context
 
     const { data: agency } = await supabase
         .from('agencies')

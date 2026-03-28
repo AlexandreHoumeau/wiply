@@ -2,17 +2,18 @@
 
 import { GitBranch, Plus, ArrowUpRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { ProjectTask } from "./types";
 
 interface TaskSubTasksProps {
-    task: any;
+    task: ProjectTask | null;
     taskPrefix: string;
-    subTasks: any[];
+    subTasks: ProjectTask[];
     doneSubCount: number;
     newSubTitle: string;
     isCreatingSubTask: boolean;
     onNewSubTitleChange: (val: string) => void;
     onCreateSubTask: (e: React.FormEvent) => void;
-    onOpenTask?: (task: any) => void;
+    onOpenTask?: (task: ProjectTask) => void;
 }
 
 export function TaskSubTasks({

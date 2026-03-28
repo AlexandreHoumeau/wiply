@@ -283,7 +283,7 @@ export async function fetchAgencyAnalytics(agencyId: string, range: AnalyticsRan
 
     const oppMap = new Map<string, { opportunity_name: string | null; opportunity_slug: string | null; click_count: number; links_count: number }>();
     links.forEach((l) => {
-        const opp = (l.opportunities as any)?.[0] ?? (l.opportunities as any) ?? null;
+        const opp = getTrackingOpportunity(l.opportunities as TrackingOpportunityRef | TrackingOpportunityRef[] | null | undefined);
         const key = opp?.slug ?? `__${l.short_code}`;
         const existing = oppMap.get(key);
         if (existing) {
@@ -297,7 +297,7 @@ export async function fetchAgencyAnalytics(agencyId: string, range: AnalyticsRan
 
     const recentClicks = allClicks.slice(0, 20).map((c) => {
         const link = linkMap.get(c.tracking_link_id);
-        const opp = (link?.opportunities as any)?.[0] ?? (link?.opportunities as any) ?? null;
+        const opp = getTrackingOpportunity(link?.opportunities as TrackingOpportunityRef | TrackingOpportunityRef[] | null | undefined);
         return {
             ip_address: c.ip_address || "—",
             country_code: c.country_code,
@@ -320,6 +320,21 @@ export type AgencyTrackingStats = {
     deviceBreakdown: Record<string, number>;
     topLinks: Array<{ opportunity_name: string | null; opportunity_slug: string | null; click_count: number; links_count: number }>;
 };
+
+type TrackingOpportunityRef = {
+    name: string | null;
+    slug: string | null;
+};
+
+function getTrackingOpportunity(
+    value: TrackingOpportunityRef | TrackingOpportunityRef[] | null | undefined
+): TrackingOpportunityRef | null {
+    if (Array.isArray(value)) {
+        return value[0] ?? null;
+    }
+
+    return value ?? null;
+}
 
 export async function fetchAgencyTrackingStats(agencyId: string): Promise<AgencyTrackingStats> {
     const supabase = await createClient();
@@ -356,7 +371,7 @@ export async function fetchAgencyTrackingStats(agencyId: string): Promise<Agency
 
     const oppMap2 = new Map<string, { opportunity_name: string | null; opportunity_slug: string | null; click_count: number; links_count: number }>();
     links.forEach((l) => {
-        const opp = (l.opportunities as any)?.[0] ?? (l.opportunities as any) ?? null;
+        const opp = getTrackingOpportunity(l.opportunities as TrackingOpportunityRef | TrackingOpportunityRef[] | null | undefined);
         const key = opp?.slug ?? `__${l.short_code}`;
         const existing = oppMap2.get(key);
         if (existing) {

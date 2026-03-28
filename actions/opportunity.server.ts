@@ -78,7 +78,9 @@ export async function fetchOpportunities({
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    let { data, count, error } = await query.range(from, to);
+    const { data: rangedData, count: rangedCount, error } = await query.range(from, to);
+    let data = rangedData;
+    let count = rangedCount;
 
     // If we have a search term, also search in company name and email
     // We need to filter client-side or use a different approach

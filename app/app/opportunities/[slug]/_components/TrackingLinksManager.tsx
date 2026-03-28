@@ -20,10 +20,17 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+type TrackingLinkItem = {
+    id: string;
+    short_code: string;
+    campaign_name: string;
+    is_active: boolean;
+};
+
 export function TrackingLinksManager({ opportunityId, agencyId }: { opportunityId: string, agencyId: string }) {
     const { agency } = useAgency();
     const { openUpgradeDialog } = useUpgradeDialog();
-    const [links, setLinks] = useState<any[]>([]);
+    const [links, setLinks] = useState<TrackingLinkItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
     const [showInput, setShowInput] = useState(false);
@@ -31,14 +38,33 @@ export function TrackingLinksManager({ opportunityId, agencyId }: { opportunityI
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
 
-    useEffect(() => { loadLinks(); }, [opportunityId]);
-
     const loadLinks = async () => {
         setIsLoading(true);
         const result = await getTrackingLinks(opportunityId);
-        if (result.success) setLinks(result.data);
+        if (result.success) setLinks((result.data ?? []) as TrackingLinkItem[]);
         setIsLoading(false);
     };
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchLinks = async () => {
+            setIsLoading(true);
+            const result = await getTrackingLinks(opportunityId);
+            if (!cancelled && result.success) {
+                setLinks((result.data ?? []) as TrackingLinkItem[]);
+            }
+            if (!cancelled) {
+                setIsLoading(false);
+            }
+        };
+
+        void fetchLinks();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [opportunityId]);
 
     const handleToggleStatus = async (linkId: string, currentStatus: boolean) => {
         setTogglingId(linkId);

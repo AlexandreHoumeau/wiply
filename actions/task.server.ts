@@ -3,6 +3,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications";
 
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return "Une erreur inattendue est survenue";
+}
+
+type TaskNotificationProject = {
+    slug: string | null;
+    task_prefix: string | null;
+};
+
+type TaskNotificationTarget = {
+    created_by: string | null;
+    assignee_id: string | null;
+    title: string;
+    agency_id: string;
+    task_number: number | null;
+    project: TaskNotificationProject | null;
+};
+
 export async function getProjectTasks(projectId: string) {
     const supabase = await createClient();
 
@@ -21,9 +43,9 @@ export async function getProjectTasks(projectId: string) {
 
         if (error) throw error;
         return { success: true, data: data || [] };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Erreur fetch tasks:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -47,9 +69,9 @@ export async function updateTaskStatusAndPosition(
 
         if (error) throw error;
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Erreur update task:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -59,9 +81,9 @@ export async function deleteTask(taskId: string) {
         const { error } = await supabase.from("tasks").delete().eq("id", taskId);
         if (error) throw error;
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Erreur suppression tâche:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -96,9 +118,9 @@ export async function getTaskComments(taskId: string): Promise<{ success: boolea
 
         if (error) throw error;
         return { success: true, data: (data ?? []) as TaskComment[] };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Erreur fetch comments:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -117,11 +139,13 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
         if (error) throw error;
 
         // Notify task creator and assignee (excluding the commenter)
-        const { data: task } = await supabase
+        const { data: taskData } = await supabase
             .from("tasks")
             .select("created_by, assignee_id, title, agency_id, task_number, project:projects!tasks_project_id_fkey(slug, task_prefix)")
             .eq("id", taskId)
             .single();
+
+        const task = taskData as TaskNotificationTarget | null;
 
         if (task) {
             // Extract @mention user IDs from HTML content (data-id attributes)
@@ -137,16 +161,16 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
                     agencyId: task.agency_id,
                     userId: recipientId,
                     type: "task_comment",
-                    title: "Nouveau commentaire",
-                    body: `Commentaire sur la tâche "${task.title}"`,
-                    metadata: {
-                        task_id: taskId,
-                        project_slug: (task.project as any)?.slug ?? null,
-                        task_number: task.task_number,
-                        task_prefix: (task.project as any)?.task_prefix ?? null,
-                    },
-                });
-            }
+                        title: "Nouveau commentaire",
+                        body: `Commentaire sur la tâche "${task.title}"`,
+                        metadata: {
+                            task_id: taskId,
+                            project_slug: task.project?.slug ?? null,
+                            task_number: task.task_number,
+                            task_prefix: task.project?.task_prefix ?? null,
+                        },
+                    });
+                }
 
             // Notify mentioned users (excluding those already notified above, and the commenter)
             const alreadyNotified = new Set([user.id, ...commentRecipients]);
@@ -161,9 +185,9 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
                         body: `Vous avez été mentionné dans un commentaire sur "${task.title}"`,
                         metadata: {
                             task_id: taskId,
-                            project_slug: (task.project as any)?.slug ?? null,
+                            project_slug: task.project?.slug ?? null,
                             task_number: task.task_number,
-                            task_prefix: (task.project as any)?.task_prefix ?? null,
+                            task_prefix: task.project?.task_prefix ?? null,
                         },
                     });
                 }
@@ -171,9 +195,9 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
         }
 
         return { success: true, data: data as TaskComment };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Erreur ajout commentaire:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -191,8 +215,8 @@ export async function deleteTaskComment(commentId: string): Promise<{ success: b
 
         if (error) throw error;
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Erreur suppression commentaire:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: getErrorMessage(error) };
     }
 }

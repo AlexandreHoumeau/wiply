@@ -2,7 +2,6 @@ import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "re
 import React from "react";
 
 // ── Colors & Theme ───────────────────────────────────────────────────────────
-const BG = "#F8FAFC"; // slate-50
 const SLATE_900 = "#0F172A";
 const SLATE_800 = "#1E293B";
 const SLATE_700 = "#334155";
@@ -21,16 +20,11 @@ const BLUE_50 = "#EFF6FF";
 
 const EMERALD_600 = "#059669";
 const EMERALD_100 = "#D1FAE5";
-const EMERALD_50 = "#ECFDF5";
-
 const PURPLE_600 = "#9333EA";
-const PURPLE_100 = "#F3E8FF";
 const PURPLE_50 = "#FAF5FF";
 
 const ORANGE_600 = "#EA580C";
 const ORANGE_100 = "#FFEDD5";
-const ORANGE_50 = "#FFF7ED";
-
 const RED_600 = "#DC2626";
 const RED_100 = "#FEE2E2";
 const RED_50 = "#FEF2F2";
@@ -49,8 +43,18 @@ const Icons = {
   CursorArrow: () => <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: "-4px", marginTop: "-4px" }}><path d="M5.5 3.21V20.8C5.5 21.43 6.22 21.78 6.72 21.4L11.23 17.65C11.45 17.47 11.73 17.37 12.02 17.37H18.73C19.38 17.37 19.72 16.59 19.27 16.14L6.59 2.76C6.15 2.3 5.5 2.62 5.5 3.21Z" fill="#0F172A" stroke="white" strokeWidth="1.5"/></svg>
 };
 
+type CompositionTaskCard = {
+  id: string;
+  title: string;
+  description?: string;
+  type: "feature" | "design" | "bug";
+  priority: "medium" | "high" | "urgent";
+  comments: number;
+  assignee?: string;
+};
+
 // ── Components ───────────────────────────────────────────────────────────────
-function TaskCard({ id, title, description, type, priority, comments, assignee }: any) {
+function TaskCard({ id, title, description, type, priority, comments, assignee }: CompositionTaskCard) {
   return (
     <div style={{ padding: 20, borderRadius: 16, background: WHITE, border: `1px solid ${SLATE_200}`, boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>

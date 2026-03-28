@@ -3,6 +3,7 @@ import { getOpportunityTimeline } from "@/actions/timeline.server";
 import { getTrackingLinks } from "@/actions/tracking.server";
 import { getAIGeneratedMessages } from "@/actions/ai-messages";
 import OpportunityOverview from "./_components/opportunity-overview";
+import { notFound } from "next/navigation";
 
 export default async function OverviewPage({
     params,
@@ -12,7 +13,7 @@ export default async function OverviewPage({
     const { slug } = await params;
     const opportunity = await getOpportunityBySlug(slug);
 
-    if (!opportunity) return null;
+    if (!opportunity) notFound();
 
     const [eventsResult, trackingResult, messagesResult] = await Promise.all([
         getOpportunityTimeline(opportunity.id),

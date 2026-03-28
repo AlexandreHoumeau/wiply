@@ -82,7 +82,7 @@ export async function updateProfile(
         }
 
         // 5. Revalidate the settings page
-        revalidatePath("/settings/profile")
+        revalidatePath("/app/settings/profile")
         revalidateTag(`settings-${user.id}`, {})
 
         return {

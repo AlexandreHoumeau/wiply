@@ -27,19 +27,27 @@ export function DriveClient({ initialFiles, initialFolders, usedBytes: initialUs
     const [files, setFiles] = useState<FileRecord[]>(initialFiles);
     const [folders, setFolders] = useState<FolderRecord[]>(initialFolders);
     const [usedBytes, setUsedBytes] = useState(initialUsed);
-    const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+    const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(() => {
+        if (typeof window === "undefined") {
+            return {};
+        }
 
-    // Hydrate expanded state from localStorage after mount (SSR-safe)
-    useEffect(() => {
         try {
             const stored = localStorage.getItem(LS_KEY);
-            if (stored) setExpandedFolders(JSON.parse(stored));
+            return stored ? JSON.parse(stored) as Record<string, boolean> : {};
+        } catch {
+            return {};
+        }
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify(expandedFolders));
         } catch {}
-    }, []);
+    }, [expandedFolders]);
 
     const saveExpanded = (next: Record<string, boolean>) => {
         setExpandedFolders(next);
-        try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch {}
     };
 
     // Dialog state

@@ -12,19 +12,27 @@ export default function ProjectOverviewPage() {
     const [, setIsLoadingStats] = useState(true);
 
     useEffect(() => {
-        if (project) {
-            loadStats();
-        }
-    }, [project]);
+        if (!project) return;
 
-    const loadStats = async () => {
-        setIsLoadingStats(true);
-        const result = await getProjectOverviewStats(project!.id);
-        if (result.success) {
-            setStats(result.data);
-        }
-        setIsLoadingStats(false);
-    };
+        let cancelled = false;
+
+        const fetchStats = async () => {
+            setIsLoadingStats(true);
+            const result = await getProjectOverviewStats(project.id);
+            if (!cancelled && result.success) {
+                setStats(result.data);
+            }
+            if (!cancelled) {
+                setIsLoadingStats(false);
+            }
+        };
+
+        void fetchStats();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [project]);
 
     if (!project) return null;
 

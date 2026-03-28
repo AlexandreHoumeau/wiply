@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Mention from "@tiptap/extension-mention";
 import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion";
-import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -29,10 +29,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-function isEntityRef(item: AgencyMember | EntityRef): item is EntityRef {
-    return "entityType" in item;
-}
 
 const ENTITY_COLORS: Record<EntityRef["entityType"], string> = {
     ticket: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
@@ -61,9 +57,7 @@ interface MentionListHandle {
 
 const MentionList = forwardRef<MentionListHandle, MentionListProps>(function MentionList({ items, command }, ref) {
     const [selected, setSelected] = useState(0);
-
-    // eslint-disable-next-line react-compiler/react-compiler
-    useEffect(() => { setSelected(0); }, [items]);
+    const activeIndex = selected >= items.length ? 0 : selected;
 
     useImperativeHandle(ref, () => ({
         onKeyDown: (event: KeyboardEvent) => {
@@ -76,7 +70,7 @@ const MentionList = forwardRef<MentionListHandle, MentionListProps>(function Men
                 return true;
             }
             if (event.key === "Enter") {
-                const item = items[selected];
+                const item = items[activeIndex];
                 if (item) {
                     const label = item.first_name
                         ? `${item.first_name} ${item.last_name ?? ""}`.trim()
@@ -103,7 +97,7 @@ const MentionList = forwardRef<MentionListHandle, MentionListProps>(function Men
                         type="button"
                         className={cn(
                             "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors",
-                            i === selected ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50"
+                            i === activeIndex ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50"
                         )}
                         onMouseEnter={() => setSelected(i)}
                         onMouseDown={(e) => {
@@ -144,9 +138,7 @@ interface EntityMentionListHandle {
 const EntityMentionList = forwardRef<EntityMentionListHandle, EntityMentionListProps>(
     function EntityMentionList({ items, command, hint }, ref) {
         const [selected, setSelected] = useState(0);
-
-        // eslint-disable-next-line react-compiler/react-compiler
-        useEffect(() => { setSelected(0); }, [items]);
+        const activeIndex = selected >= items.length ? 0 : selected;
 
         useImperativeHandle(ref, () => ({
             onKeyDown: (event: KeyboardEvent) => {
@@ -159,7 +151,7 @@ const EntityMentionList = forwardRef<EntityMentionListHandle, EntityMentionListP
                     return true;
                 }
                 if (event.key === "Enter") {
-                    const item = items[selected];
+                    const item = items[activeIndex];
                     if (item) command({ id: item.id, label: item.label, entityType: item.entityType, projectSlug: item.projectSlug });
                     return true;
                 }
@@ -180,7 +172,7 @@ const EntityMentionList = forwardRef<EntityMentionListHandle, EntityMentionListP
                         type="button"
                         className={cn(
                             "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors",
-                            i === selected ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50"
+                            i === activeIndex ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50"
                         )}
                         onMouseEnter={() => setSelected(i)}
                         onMouseDown={(e) => {
@@ -214,20 +206,11 @@ interface LinkDialogProps {
 }
 
 function LinkDialog({ open, initialUrl, onConfirm, onRemove, onClose }: LinkDialogProps) {
-    const [url, setUrl] = useState(initialUrl);
     const inputRef = useRef<HTMLInputElement>(null);
-
-    // eslint-disable-next-line react-compiler/react-compiler
-    useEffect(() => {
-        if (open) {
-            setUrl(initialUrl);
-            setTimeout(() => inputRef.current?.select(), 50);
-        }
-    }, [open, initialUrl]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onConfirm(url.trim());
+        onConfirm(inputRef.current?.value.trim() ?? "");
     };
 
     return (
@@ -242,13 +225,14 @@ function LinkDialog({ open, initialUrl, onConfirm, onRemove, onClose }: LinkDial
                 <form onSubmit={handleSubmit}>
                     <div className="py-2">
                         <Input
+                            key={initialUrl}
                             ref={inputRef}
                             type="url"
                             placeholder="https://exemple.com"
-                            value={url}
-                            onChange={(e) => setUrl(e.target.value)}
+                            defaultValue={initialUrl}
                             className="w-full"
                             autoComplete="off"
+                            autoFocus
                         />
                     </div>
                     <DialogFooter className="flex-row justify-between sm:justify-between gap-2 pt-2">
@@ -270,7 +254,7 @@ function LinkDialog({ open, initialUrl, onConfirm, onRemove, onClose }: LinkDial
                             <Button type="button" variant="outline" size="sm" onClick={onClose}>
                                 Annuler
                             </Button>
-                            <Button type="submit" size="sm" disabled={!url.trim()}>
+                            <Button type="submit" size="sm">
                                 {initialUrl ? "Mettre à jour" : "Insérer"}
                             </Button>
                         </div>
@@ -452,15 +436,13 @@ export function RichTextEditor({
                             const rect = props.clientRect?.();
                             if (rect) setPopupPos({ x: rect.left, y: rect.bottom + 4 });
                             setMentionItems(props.items);
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            mentionCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                            mentionCommandRef.current = (item) => (props.command as (attrs: { id: string; label: string }) => void)(item);
                         },
                         onUpdate: (props: SuggestionProps<AgencyMember>) => {
                             const rect = props.clientRect?.();
                             if (rect) setPopupPos({ x: rect.left, y: rect.bottom + 4 });
                             setMentionItems(props.items);
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            mentionCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                            mentionCommandRef.current = (item) => (props.command as (attrs: { id: string; label: string }) => void)(item);
                         },
                         onExit: () => {
                             setPopupPos(null);
@@ -502,15 +484,13 @@ export function RichTextEditor({
                                 const rect = props.clientRect?.();
                                 if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
                                 setEntityItems(props.items);
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                                entityCommandRef.current = (item) => (props.command as (attrs: { id: string; label: string; entityType: string; projectSlug?: string }) => void)(item);
                             },
                             onUpdate: (props: SuggestionProps<EntityRef>) => {
                                 const rect = props.clientRect?.();
                                 if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
                                 setEntityItems(props.items);
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                                entityCommandRef.current = (item) => (props.command as (attrs: { id: string; label: string; entityType: string; projectSlug?: string }) => void)(item);
                             },
                             onExit: () => {
                                 setEntityPopupPos(null);
@@ -547,15 +527,13 @@ export function RichTextEditor({
                                 const rect = props.clientRect?.();
                                 if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
                                 setEntityItems(props.items);
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                                entityCommandRef.current = (item) => (props.command as (attrs: { id: string; label: string; entityType: string; projectSlug?: string }) => void)(item);
                             },
                             onUpdate: (props: SuggestionProps<EntityRef>) => {
                                 const rect = props.clientRect?.();
                                 if (rect) setEntityPopupPos({ x: rect.left, y: rect.bottom + 4 });
                                 setEntityItems(props.items);
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                entityCommandRef.current = (item) => (props.command as (a: any) => void)(item);
+                                entityCommandRef.current = (item) => (props.command as (attrs: { id: string; label: string; entityType: string; projectSlug?: string }) => void)(item);
                             },
                             onExit: () => {
                                 setEntityPopupPos(null);
@@ -621,14 +599,14 @@ export function RichTextEditor({
         }
     }, [content, editor]);
 
-    const setLink = useCallback(() => {
+    const setLink = () => {
         if (!editor) return;
         const prev = editor.getAttributes("link").href as string | undefined;
         setLinkInitialUrl(prev ?? "");
         setLinkDialogOpen(true);
-    }, [editor]);
+    };
 
-    const handleLinkConfirm = useCallback((url: string) => {
+    const handleLinkConfirm = (url: string) => {
         if (!editor) return;
         setLinkDialogOpen(false);
         if (!url) {
@@ -636,13 +614,13 @@ export function RichTextEditor({
             return;
         }
         editor.chain().focus().setLink({ href: url }).run();
-    }, [editor]);
+    };
 
-    const handleLinkRemove = useCallback(() => {
+    const handleLinkRemove = () => {
         if (!editor) return;
         setLinkDialogOpen(false);
         editor.chain().focus().unsetLink().run();
-    }, [editor]);
+    };
 
     if (!editor) return null;
 

@@ -187,8 +187,17 @@ Deno.serve(async (_req) => {
 
         // Group by user
         const byUser = new Map<string, typeof notifications>();
+        type DigestProfile = {
+            email?: string | null;
+            first_name?: string | null;
+            email_notifications_new_lead?: boolean | null;
+            email_notifications_messages?: boolean | null;
+            email_notifications_tasks?: boolean | null;
+            email_notifications_tracking?: boolean | null;
+            email_notifications_digest?: boolean | null;
+        };
         for (const n of notifications) {
-            const profile = n.profile as any;
+            const profile = n.profile as DigestProfile | null;
             if (!profile?.email) continue;
 
             // Check if this notification type is opted in
@@ -204,7 +213,7 @@ Deno.serve(async (_req) => {
         let emailsSent = 0;
 
         for (const [, userNotifs] of byUser) {
-            const profile = (userNotifs[0].profile as any);
+            const profile = userNotifs[0].profile as DigestProfile | null;
             const firstName = profile.first_name ?? "là";
             const email = profile.email;
             const count = userNotifs.length;
@@ -214,7 +223,7 @@ Deno.serve(async (_req) => {
                 const subject = `Wiply — ${count} nouvelle${count > 1 ? "s" : ""} notification${count > 1 ? "s" : ""}`;
                 await sendBrevoEmail(email, subject, html);
                 emailsSent++;
-                sentIds.push(...userNotifs.map((n: any) => n.id));
+                sentIds.push(...userNotifs.map((notification) => notification.id));
             } catch (err) {
                 console.error(`Failed to send digest to ${email}:`, err);
             }

@@ -1,36 +1,91 @@
 "use client";
 
 import { useEffect, useState, use, useRef } from "react";
+import Image from "next/image";
 import { getPortalData, submitClientContent } from "@/actions/portal.server";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { PortalUploadAccessButton } from "@/components/files/PortalUploadAccessButton";
 import { toast } from "sonner";
 import {
     Loader2, PenTool, Globe, CheckCircle2, ArrowRight, UploadCloud,
     FileType2, Image as ImageIcon, Check, MessageSquare, Shield
 } from "lucide-react";
 
+type PortalChecklistItem = {
+    id: string;
+    title: string;
+    description: string | null;
+    expected_type: string;
+    status: "pending" | "uploaded";
+    client_response: string | null;
+    file_url: string | null;
+};
+
+type PortalProjectData = {
+    name: string;
+    company?: { name?: string | null } | null;
+    agency?: {
+        name?: string | null;
+        logo_url?: string | null;
+        primary_color?: string | null;
+        secondary_color?: string | null;
+    } | null;
+    figma_url?: string | null;
+    deployment_url?: string | null;
+    portal_show_progress?: boolean | null;
+    portal_message?: string | null;
+};
+
 export default function ClientPortalPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = use(params);
 
     const [isLoading, setIsLoading] = useState(true);
-    const [data, setData] = useState<{ project: any, checklists: any[] } | null>(null);
+    const [data, setData] = useState<{ project: PortalProjectData; checklists: PortalChecklistItem[] } | null>(null);
     const [submittingId, setSubmittingId] = useState<string | null>(null);
     const [textInputs, setTextInputs] = useState<Record<string, string>>({});
     const [fileInputs, setFileInputs] = useState<Record<string, File | null>>({});
 
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-    useEffect(() => { loadData(token); }, [token]);
-
     const loadData = async (magicToken: string) => {
         const result = await getPortalData(magicToken);
-        if (result.success) setData({ project: result.project, checklists: result.checklists || [] });
+        if (result.success) {
+            setData({
+                project: result.project as PortalProjectData,
+                checklists: (result.checklists ?? []) as PortalChecklistItem[],
+            });
+        }
         else toast.error("Lien invalide ou expiré.");
         setIsLoading(false);
     };
 
-    const handleSubmit = async (item: any) => {
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchPortalData = async () => {
+            const result = await getPortalData(token);
+            if (cancelled) return;
+
+            if (result.success) {
+                setData({
+                    project: result.project as PortalProjectData,
+                    checklists: (result.checklists ?? []) as PortalChecklistItem[],
+                });
+            } else {
+                toast.error("Lien invalide ou expiré.");
+            }
+            setIsLoading(false);
+        };
+
+        void fetchPortalData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [token]);
+
+    const handleSubmit = async (item: PortalChecklistItem) => {
         const textContent = textInputs[item.id];
         const fileContent = fileInputs[item.id];
 
@@ -51,7 +106,7 @@ export default function ClientPortalPage({ params }: { params: Promise<{ token: 
             toast.success("Parfait ! Élément envoyé à l'équipe.");
             loadData(token);
         } else {
-            toast.error("Erreur lors de l'envoi.");
+            toast.error(result.error ?? "Erreur lors de l'envoi.");
         }
     };
 
@@ -85,9 +140,12 @@ export default function ClientPortalPage({ params }: { params: Promise<{ token: 
                 <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         {logoUrl ? (
-                            <img
+                            <Image
                                 src={logoUrl}
                                 alt={agencyName}
+                                width={32}
+                                height={32}
+                                unoptimized
                                 className="h-8 w-8 rounded-lg object-contain"
                             />
                         ) : (
@@ -342,9 +400,9 @@ export default function ClientPortalPage({ params }: { params: Promise<{ token: 
                                                 <div className="flex-1 overflow-hidden">
                                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Fourni par vous</div>
                                                     {item.file_url ? (
-                                                        <a href={item.file_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-slate-700 hover:text-blue-600 truncate block">
+                                                        <PortalUploadAccessButton itemId={item.id} portalToken={token} variant="link">
                                                             {item.client_response} (Voir le fichier)
-                                                        </a>
+                                                        </PortalUploadAccessButton>
                                                     ) : (
                                                         <p className="text-sm text-slate-700 truncate">{item.client_response}</p>
                                                     )}
@@ -362,7 +420,7 @@ export default function ClientPortalPage({ params }: { params: Promise<{ token: 
                 <footer className="pt-8 text-center">
                     <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
                         {logoUrl ? (
-                            <img src={logoUrl} alt={agencyName} className="h-4 w-4 rounded object-contain opacity-50" />
+                            <Image src={logoUrl} alt={agencyName} width={16} height={16} unoptimized className="h-4 w-4 rounded object-contain opacity-50" />
                         ) : (
                             <div
                                 className="h-4 w-4 rounded flex items-center justify-center text-white text-[8px] font-bold"

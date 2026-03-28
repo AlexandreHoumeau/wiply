@@ -2,7 +2,6 @@ import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "re
 import React from "react";
 
 // ── Colors & Theme ───────────────────────────────────────────────────────────
-const BG = "#FAFAFA";
 const SLATE_900 = "#0F172A";
 const SLATE_700 = "#334155";
 const SLATE_600 = "#475569";

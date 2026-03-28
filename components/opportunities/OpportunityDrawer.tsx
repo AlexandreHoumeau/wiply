@@ -39,7 +39,7 @@ interface OpportunityDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     initialData?: OpportunityWithCompany | null;
-    onSaved: (opportunity: any) => void;
+    onSaved: (opportunity: OpportunityWithCompany) => void;
     userProfile: { agency_id: string };
 }
 
@@ -91,7 +91,7 @@ export function OpportunityDrawer({
             onSaved(opportunity);
             onOpenChange(false);
             form.reset();
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
             setError("Une erreur est survenue. Réessayez.");
         }

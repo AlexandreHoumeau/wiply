@@ -2,7 +2,9 @@
 "use client";
 
 import { updateAgencyBranding } from "@/actions/agency.server";
+import type { Agency } from "@/lib/validators/agency";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -148,7 +150,7 @@ export function AgencyBrandingDialog({
   companyInitial,
   isAdmin,
 }: {
-  agency: any;
+  agency: Agency | null;
   companyInitial: string;
   isAdmin: boolean;
 }) {
@@ -197,9 +199,12 @@ export function AgencyBrandingDialog({
       <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       {agency?.logo_url ? (
-        <img
+        <Image
           src={agency.logo_url}
           alt={`${agency.name} logo`}
+          width={80}
+          height={80}
+          unoptimized
           className="h-full w-full object-contain p-1 relative z-10 transition-transform group-hover:scale-105"
         />
       ) : (
@@ -259,9 +264,12 @@ export function AgencyBrandingDialog({
                 style={{ backgroundColor: `${safeSecondary}40` }}
               >
                 {preview ? (
-                  <img
+                  <Image
                     src={preview}
                     alt="Logo preview"
+                    width={40}
+                    height={40}
+                    unoptimized
                     className="h-full w-full object-contain p-0.5"
                   />
                 ) : (
@@ -309,9 +317,12 @@ export function AgencyBrandingDialog({
               <div className="flex items-center gap-4 p-4">
                 <div className="h-14 w-14 rounded-xl border border-border bg-card flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
                   {preview ? (
-                    <img
+                    <Image
                       src={preview}
                       alt="Logo preview"
+                      width={56}
+                      height={56}
+                      unoptimized
                       className="h-full w-full object-contain p-1"
                     />
                   ) : (
