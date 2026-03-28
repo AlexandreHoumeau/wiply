@@ -41,4 +41,12 @@ export async function getUniqueSlug(
 export const getInitials = (firstName?: string, lastName?: string, email?: string) => {
   if (firstName && lastName) return `${firstName[0]}${lastName[0]}`.toUpperCase();
   return email?.slice(0, 2).toUpperCase() || "??";
-}; 
+};
+
+export function formatBytes(bytes: number, decimals = 1): string {
+  if (bytes === 0) return "0 o";
+  const k = 1024;
+  const sizes = ["o", "Ko", "Mo", "Go"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${sizes[i]}`;
+}

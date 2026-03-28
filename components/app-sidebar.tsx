@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { motion } from "framer-motion"
 import {
     Briefcase, Building2, ChevronsUpDown, FileText, Kanban, LayoutDashboard,
-    Lock, LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers, Zap
+    Lock, LogOut, Settings, ShieldCheck, Users, PanelLeftClose, PanelLeftOpen, Layers, FolderOpen, Zap
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -46,6 +46,7 @@ const secondaryNav: NavConfigItem[] = [
     { label: "Clients", href: "/app/companies", icon: Building2 },
     { label: "Agence", href: "/app/agency", icon: Users },
     { label: "Espace interne", href: "/app/workspace", icon: Layers },
+    { label: "Fichiers", href: "/app/files", icon: FolderOpen, proOnly: true },
 ]
 
 interface AppSidebarProps {

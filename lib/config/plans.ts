@@ -6,6 +6,8 @@ export const PLANS = {
         ai_enabled: false,
         quotes_enabled: false,
         price_id: null as null,
+        files_enabled: false,
+        max_storage_bytes: 0,
     },
     PRO: {
         max_projects: Infinity,
@@ -14,6 +16,8 @@ export const PLANS = {
         ai_enabled: true,
         quotes_enabled: true,
         price_id: process.env.STRIPE_PRO_PRICE_ID!,
+        files_enabled: true,
+        max_storage_bytes: 2 * 1024 * 1024 * 1024,
     },
 } as const
 

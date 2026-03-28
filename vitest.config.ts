@@ -19,6 +19,7 @@ export default defineConfig({
         "lib/validators/quotes.ts",
         "lib/utils.ts",
         "actions/dashboard.server.ts",
+        "components/files/driveUtils.ts",
         // Add more paths here as you write unit tests for other files.
         // DB-heavy CRUD wrappers (tracking.server.ts, opportunity.client.ts)
         // belong in integration tests and are excluded from this threshold.

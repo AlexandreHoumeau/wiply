@@ -5,6 +5,9 @@ import { checkProjectLimit, checkMemberLimit, checkAiEnabled, checkTrackingLinkL
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }));
+vi.mock("@/lib/supabase/admin", () => ({
+  supabaseAdmin: {},
+}));
 
 import { createClient } from "@/lib/supabase/server";
 

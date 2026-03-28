@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fetchAgencyTrackingStats, fetchAgencyAnalytics } from "@/actions/tracking.server";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
+vi.mock("@/lib/supabase/admin", () => ({ supabaseAdmin: {} }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { createClient } from "@/lib/supabase/server";
