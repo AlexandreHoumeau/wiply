@@ -296,6 +296,12 @@ export default async function PublicQuotePage({
                       <span>−{fmt(totals.discountAmount, quote.currency)}</span>
                     </div>
                   )}
+                  {totals.discountAmount > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 16px", fontSize: "13px", fontWeight: 600, color: "#1a1a1a", borderBottom: quote.tax_rate != null && quote.tax_rate > 0 ? "1px solid #ebebeb" : "none" }}>
+                      <span>Total HT</span>
+                      <span>{fmt(totals.subtotal - totals.discountAmount, quote.currency)}</span>
+                    </div>
+                  )}
                   {quote.tax_rate != null && quote.tax_rate > 0 && (
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 16px", fontSize: "13px", color: "#555" }}>
                       <span>TVA ({quote.tax_rate}%)</span>

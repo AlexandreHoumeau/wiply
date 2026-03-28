@@ -827,6 +827,12 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                 <span className="font-mono tabular-nums">−{fmt(totals.discountAmount, currency)}</span>
               </div>
             )}
+            {totals.discountAmount > 0 && (
+              <div className="flex justify-between text-sm font-semibold text-foreground">
+                <span>Total HT</span>
+                <span className="font-mono tabular-nums">{fmt(totals.subtotal - totals.discountAmount, currency)}</span>
+              </div>
+            )}
             {parseFloat(taxRate) > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>TVA ({taxRate}%)</span>
