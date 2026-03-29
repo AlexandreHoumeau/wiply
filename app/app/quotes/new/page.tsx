@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Lock, ChevronsUpDown, Check, Loader2 } from "lucide-react"
+import { ArrowLeft, ChevronsUpDown, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +10,7 @@ import { useAgency } from "@/providers/agency-provider"
 import { isProPlan } from "@/lib/validators/agency"
 import { createQuote, listOpportunitiesForSelect, getOpportunityForSelect } from "@/actions/quotes.server"
 import { toast } from "sonner"
+import { ProPageGate } from "@/components/pro-page-gate"
 
 type OpportunityOption = { id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }
 
@@ -62,22 +63,7 @@ export default function NewQuotePage() {
   }, [])
 
   if (!agency || !isProPlan(agency)) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8 text-center">
-        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-100">
-          <Lock className="w-8 h-8 text-slate-400" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Fonctionnalité PRO</h2>
-          <p className="text-muted-foreground max-w-md">
-            Les devis sont disponibles sur le plan PRO.
-          </p>
-        </div>
-        <Button onClick={() => router.push("/app/agency/billing")}>
-          Passer au plan PRO
-        </Button>
-      </div>
-    )
+    return <ProPageGate feature="quotes" />
   }
 
   const handleSelectOpp = (opp: OpportunityOption) => {

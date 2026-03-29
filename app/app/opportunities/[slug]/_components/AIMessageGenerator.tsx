@@ -232,7 +232,7 @@ export function AIMessageGenerator({
 
     // Config
     const [selectedChannel, setSelectedChannel] = useState<ContactVia>(
-        (initialStageMessage?.channel as ContactVia | undefined) ?? (opportunity.contact_via as ContactVia) || "email"
+        ((initialStageMessage?.channel as ContactVia | undefined) ?? (opportunity.contact_via as ContactVia)) || "email"
     );
     const [tone, setTone] = useState(initialStageMessage?.tone ?? "friendly");
     const [length, setLength] = useState(initialStageMessage?.length ?? "medium");

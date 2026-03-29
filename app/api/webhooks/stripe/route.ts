@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { enforceAgencySeatPolicy } from '@/lib/billing/enforceSeatPolicy'
 import { stripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -92,6 +93,7 @@ export async function POST(req: NextRequest) {
 
                 if (agencyId) {
                     await updateAgencyBilling(agencyId, { plan: 'FREE', subscription_status: 'inactive' })
+                    await enforceAgencySeatPolicy(agencyId)
                 }
                 break
             }

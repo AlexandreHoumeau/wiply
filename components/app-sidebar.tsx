@@ -39,7 +39,7 @@ type NavConfigItem = {
 const mainNav: NavConfigItem[] = [
     { label: "Tableau de bord", href: "/app", icon: LayoutDashboard },
     { label: "Opportunités", href: "/app/opportunities", icon: Briefcase },
-    { label: "Devis", href: "/app/quotes", icon: FileText, proOnly: true },
+    { label: "Devis", href: "/app/quotes", icon: FileText },
     { label: "Projets", href: "/app/projects", icon: Kanban },
 ]
 
@@ -47,7 +47,7 @@ const secondaryNav: NavConfigItem[] = [
     { label: "Clients", href: "/app/companies", icon: Building2 },
     { label: "Agence", href: "/app/agency", icon: Users },
     { label: "Espace interne", href: "/app/workspace", icon: Layers },
-    { label: "Fichiers", href: "/app/files", icon: FolderOpen, proOnly: true },
+    { label: "Fichiers", href: "/app/files", icon: FolderOpen },
 ]
 
 interface AppSidebarProps {
@@ -379,12 +379,7 @@ function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, op
                 </motion.span>
             )}
 
-            {/* Pro Badge or Lock icon */}
-            {locked && !isCollapsed && (
-                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white shrink-0">
-                    PRO
-                </span>
-            )}
+            {/* Lock icon */}
             {locked && isCollapsed && (
                 <Lock className="absolute bottom-1 right-1 w-2.5 h-2.5 text-amber-600/60" />
             )}

@@ -2,6 +2,8 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { checkMemberLimit } from "@/lib/billing/checkLimit"
+import { enforceAgencySeatPolicy } from "@/lib/billing/enforceSeatPolicy"
 import { createNotification } from "@/lib/notifications"
 import { sendEmail } from "@/lib/email"
 import { MemberJoinedEmail } from "@/emails/member-joined"
@@ -50,6 +52,18 @@ export async function acceptInvitation(token: string) {
 
     if (user.email !== typedInvite.email) {
         return { error: `Cette invitation est destinée à ${typedInvite.email}. Vous êtes connecté en tant que ${user.email}.` }
+    }
+
+    await enforceAgencySeatPolicy(typedInvite.agency_id)
+
+    const limitCheck = await checkMemberLimit(typedInvite.agency_id)
+    if (!limitCheck.allowed) {
+        await supabaseAdmin
+            .from("agency_invites")
+            .delete()
+            .eq("id", typedInvite.id);
+
+        return { error: "Cette invitation n'est plus valide car l'agence n'a plus de places disponibles sur son plan actuel." }
     }
 
     // 4. TRANSACTION : Mettre à jour le profil + Marquer l'invitation comme acceptée

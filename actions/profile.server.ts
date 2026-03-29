@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { AuthUserContext } from "@/lib/validators/definitions";
 import { NotificationPreferences, Profile, updateProfileSchema, UpdateProfileState } from "@/lib/validators/profile";
+import { enforceAgencySeatPolicy } from "@/lib/billing/enforceSeatPolicy";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function fetchUserProfile(): Promise<Profile | null> {
@@ -128,8 +129,22 @@ export async function getAuthenticatedUserContext(): Promise<AuthUserContext | n
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) return null
 
-        // 2. Fetch Profile joined with Agency
-        // We use the '!' notation to specify which foreign key to follow
+        const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("agency_id")
+            .eq("id", user.id)
+            .single()
+
+        if (profileError || !profile) {
+            console.error("Error fetching user profile:", profileError)
+            return null
+        }
+
+        if (profile.agency_id) {
+            await enforceAgencySeatPolicy(profile.agency_id)
+        }
+
+        // 2. Fetch Profile joined with Agency after downgrade cleanup
         const { data, error } = await supabase
             .from("profiles")
             .select(`
@@ -139,12 +154,11 @@ export async function getAuthenticatedUserContext(): Promise<AuthUserContext | n
             .eq("id", user.id)
             .single()
 
-        if (error || !data) {
+        if (error || !data?.agency) {
             console.error("Error fetching user context:", error)
             return null
         }
 
-        // 'data' now matches the AuthUserContext type
         return data as AuthUserContext
     } catch (e) {
         console.error("Unexpected error:", e)
