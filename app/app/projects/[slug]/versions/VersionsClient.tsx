@@ -314,7 +314,7 @@ function TaskRow({ task, taskPrefix }: { task: VersionTask; taskPrefix: string }
                 <div
                     className="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
                     style={{ backgroundColor: "var(--brand-secondary,#6366F1)" }}
-                    title={task.assignee.first_name ? `${task.assignee.first_name} ${task.assignee.last_name ?? ""}`.trim() : task.assignee.email}
+                    title={task.assignee.first_name ? `${task.assignee.first_name} ${task.assignee.last_name ?? ""}`.trim() : task.assignee.email ?? undefined}
                 >
                     {task.assignee.first_name?.charAt(0)}{task.assignee.last_name?.charAt(0)}
                 </div>

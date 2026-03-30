@@ -184,7 +184,7 @@ export async function getTaskFiles(taskId: string): Promise<{ success: boolean; 
 
         if (error) throw error;
         const files = (data ?? []).map((row) => row.file).filter(Boolean);
-        return { success: true, data: files as FileRecord[] };
+        return { success: true, data: files as unknown as FileRecord[] };
     } catch (error: unknown) {
         return { success: false, error: getErrorMessage(error) };
     }

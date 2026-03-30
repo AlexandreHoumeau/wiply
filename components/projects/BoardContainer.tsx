@@ -114,9 +114,9 @@ function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectI
     const filtered = useMemo(() => initialTasks.filter((t) => {
         if (hideReleased && t.version?.status === "released") return false;
         if (selectedAssignees.length > 0 && !selectedAssignees.includes(t.assignee_id ?? "__none__")) return false;
-        if (selectedTypes.length > 0 && !selectedTypes.includes(t.type)) return false;
-        if (selectedPriorities.length > 0 && !selectedPriorities.includes(t.priority)) return false;
-        if (selectedStatuses.length > 0 && !selectedStatuses.includes(t.status)) return false;
+        if (selectedTypes.length > 0 && !selectedTypes.includes(t.type ?? "")) return false;
+        if (selectedPriorities.length > 0 && !selectedPriorities.includes(t.priority ?? "")) return false;
+        if (selectedStatuses.length > 0 && !selectedStatuses.includes(t.status ?? "")) return false;
         return true;
     }), [initialTasks, hideReleased, selectedAssignees, selectedTypes, selectedPriorities, selectedStatuses]);
 
@@ -321,8 +321,8 @@ function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectI
 
                 {/* ── View ─────────────────────────────────────────────────── */}
                 <div className="flex-1 overflow-hidden">
-                    {view === "board"    && <KanbanBoard projectId={projectId} tasks={filtered} allTasks={initialTasks} onOpenTask={handleOpenTask} onNewTask={handleOpenNewTask} />}
-                    {view === "list"     && <ListView    projectId={projectId} tasks={filtered} allTasks={initialTasks} onOpenTask={handleOpenTask} />}
+                    {view === "board"    && <KanbanBoard _projectId={projectId} tasks={filtered} allTasks={initialTasks} onOpenTask={handleOpenTask} onNewTask={handleOpenNewTask} />}
+                    {view === "list"     && <ListView    projectId={projectId} tasks={filtered} allTasks={initialTasks} onOpenTask={(t) => handleOpenTask(t as ProjectTask)} />}
                     {view === "gantt"    && <GanttView   projectId={projectId} tasks={filtered} />}
                     {view === "calendar" && <CalendarView projectId={projectId} tasks={filtered} />}
                 </div>
@@ -335,7 +335,7 @@ function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectI
                 projectId={projectId}
                 allTasks={initialTasks}
                 onSaved={handleTaskSaved}
-                onOpenTask={handleOpenTask}
+                onOpenTask={(t) => handleOpenTask(t as ProjectTask)}
                 initialStatus={targetStatus}
             />
         </>

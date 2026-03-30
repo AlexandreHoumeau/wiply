@@ -121,9 +121,9 @@ export function ListView({ projectId: _projectId, tasks, allTasks, onOpenTask }:
         let cmp = 0;
         switch (sortKey) {
             case "title":      cmp = (a.title ?? "").localeCompare(b.title ?? ""); break;
-            case "status":     cmp = (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9); break;
+            case "status":     cmp = (STATUS_ORDER[a.status ?? ""] ?? 9) - (STATUS_ORDER[b.status ?? ""] ?? 9); break;
             case "type":       cmp = (a.type ?? "").localeCompare(b.type ?? ""); break;
-            case "priority":   cmp = (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9); break;
+            case "priority":   cmp = (PRIORITY_ORDER[a.priority ?? ""] ?? 9) - (PRIORITY_ORDER[b.priority ?? ""] ?? 9); break;
             case "assignee":   cmp = ((a.assignee?.first_name ?? a.assignee?.email ?? "")).localeCompare(b.assignee?.first_name ?? b.assignee?.email ?? ""); break;
             case "due_date":   cmp = (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"); break;
             case "created_at": cmp = (a.created_at ?? "").localeCompare(b.created_at ?? ""); break;

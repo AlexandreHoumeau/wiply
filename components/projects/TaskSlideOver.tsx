@@ -18,18 +18,9 @@ import { TaskComments } from "./TaskComments";
 import { TaskSidebar } from "./TaskSidebar";
 import dayjs from "dayjs";
 
-type TaskItem = {
-    id: string;
-    title?: string | null;
-    description?: string | null;
-    status?: string | null;
-    priority?: string | null;
-    type?: string | null;
-    assignee_id?: string | null;
-    due_date?: string | null;
-    version_id?: string | null;
-    parent_id?: string | null;
-    task_number?: number | null;
+import type { ProjectTask } from "./types";
+type TaskItem = ProjectTask & {
+    version?: { id: string; name: string; status?: string | null } | null;
 };
 
 interface TaskSlideOverProps {
@@ -127,7 +118,7 @@ function TaskSlideOverInner({
         ...localSubTasks,
     ].filter((t, i, arr) => arr.findIndex((x) => x.id === t.id) === i);
 
-    const parentTask = task?.parent_id ? allTasks.find((t) => t.id === task.parent_id) : null;
+    const parentTask = (task?.parent_id ? allTasks.find((t) => t.id === task.parent_id) : null) ?? null;
     const taskSlug = task?.task_number ? `${taskPrefix}-${task.task_number}` : null;
     const isOverdue = !!(dueDate && dayjs(dueDate).isBefore(dayjs(), "day") && status !== "done");
     const doneSubCount = subTasks.filter((t) => t.status === "done").length;
@@ -154,6 +145,7 @@ function TaskSlideOverInner({
     };
 
     const handleDelete = async () => {
+        if (!task) return;
         setIsLoading(true);
         const result = await deleteTask(task.id);
         setIsLoading(false);
@@ -197,7 +189,7 @@ function TaskSlideOverInner({
         );
         setIsCreatingSubTask(false);
         if (result.success && result.data) {
-            setLocalSubTasks((prev) => [...prev, result.data]);
+            setLocalSubTasks((prev) => [...prev, result.data as TaskItem]);
             setNewSubTitle("");
             onSaved();
         } else {

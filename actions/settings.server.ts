@@ -18,7 +18,7 @@ async function fetchAgencyData(agencyId: string) {
     ] = await Promise.all([
         supabaseAdmin.from('agencies').select('*').eq('id', agencyId).single(),
         supabaseAdmin.from('profiles').select('id, first_name, last_name, email, role').eq('agency_id', agencyId),
-        supabaseAdmin.from('agency_invites').select('id, email, role').eq('agency_id', agencyId).eq('accepted', false),
+        supabaseAdmin.from('agency_invites').select('id, email, role, expires_at').eq('agency_id', agencyId).eq('accepted', false),
         supabaseAdmin.from('agency_ai_configs').select('*').eq('agency_id', agencyId).maybeSingle(),
         supabaseAdmin.from('projects').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId),
         supabaseAdmin.from('profiles').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId),

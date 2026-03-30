@@ -30,9 +30,7 @@ export default async function NoAgencyPage() {
         .gt("expires_at", new Date().toISOString())
         .maybeSingle();
 
-    const invitedAgencyName = Array.isArray(pendingInvite?.agencies)
-        ? pendingInvite.agencies[0]?.name ?? null
-        : pendingInvite?.agencies?.name ?? null;
+    const invitedAgencyName = pendingInvite?.agencies?.[0]?.name ?? null;
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">

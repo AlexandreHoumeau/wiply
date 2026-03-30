@@ -19,7 +19,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { OpportunityAIContext } from "@/lib/email_generator/utils";
 import { ContactVia, OpportunityStatus, mapOpportunityStatusLabel } from "@/lib/validators/oppotunities";
 import { cn } from "@/lib/utils";
-import type { LinkRecord } from "@/actions/tracking.server";
+type LinkRecord = { id: string; is_active: boolean; [key: string]: unknown };
 
 // --- Pipeline order for stage pills ---
 const PIPELINE_ORDER: OpportunityStatus[] = [

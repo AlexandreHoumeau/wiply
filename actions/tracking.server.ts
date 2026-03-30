@@ -172,6 +172,27 @@ export async function getTrackingLinkAnalytics(opportunityId: string) {
     }
 }
 
+export type LinkAnalyticsResult = {
+    links: { id: string; is_active: boolean; [key: string]: unknown }[];
+    clicks: {
+        ip_address?: string | null;
+        os_type?: string | null;
+        device_type?: string | null;
+        country_code?: string | null;
+        city?: string | null;
+        clicked_at: string;
+        [key: string]: unknown;
+    }[];
+    analytics: {
+        totalClicks: number;
+        uniqueClicks: number;
+        deviceBreakdown: Record<string, number>;
+        countryBreakdown: Record<string, number>;
+        lastClickedAt: string | null;
+        activeLinksCount: number;
+    };
+};
+
 export type AnalyticsRange = "24h" | "7d" | "30d";
 
 export type AgencyAnalyticsData = {

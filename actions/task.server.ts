@@ -152,7 +152,7 @@ export async function addTaskComment(taskId: string, content: string): Promise<{
             const mentionedIds = [...content.matchAll(/data-id="([^"]+)"/g)].map((m) => m[1]);
 
             const commentRecipients = [task.created_by, task.assignee_id]
-                .filter(Boolean)
+                .filter((id): id is string => Boolean(id))
                 .filter((id, i, arr) => arr.indexOf(id) === i)
                 .filter((id) => id !== user.id);
 

@@ -24,7 +24,7 @@ export function OpportunityAnalytics({ opportunityId }: { opportunityId: string 
         const load = async () => {
             setIsLoading(true);
             const result = await getTrackingLinkAnalytics(opportunityId);
-            if (result.success) setData(result.data);
+            if (result.success) setData(result.data ?? null);
             setIsLoading(false);
         };
         load();

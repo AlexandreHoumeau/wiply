@@ -1,10 +1,17 @@
-import { Agency, InviteAgencyMemberInput } from "./agency"
+import { Agency } from "./agency"
 import { AgencyAiConfig } from "./ai"
 import { Profile } from "./profile"
 
+export type AgencyInvite = {
+    id: string
+    email: string
+    role: "agency_admin" | "agency_member"
+    expires_at: string | null
+}
+
 export type SettingsData = {
     profile: Profile
-    invites?: InviteAgencyMemberInput[]
+    invites?: AgencyInvite[]
     agency: Agency,
     team: Array<{
         id: string

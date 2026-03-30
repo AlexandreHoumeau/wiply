@@ -169,7 +169,7 @@ function EventRow({ event }: { event: OpportunityEvent }) {
                             </div>
                         </div>
                         <div className="p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                            {event.metadata.text}
+                            {String(event.metadata.text ?? "")}
                         </div>
                     </div>
                 ) : isStatusChange ? (
@@ -177,9 +177,9 @@ function EventRow({ event }: { event: OpportunityEvent }) {
                         <Avatar user={event.user} className="w-5 h-5 text-[9px]" />
                         <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                             <AuthorName user={event.user} />
-                            {event.metadata.from && <StatusBadge status={event.metadata.from} />}
+                            {!!event.metadata.from && <StatusBadge status={String(event.metadata.from)} />}
                             <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-                            {event.metadata.to && <StatusBadge status={event.metadata.to} />}
+                            {!!event.metadata.to && <StatusBadge status={String(event.metadata.to)} />}
                         </div>
                     </div>
                 ) : (

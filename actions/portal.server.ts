@@ -227,7 +227,7 @@ export async function getAgencyPortalUploadUrl(itemId: string) {
             .eq("id", itemId)
             .single();
 
-        const projectAgencyId = Array.isArray(item?.project) ? item.project[0]?.agency_id : item?.project?.agency_id;
+        const projectAgencyId = item?.project?.[0]?.agency_id;
         if (itemError || !item?.file_url || projectAgencyId !== profile.agency_id) {
             return { success: false, error: "Fichier introuvable" };
         }

@@ -47,7 +47,7 @@ type CompositionTaskCard = {
   id: string;
   title: string;
   description?: string;
-  type: "feature" | "design" | "bug";
+  type: "feature" | "design" | "bug" | "setup" | "content";
   priority: "medium" | "high" | "urgent";
   comments: number;
   assignee?: string;
