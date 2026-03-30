@@ -78,25 +78,15 @@ describe("completeOnboarding — demo campaign", () => {
       return agencyInsertChain
     })
 
-    const profileInsertChain = makeChain({ data: null, error: null })
-
     const agencyUpdateChain = {
       eq: vi.fn().mockResolvedValue({ error: null }),
     }
 
     const adminFromMock = vi.fn()
-      .mockReturnValueOnce(profileGuardChain)                              // profiles.select guard
-      .mockReturnValueOnce({ insert: agencyInsertInterceptor })            // agencies.insert
-      .mockReturnValueOnce({ insert: vi.fn().mockReturnValue({ ...makeChain({ data: null, error: null }), select: undefined, single: undefined }) }) // profiles.insert (no select needed, just needs to not error)
-      .mockReturnValueOnce({ update: vi.fn().mockReturnValue(agencyUpdateChain) }) // agencies.update owner_id
-
-    // For the profiles.insert call we need it to resolve with no error
-    const profileInsertResult = { error: null }
-    adminFromMock
-      .mockReturnValueOnce(profileGuardChain)
-      .mockReturnValueOnce({ insert: agencyInsertInterceptor })
-      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue(profileInsertResult) })
-      .mockReturnValueOnce({ update: vi.fn().mockReturnValue(agencyUpdateChain) })
+      .mockReturnValueOnce(profileGuardChain)                                                          // profiles.select guard
+      .mockReturnValueOnce({ insert: agencyInsertInterceptor })                                       // agencies.insert
+      .mockReturnValueOnce({ insert: vi.fn().mockResolvedValue({ data: { id: "user-1" }, error: null }) }) // profiles.insert
+      .mockReturnValueOnce({ update: vi.fn().mockReturnValue(agencyUpdateChain) })                    // agencies.update owner_id
 
     // Patch supabaseAdmin
     const { supabaseAdmin } = await import("@/lib/supabase/admin")
@@ -162,6 +152,7 @@ describe("completeOnboarding — demo campaign", () => {
       campaignCode: null,
     }).catch(() => {})
 
+    expect(mockGetCampaignDemoDays).toHaveBeenCalledWith(null)
     expect(capturedInsertPayload).toBeDefined()
     expect(capturedInsertPayload.demo_ends_at).toBeUndefined()
   })
