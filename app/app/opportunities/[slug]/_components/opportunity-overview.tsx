@@ -432,8 +432,8 @@ function MiniTimeline({ events, slug }: { events: OpportunityEvent[]; slug: stri
                                 <p className="text-sm text-foreground/80 leading-snug">
                                     {config.label(event.metadata ?? {})}
                                 </p>
-                                {event.event_type === "note_added" && event.metadata?.content && (
-                                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{event.metadata.content}</p>
+                                {event.event_type === "note_added" && !!event.metadata?.content && (
+                                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{String(event.metadata.content)}</p>
                                 )}
                             </div>
                             <span className="text-xs text-muted-foreground shrink-0 mt-0.5">

@@ -17,6 +17,7 @@ const BLUE_50 = "#EFF6FF";
 
 const EMERALD_600 = "#059669";
 const EMERALD_100 = "#D1FAE5";
+const EMERALD_50 = "#ECFDF5";
 // ── Generated Text ───────────────────────────────────────────────────────────
 const SUBJECT_TEXT = "Votre stratégie d'acquisition – Retour sur notre échange";
 const BODY_TEXT = `Bonjour Sophie,

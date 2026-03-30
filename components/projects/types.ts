@@ -31,4 +31,5 @@ export type ProjectTask = {
     version_id?: string | null;
     version?: ProjectTaskVersion | null;
     task_comments?: ProjectTaskCommentCount[] | null;
+    creator?: { first_name: string | null; last_name: string | null; email: string | null } | null;
 };

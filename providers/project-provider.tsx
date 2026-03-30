@@ -19,6 +19,7 @@ export type ProjectContextValue = {
     magic_token?: string | null;
     is_portal_active?: boolean | null;
     company_id?: string | null;
+    company?: { id: string; name: string } | null;
 };
 
 const ProjectContext = createContext<ProjectContextValue | null>(null);

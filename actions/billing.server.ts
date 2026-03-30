@@ -42,7 +42,7 @@ export async function createCheckoutSession(
     agencyId: string
 ): Promise<{ url: string } | { error: string }> {
     const context = await getAuthorizedAgencyBillingContext(agencyId)
-    if ('error' in context) return { error: context.error }
+    if ('error' in context) return { error: context.error as string }
     const { supabase, user } = context
 
     const { data: agency } = await supabase
@@ -77,7 +77,7 @@ export async function createPortalSession(
     agencyId: string
 ): Promise<{ url: string } | { error: string }> {
     const context = await getAuthorizedAgencyBillingContext(agencyId)
-    if ('error' in context) return { error: context.error }
+    if ('error' in context) return { error: context.error as string }
     const { supabase } = context
 
     const { data: agency } = await supabase

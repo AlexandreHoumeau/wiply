@@ -84,6 +84,7 @@ export type QuoteCompanyRef = {
   billing_address?: string | null
   contact_name?: string | null
   email?: string | null
+  website?: string | null
 }
 
 export type QuoteOpportunityRef = {

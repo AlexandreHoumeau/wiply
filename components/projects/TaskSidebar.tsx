@@ -247,7 +247,7 @@ export function TaskSidebar({
                                         className="h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0"
                                         style={{ backgroundColor: "var(--brand-secondary,#6366F1)", color: "#fff" }}
                                     >
-                                        {getInitials(task.creator.first_name, task.creator.last_name, task.creator.email)}
+                                        {getInitials(task.creator.first_name ?? undefined, task.creator.last_name ?? undefined, task.creator.email ?? undefined)}
                                     </div>
                                     <p className="text-[11px] font-medium text-muted-foreground/70 truncate">
                                         {task.creator.first_name

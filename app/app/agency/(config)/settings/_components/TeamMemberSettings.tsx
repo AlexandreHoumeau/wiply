@@ -13,16 +13,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TabsContent } from "@/components/ui/tabs";
 import { getInitials } from "@/lib/utils";
-import type { InviteAgencyMemberInput } from "@/lib/validators/agency";
 import type { Profile } from "@/lib/validators/profile";
 import type { AgencyMember } from "@/actions/agency.server";
+import type { AgencyInvite } from "@/lib/validators/settings";
 import dayjs from "dayjs";
 import { Clock, Loader2, Mail, MoreVertical, Send, ShieldCheck, Sparkles, Trash2, UserPlus } from "lucide-react";
 
 type TeamMemberSettingsProps = {
     team: AgencyMember[]
     profile: Profile
-    invites: InviteAgencyMemberInput[]
+    invites: AgencyInvite[]
     inviteState: {
         success?: boolean
         message?: string
@@ -125,7 +125,7 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
                                             <div className="relative">
                                                 <Avatar className={`h-10 w-10 border-2 shadow-sm ${isMe ? 'border-blue-400' : 'border-background'}`}>
                                                     <AvatarFallback className={`${isMe ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'} text-xs font-bold`}>
-                                                        {getInitials(member.first_name, member.last_name, member.email)}
+                                                        {getInitials(member.first_name ?? undefined, member.last_name ?? undefined, member.email ?? undefined)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 {isMe && (
