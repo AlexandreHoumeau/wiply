@@ -4,7 +4,12 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { bootstrapUser } from "@/services/onboarding.service";
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ campaign?: string }>;
+}) {
+    const { campaign } = await searchParams;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -60,6 +65,7 @@ export default async function OnboardingPage() {
                 <OnboardingForm
                     defaultFirstName={defaultFirstName}
                     defaultLastName={defaultLastName}
+                    campaignCode={campaign}
                 />
             </div>
         </div>

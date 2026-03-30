@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getCampaignDemoDays, incrementCampaignUses } from "@/lib/billing/demoCampaigns";
 
 function generateSlug(name: string): string {
     return name
@@ -20,10 +21,12 @@ export async function completeOnboarding({
     agencyName,
     firstName,
     lastName,
+    campaignCode,
 }: {
     agencyName: string;
     firstName: string;
     lastName: string;
+    campaignCode?: string | null;
 }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -41,10 +44,15 @@ export async function completeOnboarding({
 
     const slug = generateSlug(agencyName.trim());
 
+    const demoDays = await getCampaignDemoDays(campaignCode ?? null)
+    const demoEndsAt = demoDays
+        ? new Date(Date.now() + demoDays * 24 * 3600 * 1000).toISOString()
+        : null
+
     // Step 1: Create agency WITHOUT owner_id (owner_id FK references profiles.id which doesn't exist yet)
     const { data: agency, error: agencyError } = await supabaseAdmin
         .from("agencies")
-        .insert({ name: agencyName.trim(), slug })
+        .insert({ name: agencyName.trim(), slug, ...(demoEndsAt && { demo_ends_at: demoEndsAt }) })
         .select()
         .single();
 
@@ -93,6 +101,10 @@ export async function completeOnboarding({
     if (ownerError) {
         console.error("[onboarding] agency owner_id update error:", JSON.stringify(ownerError));
         // Non-fatal: profile and agency exist, just owner_id not set
+    }
+
+    if (demoDays && campaignCode) {
+        incrementCampaignUses(campaignCode).catch(console.error)
     }
 
     revalidatePath("/", "layout");

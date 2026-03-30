@@ -33,9 +33,10 @@ type FormValues = z.infer<typeof schema>;
 interface OnboardingFormProps {
     defaultFirstName?: string;
     defaultLastName?: string;
+    campaignCode?: string | null;
 }
 
-export function OnboardingForm({ defaultFirstName = "", defaultLastName = "" }: OnboardingFormProps) {
+export function OnboardingForm({ defaultFirstName = "", defaultLastName = "", campaignCode }: OnboardingFormProps) {
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
 
@@ -52,7 +53,7 @@ export function OnboardingForm({ defaultFirstName = "", defaultLastName = "" }: 
         setError(null);
         startTransition(async () => {
             try {
-                await completeOnboarding(values);
+                await completeOnboarding({ ...values, campaignCode });
                 posthog.capture("onboarding_completed", {
                     agency_name: values.agencyName,
                 });
