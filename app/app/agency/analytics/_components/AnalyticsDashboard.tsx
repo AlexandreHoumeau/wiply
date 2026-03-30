@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
+import type { TooltipProps } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 dayjs.extend(relativeTime);
 
@@ -68,7 +70,7 @@ function countryFlag(code: string): string {
   );
 }
 
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label }: TooltipProps<ValueType, NameType>) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm px-4 py-3 shadow-xl">

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Company, CompanyLink } from "./companies";
+import { Company } from "./companies";
 
 export const opportunitySchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
@@ -160,7 +160,7 @@ export type OpportunityEvent = {
   opportunity_id: string;
   user_id: string | null;
   event_type: TimelineEventType;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   user: { first_name: string; last_name: string } | null;
 };

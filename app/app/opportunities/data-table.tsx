@@ -53,6 +53,7 @@ export function DataTable<TData, TValue>({
 
   React.useEffect(() => { setSearchInput(search); }, [search]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -111,7 +112,7 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(
                     "border-b border-border/30 last:border-0 transition-colors group",
-                    (row.original as any).is_favorite
+                    row.original.is_favorite
                       ? "border-l-4 border-l-amber-400 bg-amber-50/30 dark:bg-amber-950/20 hover:bg-amber-50/50 dark:hover:bg-amber-950/30"
                       : "hover:bg-muted/80"
                   )}

@@ -12,7 +12,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUpdateQuote, useUpdateQuoteStatus, useAddQuoteItem, useUpdateQuoteItem, useDeleteQuoteItem } from "@/hooks/use-quotes"
-import { computeQuoteTotals, ALLOWED_TRANSITIONS, QuoteStatus, PAYMENT_TERMS_LABELS } from "@/lib/validators/quotes"
+import {
+  computeQuoteTotals,
+  ALLOWED_TRANSITIONS,
+  QuoteStatus,
+  PAYMENT_TERMS_LABELS,
+  type PaymentTermsPreset,
+  type QuoteDetail,
+  type QuoteDiscountType,
+  type QuoteItem,
+  type QuoteItemType,
+} from "@/lib/validators/quotes"
 import { generateQuoteWithAI, listOpportunitiesForSelect } from "@/actions/quotes.server"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -46,7 +56,15 @@ function fmt(amount: number, currency = "EUR") {
   return new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(amount)
 }
 
-type QuoteData = any
+type QuoteEditorQuote = QuoteDetail
+type EditableQuoteItem = QuoteItem
+type AiPreviewItem = {
+  type: QuoteItemType
+  label: string
+  description?: string
+  quantity: number
+  unit_price: number
+}
 
 const AGENCY_FIELDS: { key: string; label: string }[] = [
   { key: "address", label: "Adresse" },
@@ -61,8 +79,8 @@ const AGENCY_FIELDS: { key: string; label: string }[] = [
 function SortableItemRow({
   item, index, currency, handleUpdateItem, handleDeleteItem,
 }: {
-  item: any; index: number; currency: string
-  handleUpdateItem: (id: string, field: string, value: any) => void
+  item: EditableQuoteItem; index: number; currency: string
+  handleUpdateItem: (id: string, field: keyof EditableQuoteItem, value: string | number | null) => void
   handleDeleteItem: (id: string) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
@@ -141,7 +159,7 @@ function SortableItemRow({
   )
 }
 
-export function QuoteEditor({ quote }: { quote: QuoteData }) {
+export function QuoteEditor({ quote }: { quote: QuoteEditorQuote }) {
   const router = useRouter()
   const { agency } = useAgency()
   const updateQuote = useUpdateQuote(quote.id)
@@ -170,7 +188,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   // Opportunity linking
   const [opportunities, setOpportunities] = useState<OpportunityOption[]>([])
   const [selectedOpp, setSelectedOpp] = useState<OpportunityOption | null>(
-    quote.opportunity ? { id: (quote.opportunity as any).id, name: (quote.opportunity as any).name, company_id: quote.company_id, company: quote.company as any } : null
+    quote.opportunity ? { id: quote.opportunity.id, name: quote.opportunity.name, company_id: quote.company_id, company: quote.company } : null
   )
   const [oppDropdownOpen, setOppDropdownOpen] = useState(false)
   const [oppSearch, setOppSearch] = useState("")
@@ -185,7 +203,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
         setIsOppSearching(false)
       })
     }
-  }, [oppDropdownOpen])
+  }, [oppDropdownOpen, oppSearch])
 
   const handleOppSearchChange = useCallback((value: string) => {
     setOppSearch(value)
@@ -205,38 +223,38 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
   const contextCount = [
     quote.company?.name,
     quote.company?.business_sector,
-    (quote.opportunity as any)?.name,
-    (quote.opportunity as any)?.status,
-    (quote.opportunity as any)?.description,
+    quote.opportunity?.name,
+    quote.opportunity?.status,
+    quote.opportunity?.description,
   ].filter(Boolean).length
   const [aiPrompt, setAiPrompt] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [aiPreview, setAiPreview] = useState<{
     description: string
-    items: Array<{ type: string; label: string; description?: string; quantity: number; unit_price: number }>
+    items: AiPreviewItem[]
   } | null>(null)
 
-  const sortedFromServer = (quote.items ?? []).slice().sort((a: any, b: any) => a.order - b.order)
-  const [itemIds, setItemIds] = useState<string[]>(() => sortedFromServer.map((i: any) => i.id))
+  const sortedFromServer = (quote.items ?? []).slice().sort((a, b) => a.order - b.order)
+  const [itemIds, setItemIds] = useState<string[]>(() => sortedFromServer.map((item) => item.id))
   const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     if (!isDragging) {
-      setItemIds(sortedFromServer.map((i: any) => i.id))
+      setItemIds(sortedFromServer.map((item) => item.id))
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.items])
 
-  const itemsById = Object.fromEntries((quote.items ?? []).map((i: any) => [i.id, i]))
+  const itemsById = Object.fromEntries((quote.items ?? []).map((item) => [item.id, item]))
   const items = itemIds.map(id => itemsById[id]).filter(Boolean)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const totals = computeQuoteTotals({
-    discount_type: discountType !== "none" ? (discountType as any) : null,
+    discount_type: discountType !== "none" ? (discountType as QuoteDiscountType) : null,
     discount_value: discountValue ? parseFloat(discountValue) : null,
     tax_rate: taxRate ? parseFloat(taxRate) : null,
-    items: items.map((i: any) => ({ quantity: i.quantity, unit_price: i.unit_price })),
+    items: items.map((item) => ({ quantity: item.quantity, unit_price: item.unit_price })),
   })
 
   const publicUrl = typeof window !== "undefined"
@@ -248,13 +266,13 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
     const result = await updateQuote.mutateAsync({
       title, description: description || null, notes: notes || null, valid_until: validUntil || null,
       currency,
-      discount_type: discountType !== "none" ? (discountType as any) : null,
+      discount_type: discountType !== "none" ? (discountType as QuoteDiscountType) : null,
       discount_value: discountType !== "none" && discountValue ? parseFloat(discountValue) : null,
       tax_rate: taxRate ? parseFloat(taxRate) : null,
       opportunity_id: selectedOpp?.id ?? null,
       company_id: selectedOpp?.company_id ?? null,
       service_start_date: serviceStartDate || null,
-      payment_terms_preset: (paymentTermsPreset || null) as any,
+      payment_terms_preset: (paymentTermsPreset || null) as PaymentTermsPreset | null,
       payment_terms_notes: paymentTermsNotes || null,
     })
     setIsSaving(false)
@@ -285,7 +303,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
     if ("error" in result && result.error) toast.error(result.error)
   }
 
-  const handleUpdateItem = async (id: string, field: string, value: any) => {
+  const handleUpdateItem = async (id: string, field: keyof EditableQuoteItem, value: string | number | null) => {
     const result = await updateItem.mutateAsync({ id, item: { [field]: value } })
     if ("error" in result && result.error) toast.error(result.error)
   }
@@ -312,7 +330,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
     setIsGenerating(true)
     setAiPreview(null)
     // Save opportunity/company link first so AI can fetch them
-    if (selectedOpp?.id !== (quote.opportunity as any)?.id) {
+    if (selectedOpp?.id !== quote.opportunity?.id) {
       await updateQuote.mutateAsync({
         opportunity_id: selectedOpp?.id ?? null,
         company_id: selectedOpp?.company_id ?? null,
@@ -333,7 +351,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
     let order = items.length
     for (const item of aiPreview.items) {
       await addItem.mutateAsync({
-        type: item.type as any,
+        type: item.type,
         label: item.label,
         description: item.description,
         quantity: item.quantity,
@@ -596,15 +614,15 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                           {quote.company?.business_sector && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">Secteur : {quote.company.business_sector}</span>
                           )}
-                          {(quote.opportunity as any)?.name && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">📋 {(quote.opportunity as any).name}</span>
+                          {quote.opportunity?.name && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">📋 {quote.opportunity.name}</span>
                           )}
-                          {(quote.opportunity as any)?.status && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">Statut : {(quote.opportunity as any).status}</span>
+                          {quote.opportunity?.status && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">Statut : {quote.opportunity.status}</span>
                           )}
-                          {(quote.opportunity as any)?.description && (
+                          {quote.opportunity?.description && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs">
-                              📝 &ldquo;{((quote.opportunity as any).description as string).slice(0, 80)}{(quote.opportunity as any).description.length > 80 ? "…" : ""}&rdquo;
+                              📝 &ldquo;{quote.opportunity.description.slice(0, 80)}{quote.opportunity.description.length > 80 ? "…" : ""}&rdquo;
                             </span>
                           )}
                         </>
@@ -736,7 +754,7 @@ export function QuoteEditor({ quote }: { quote: QuoteData }) {
                     </thead>
                     <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                       <tbody>
-                        {items.map((item: any, i: number) => (
+                        {items.map((item, i) => (
                           <SortableItemRow
                             key={item.id}
                             item={item}

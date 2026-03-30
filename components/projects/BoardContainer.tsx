@@ -7,6 +7,7 @@ import {
     AlignLeft, Bug, LayoutTemplate, PenTool, Settings,
     ArrowUp, ArrowDown, Equal, AlertOctagon, X, ChevronDown, Eye, EyeOff,
     Inbox, PlayCircle, Clock, CheckCircle2,
+    type LucideIcon,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,17 +16,18 @@ import { ListView } from "./ListView";
 import { GanttView } from "./GanttView";
 import { CalendarView } from "./CalendarView";
 import { TaskSlideOver } from "./TaskSlideOver";
+import type { ProjectTask, ProjectTaskAssignee } from "./types";
 
 type View = "board" | "list" | "gantt" | "calendar";
 
-const VIEWS: { id: View; label: string; icon: any }[] = [
+const VIEWS: { id: View; label: string; icon: LucideIcon }[] = [
     { id: "board",    label: "Board",     icon: LayoutGrid },
     { id: "list",     label: "Liste",     icon: List },
     { id: "gantt",    label: "Gantt",     icon: GanttChartSquare },
     { id: "calendar", label: "Calendrier", icon: CalendarDays },
 ];
 
-const TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> = {
+const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
     feature: { label: "Fonctionnalité", icon: AlignLeft,      color: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/40" },
     bug:     { label: "Bug",            icon: Bug,            color: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/40" },
     design:  { label: "Design",         icon: LayoutTemplate, color: "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/40" },
@@ -33,21 +35,21 @@ const TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> =
     setup:   { label: "Setup",          icon: Settings,       color: "bg-muted text-muted-foreground border-border" },
 };
 
-const STATUS_LABELS: Record<string, { label: string; icon: any; color: string }> = {
+const STATUS_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
     todo:        { label: "À faire",  icon: Inbox,        color: "bg-muted text-muted-foreground border-border" },
     in_progress: { label: "En cours", icon: PlayCircle,   color: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/40" },
     review:      { label: "En revue", icon: Clock,        color: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/40" },
     done:        { label: "Terminé",  icon: CheckCircle2, color: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40" },
 };
 
-const PRIORITY_LABELS: Record<string, { label: string; icon: any; color: string }> = {
+const PRIORITY_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
     low:    { label: "Basse",   icon: ArrowDown,    color: "bg-muted text-muted-foreground border-border" },
     medium: { label: "Moyenne", icon: Equal,        color: "bg-muted text-muted-foreground border-border" },
     high:   { label: "Haute",   icon: ArrowUp,      color: "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/40" },
     urgent: { label: "Urgente", icon: AlertOctagon, color: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40" },
 };
 
-function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectId: string; initialTasks: any[]; taskPrefix: string }) {
+function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectId: string; initialTasks: ProjectTask[]; taskPrefix: string }) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -61,10 +63,10 @@ function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectI
 
     // Lifted slide-over state
     const [slideOverOpen, setSlideOverOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<any | null>(null);
+    const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
     const [targetStatus, setTargetStatus] = useState("todo");
 
-    const handleOpenTask = useCallback((task: any) => {
+    const handleOpenTask = useCallback((task: ProjectTask) => {
         setSelectedTask(task);
         setSlideOverOpen(true);
         if (task?.task_number) {
@@ -98,7 +100,7 @@ function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectI
     }, []);
 
     const assignees = useMemo(() => {
-        const seen = new Map<string, any>();
+        const seen = new Map<string, ProjectTaskAssignee | null>();
         for (const t of initialTasks) {
             const key = t.assignee_id ?? "__none__";
             if (!seen.has(key)) seen.set(key, t.assignee ?? null);
@@ -340,7 +342,7 @@ function BoardContainerInner({ projectId, initialTasks, taskPrefix }: { projectI
     );
 }
 
-export function BoardContainer({ projectId, initialTasks, taskPrefix = "TCK" }: { projectId: string; initialTasks: any[]; taskPrefix?: string }) {
+export function BoardContainer({ projectId, initialTasks, taskPrefix = "TCK" }: { projectId: string; initialTasks: ProjectTask[]; taskPrefix?: string }) {
     return (
         <Suspense>
             <BoardContainerInner projectId={projectId} initialTasks={initialTasks} taskPrefix={taskPrefix} />

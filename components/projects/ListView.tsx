@@ -11,8 +11,9 @@ import { cn, getInitials } from "@/lib/utils";
 import { useProject } from "@/providers/project-provider";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
+import type { LucideIcon } from "lucide-react";
 
-const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string }> = {
     feature: { label: "Feature",  icon: AlignLeft,      color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40" },
     bug:     { label: "Bug",      icon: Bug,            color: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40" },
     design:  { label: "Design",   icon: LayoutTemplate, color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40" },
@@ -20,14 +21,14 @@ const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> =
     setup:   { label: "Setup",    icon: Settings,       color: "text-muted-foreground bg-muted" },
 };
 
-const PRIORITY_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
+const PRIORITY_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string }> = {
     low:    { label: "Basse",   icon: ArrowDown,    color: "text-muted-foreground" },
     medium: { label: "Moyenne", icon: Equal,        color: "text-muted-foreground" },
     high:   { label: "Haute",   icon: ArrowUp,      color: "text-orange-500" },
     urgent: { label: "Urgente", icon: AlertOctagon, color: "text-red-600 dark:text-red-400" },
 };
 
-const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
+const STATUS_CONFIG: Record<string, { label: string; icon: LucideIcon; color: string }> = {
     todo:        { label: "À faire",  icon: Inbox,        color: "text-muted-foreground" },
     in_progress: { label: "En cours", icon: PlayCircle,   color: "text-blue-500" },
     review:      { label: "En revue", icon: Clock,        color: "text-amber-500" },
@@ -38,13 +39,72 @@ type SortKey = "title" | "status" | "type" | "priority" | "assignee" | "due_date
 
 interface ListViewProps {
     projectId: string;
-    tasks: any[];
-    allTasks: any[];
-    onOpenTask: (task: any) => void;
+    tasks: Array<{
+        id: string;
+        title: string;
+        status?: string | null;
+        type?: string | null;
+        priority?: string | null;
+        due_date?: string | null;
+        created_at?: string | null;
+        description?: string | null;
+        parent_id?: string | null;
+        task_number?: number | null;
+        assignee?: {
+            first_name?: string | null;
+            last_name?: string | null;
+            email?: string | null;
+        } | null;
+    }>;
+    allTasks: Array<{ id: string; parent_id?: string | null }>;
+    onOpenTask: (task: ListViewProps["tasks"][number]) => void;
+}
+
+function SortIcon({
+    col,
+    sortKey,
+    sortDir,
+}: {
+    col: SortKey;
+    sortKey: SortKey;
+    sortDir: "asc" | "desc";
+}) {
+    if (sortKey !== col) return <ChevronUp className="w-3 h-3 text-muted-foreground/30" />;
+    return sortDir === "asc"
+        ? <ChevronUp className="w-3 h-3 text-muted-foreground" />
+        : <ChevronDown className="w-3 h-3 text-muted-foreground" />;
+}
+
+function ColumnHeader({
+    col,
+    label,
+    className,
+    onSort,
+    sortKey,
+    sortDir,
+}: {
+    col: SortKey;
+    label: string;
+    className?: string;
+    onSort: (col: SortKey) => void;
+    sortKey: SortKey;
+    sortDir: "asc" | "desc";
+}) {
+    return (
+        <th
+            onClick={() => onSort(col)}
+            className={cn("px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-foreground select-none whitespace-nowrap", className)}
+        >
+            <span className="inline-flex items-center gap-1">
+                {label}
+                <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
+            </span>
+        </th>
+    );
 }
 
 export function ListView({ projectId: _projectId, tasks, allTasks, onOpenTask }: ListViewProps) {
-    const project = useProject() as any;
+    const project = useProject();
     const taskPrefix = project?.task_prefix ?? "TCK";
     const [sortKey, setSortKey] = useState<SortKey>("created_at");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -71,38 +131,19 @@ export function ListView({ projectId: _projectId, tasks, allTasks, onOpenTask }:
         return sortDir === "asc" ? cmp : -cmp;
     });
 
-    const SortIcon = ({ col }: { col: SortKey }) => {
-        if (sortKey !== col) return <ChevronUp className="w-3 h-3 text-muted-foreground/30" />;
-        return sortDir === "asc"
-            ? <ChevronUp className="w-3 h-3 text-muted-foreground" />
-            : <ChevronDown className="w-3 h-3 text-muted-foreground" />;
-    };
-
-    const ColHeader = ({ col, label, className }: { col: SortKey; label: string; className?: string }) => (
-        <th
-            onClick={() => handleSort(col)}
-            className={cn("px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground cursor-pointer hover:text-foreground select-none whitespace-nowrap", className)}
-        >
-            <span className="inline-flex items-center gap-1">
-                {label}
-                <SortIcon col={col} />
-            </span>
-        </th>
-    );
-
     return (
         <div className="h-full overflow-auto bg-muted/20">
                 <table className="w-full min-w-[800px] border-collapse">
                     <thead className="sticky top-0 z-10 bg-background border-b border-border/60">
                         <tr>
                             <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-muted-foreground w-16">#</th>
-                            <ColHeader col="type"       label="Type"     className="w-28" />
-                            <ColHeader col="title"      label="Titre"    />
-                            <ColHeader col="status"     label="Statut"   className="w-28" />
-                            <ColHeader col="priority"   label="Priorité" className="w-24" />
-                            <ColHeader col="assignee"   label="Assigné"  className="w-36" />
-                            <ColHeader col="due_date"   label="Échéance" className="w-28" />
-                            <ColHeader col="created_at" label="Créé"     className="w-24" />
+                            <ColumnHeader col="type" label="Type" className="w-28" onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
+                            <ColumnHeader col="title" label="Titre" onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
+                            <ColumnHeader col="status" label="Statut" className="w-28" onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
+                            <ColumnHeader col="priority" label="Priorité" className="w-24" onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
+                            <ColumnHeader col="assignee" label="Assigné" className="w-36" onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
+                            <ColumnHeader col="due_date" label="Échéance" className="w-28" onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
+                            <ColumnHeader col="created_at" label="Créé" className="w-24" onSort={handleSort} sortKey={sortKey} sortDir={sortDir} />
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">

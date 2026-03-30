@@ -104,7 +104,7 @@ export async function updateAIGeneratedMessage(
 // --- GENERATION ENGINE ---
 
 export async function generateOpportunityMessage(
-	_prevState: any,
+	_prevState: unknown,
 	formData: FormData,
 	agencyId?: string
 ): Promise<{ subject: string | null; body: string; error?: string; id: string | null }> {
@@ -167,7 +167,7 @@ export async function generateOpportunityMessage(
 		if (trackingResult.data && trackingResult.data.length > 0 && appUrl) {
 			trackingLinkUrl = `${appUrl}/t/${trackingResult.data[0].short_code}`;
 		}
-		agencyWebsite = (agencyResult as any).data?.website || null;
+		agencyWebsite = agencyResult.data?.website || null;
 
 		const isLost = opportunity.status === "lost";
 

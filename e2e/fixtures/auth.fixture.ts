@@ -1,6 +1,6 @@
 import { test as base, Page } from "@playwright/test";
 import { createFullUser, FullUser } from "../helpers/test-users";
-import { injectSession, bootstrapSession } from "../helpers/auth-helpers";
+import { injectSession } from "../helpers/auth-helpers";
 
 type AuthFixtures = {
   /** A page that is already signed in as a regular user (FREE plan). */
@@ -14,28 +14,28 @@ type AuthFixtures = {
 };
 
 export const test = base.extend<AuthFixtures>({
-  loggedInUser: async ({}, use) => {
+  loggedInUser: async ({}, applyFixture) => {
     const user = await createFullUser({ plan: "FREE" });
-    await use(user);
+    await applyFixture(user);
   },
 
-  loggedInPage: async ({ page, loggedInUser }, use) => {
+  loggedInPage: async ({ page, loggedInUser }, applyFixture) => {
     await injectSession(page, loggedInUser.email);
     await page.goto("/app");
     await page.waitForLoadState("networkidle");
-    await use(page);
+    await applyFixture(page);
   },
 
-  adminUser: async ({}, use) => {
+  adminUser: async ({}, applyFixture) => {
     const user = await createFullUser({ plan: "PRO" });
-    await use(user);
+    await applyFixture(user);
   },
 
-  adminPage: async ({ page, adminUser }, use) => {
+  adminPage: async ({ page, adminUser }, applyFixture) => {
     await injectSession(page, adminUser.email);
     await page.goto("/app");
     await page.waitForLoadState("networkidle");
-    await use(page);
+    await applyFixture(page);
   },
 });
 

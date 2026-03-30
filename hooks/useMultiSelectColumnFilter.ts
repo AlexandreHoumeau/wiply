@@ -6,7 +6,7 @@ export function useMultiSelectColumnFilter<T extends string>({
     columnId,
     allValues,
 }: {
-    table: Table<any>;
+    table: Table<unknown>;
     columnId: string;
     allValues: T[];
 }) {

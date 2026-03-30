@@ -8,6 +8,7 @@ import { RichTextViewer } from "@/components/ui/rich-text-viewer";
 import { cn, getInitials } from "@/lib/utils";
 import { type TaskComment } from "@/actions/task.server";
 import { type AgencyMember } from "@/actions/agency.server";
+import type { ProjectTask } from "./types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/fr";
@@ -15,14 +16,18 @@ import "dayjs/locale/fr";
 dayjs.extend(relativeTime);
 
 interface TaskCommentsProps {
-    task: any;
+    task: ProjectTask | null;
     comments: TaskComment[];
     commentHtml: string;
     commentKey: number;
     isSubmittingComment: boolean;
     isDeletingComment: string | null;
     myUserId: string | undefined;
-    profile: any;
+    profile: {
+        first_name?: string | null;
+        last_name?: string | null;
+        email?: string | null;
+    } | null;
     members: AgencyMember[];
     onCommentChange: (html: string) => void;
     onSubmitComment: () => void;

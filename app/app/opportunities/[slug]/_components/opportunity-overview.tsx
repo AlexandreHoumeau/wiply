@@ -113,7 +113,7 @@ const LEVEL_STYLES: Record<RecommendationLevel, { card: string; icon: string; pr
 // --- Mini timeline event config ---
 const MINI_EVENT_CONFIG: Record<
     string,
-    { icon: React.ReactNode; color: string; label: (m: Record<string, any>) => string }
+    { icon: React.ReactNode; color: string; label: (m: Record<string, unknown>) => string }
 > = {
     created: {
         icon: <Sparkles className="w-3.5 h-3.5" />,

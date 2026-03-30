@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react";
+import Image from "next/image";
 import { Menu } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar"
 import { NavigationProgress } from "@/components/navigation-progress"
@@ -45,7 +46,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
                             style={{ backgroundColor: primaryColor }}
                         >
                             {agency?.logo_url ? (
-                                <img src={agency.logo_url} alt={agency.name} className="w-full h-full object-contain p-0.5" />
+                                <Image src={agency.logo_url} alt={agency.name ?? "Agence"} width={28} height={28} unoptimized className="w-full h-full object-contain p-0.5" />
                             ) : (
                                 agency?.name?.charAt(0)?.toUpperCase() || "A"
                             )}

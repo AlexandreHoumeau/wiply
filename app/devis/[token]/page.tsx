@@ -13,12 +13,12 @@ export async function generateMetadata({
   const quote = await getPublicQuote(token)
   if (!quote) return {}
 
-  const agency = quote.agency as any
-  const company = quote.company as any
-  const items = (quote.items ?? []) as any[]
+  const agency = quote.agency
+  const company = quote.company
+  const items = quote.items ?? []
 
   const totals = computeQuoteTotals({
-    discount_type: quote.discount_type as any,
+    discount_type: quote.discount_type,
     discount_value: quote.discount_value,
     tax_rate: quote.tax_rate,
     items: items.map((i) => ({ quantity: i.quantity, unit_price: i.unit_price })),
@@ -62,15 +62,15 @@ export default async function PublicQuotePage({
   const quote = await getPublicQuote(token)
   if (!quote) notFound()
 
-  const agency = quote.agency as any
-  const company = quote.company as any
-  const items = (quote.items ?? []).sort((a: any, b: any) => a.order - b.order)
+  const agency = quote.agency
+  const company = quote.company
+  const items = [...(quote.items ?? [])].sort((a, b) => a.order - b.order)
 
   const totals = computeQuoteTotals({
-    discount_type: quote.discount_type as any,
+    discount_type: quote.discount_type,
     discount_value: quote.discount_value,
     tax_rate: quote.tax_rate,
-    items: items.map((i: any) => ({ quantity: i.quantity, unit_price: i.unit_price })),
+    items: items.map((item) => ({ quantity: item.quantity, unit_price: item.unit_price })),
   })
 
   const isExpired = quote.valid_until && new Date(quote.valid_until) < new Date()
@@ -257,7 +257,7 @@ export default async function PublicQuotePage({
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item: any, i: number) => (
+                  {items.map((item, i) => (
                     <tr key={item.id} style={{ background: i % 2 === 0 ? "#fff" : "#f7f7f5" }}>
                       <td style={{ padding: "16px 16px", verticalAlign: "top" }}>
                         <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a1a" }}>{item.label}</div>

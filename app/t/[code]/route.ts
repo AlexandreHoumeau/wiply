@@ -87,7 +87,7 @@ export async function GET(
 					type: "tracking_click",
 					title: "Lien cliqué",
 					body: `Quelqu'un a cliqué sur "${label}" (${device}, ${os})`,
-					metadata: { tracking_link_id: link.id, opportunity_slug: (link.opportunity as any)?.slug ?? null, device, os },
+					metadata: { tracking_link_id: link.id, opportunity_slug: link.opportunity?.slug ?? null, device, os },
 				});
 			}
 		});

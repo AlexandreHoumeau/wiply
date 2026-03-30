@@ -4,6 +4,14 @@ import { createClient } from "@/lib/supabase/server";
 import { OpportunityEvent } from "@/lib/validators/oppotunities";
 import { revalidatePath } from "next/cache";
 
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return "Une erreur inattendue est survenue";
+}
+
 export async function getOpportunityTimeline(
     opportunityId: string
 ): Promise<{ success: boolean; data: OpportunityEvent[]; error?: string }> {
@@ -18,8 +26,8 @@ export async function getOpportunityTimeline(
 
         if (error) return { success: false, data: [], error: error.message };
         return { success: true, data: (data as OpportunityEvent[]) || [] };
-    } catch (error: any) {
-        return { success: false, data: [], error: error.message };
+    } catch (error: unknown) {
+        return { success: false, data: [], error: getErrorMessage(error) };
     }
 }
 
@@ -63,7 +71,7 @@ export async function addOpportunityNote(
 
         revalidatePath(`/app/opportunities/${opp.id}/timeline`);
         return { success: true };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }

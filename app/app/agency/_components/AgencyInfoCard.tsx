@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useEffectEvent, useState } from "react";
 import { toast } from "sonner";
 
 export function AgencyInfoCard({ agency }: { agency: Agency }) {
@@ -26,16 +26,20 @@ export function AgencyInfoCard({ agency }: { agency: Agency }) {
   const [isEditing, setIsEditing] = useState(false);
   const [state, formAction, isPending] = useActionState(updateAgencyProfile, null);
 
+  const handleSuccess = useEffectEvent(() => {
+    toast.success(state?.message ?? "Informations mises à jour");
+    setIsEditing(false);
+    router.refresh();
+  });
+
   useEffect(() => {
     if (!state) return;
     if (state.success) {
-      toast.success(state.message ?? "Informations mises à jour");
-      setIsEditing(false);
-      router.refresh();
+      handleSuccess();
     } else if (state.message) {
       toast.error(state.message);
     }
-  }, [state, router]);
+  }, [state]);
 
   const fields = [
     { icon: Globe, label: "Site internet", value: agency.website, isLink: true },

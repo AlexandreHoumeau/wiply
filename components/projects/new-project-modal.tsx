@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner"; // Ou ton système de toast actuel
 import { Check, ChevronsUpDown, Plus, Building2, FolderKanban, Mail, Phone, Globe } from "lucide-react";
@@ -71,7 +71,7 @@ export function NewProjectModal({
         },
     });
 
-    const isNewCompany = form.watch("isNewCompany");
+    const isNewCompany = useWatch({ control: form.control, name: "isNewCompany" });
 
     async function onSubmit(data: NewProjectFormValues) {
         const result = await createProject(data, agencyId);

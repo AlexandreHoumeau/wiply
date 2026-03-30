@@ -7,6 +7,25 @@ import { cn } from "@/lib/utils";
 import { NewProjectModal } from "@/components/projects/new-project-modal";
 import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog";
 
+type ProjectListTask = {
+    status: string | null;
+};
+
+type ProjectListItem = {
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+    company_id: string | null;
+    company: {
+        name: string | null;
+    } | null;
+    tasks: ProjectListTask[] | null;
+    figma_url?: string | null;
+    github_url?: string | null;
+    deployment_url?: string | null;
+};
+
 export default async function ProjectsPage() {
     const userContext = await getAuthenticatedUserContext();
     if (!userContext) return <div>Non authentifié</div>;
@@ -27,12 +46,12 @@ export default async function ProjectsPage() {
         .eq("agency_id", agencyId)
         .order("name", { ascending: true });
 
-    const allProjects = projects ?? [];
+    const allProjects = (projects ?? []) as ProjectListItem[];
 
     // Stats
     const activeCount = allProjects.filter(p => p.status === 'active').length;
     const completedCount = allProjects.filter(p => p.status === 'completed').length;
-    const totalTasksInProgress = allProjects.flatMap(p => p.tasks ?? []).filter((t: any) => t.status === 'in_progress').length;
+    const totalTasksInProgress = allProjects.flatMap((p) => p.tasks ?? []).filter((t) => t.status === 'in_progress').length;
 
     // Group by company
     const byCompany = allProjects.reduce<Record<string, { companyName: string; companyId: string; projects: typeof allProjects }>>((acc, project) => {
@@ -53,10 +72,10 @@ export default async function ProjectsPage() {
         }
     };
 
-    const ProjectRow = ({ project }: { project: any }) => {
+    const ProjectRow = ({ project }: { project: ProjectListItem }) => {
         const statusDesign = getStatusDesign(project.status);
         const totalTasks = project.tasks?.length ?? 0;
-        const doneTasks = project.tasks?.filter((t: any) => t.status === 'done').length ?? 0;
+        const doneTasks = project.tasks?.filter((t) => t.status === 'done').length ?? 0;
         const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
         return (

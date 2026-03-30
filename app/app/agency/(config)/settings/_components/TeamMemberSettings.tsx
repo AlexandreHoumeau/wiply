@@ -13,14 +13,23 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TabsContent } from "@/components/ui/tabs";
 import { getInitials } from "@/lib/utils";
+import type { InviteAgencyMemberInput } from "@/lib/validators/agency";
+import type { Profile } from "@/lib/validators/profile";
+import type { AgencyMember } from "@/actions/agency.server";
 import dayjs from "dayjs";
 import { Clock, Loader2, Mail, MoreVertical, Send, ShieldCheck, Sparkles, Trash2, UserPlus } from "lucide-react";
 
 type TeamMemberSettingsProps = {
-    team: any[]
-    profile: any
-    invites: any[]
-    inviteState: any
+    team: AgencyMember[]
+    profile: Profile
+    invites: InviteAgencyMemberInput[]
+    inviteState: {
+        success?: boolean
+        message?: string
+        errors?: {
+            email?: string[]
+        }
+    } | null
     isInvitePending: boolean
     inviteFormAction: (payload: FormData) => void
     inviteDialogOpen: boolean
@@ -184,7 +193,7 @@ export default function TeamMemberSettings({ team, profile, inviteDialogOpen, se
                     </div>
 
                     <div className="grid gap-3">
-                        {invites.map((invite: any) => (
+                        {invites.map((invite) => (
                             <div key={invite.id} className="flex items-center justify-between p-4 bg-card border border-border border-dashed rounded-xl shadow-sm hover:border-blue-200 transition-colors">
                                 <div className="flex items-center gap-4">
                                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border border-border">

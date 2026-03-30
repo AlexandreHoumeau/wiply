@@ -75,6 +75,71 @@ export type UpdateQuoteInput = z.infer<typeof UpdateQuoteSchema>
 export type CreateQuoteItemInput = z.infer<typeof CreateQuoteItemSchema>
 export type QuoteStatus = z.infer<typeof QuoteStatusSchema>
 export type QuoteItemType = z.infer<typeof QuoteItemTypeSchema>
+export type QuoteDiscountType = NonNullable<Quote["discount_type"]>
+
+export type QuoteCompanyRef = {
+  id: string
+  name: string
+  business_sector?: string | null
+  billing_address?: string | null
+  contact_name?: string | null
+  email?: string | null
+}
+
+export type QuoteOpportunityRef = {
+  id: string
+  name: string
+  status?: string | null
+  description?: string | null
+}
+
+export type QuoteAgencyRef = {
+  name?: string | null
+  legal_name?: string | null
+  legal_form?: string | null
+  rcs_number?: string | null
+  vat_number?: string | null
+  address?: string | null
+  phone?: string | null
+  email?: string | null
+  logo_url?: string | null
+  primary_color?: string | null
+  secondary_color?: string | null
+}
+
+export type QuoteListItem = Quote & {
+  items?: Pick<QuoteItem, "quantity" | "unit_price">[]
+  company: QuoteCompanyRef | null
+  opportunity: QuoteOpportunityRef | null
+}
+
+export type QuoteDetail = Quote & {
+  items: QuoteItem[]
+  company: QuoteCompanyRef | null
+  opportunity: QuoteOpportunityRef | null
+}
+
+export type PublicQuote = Pick<
+  Quote,
+  | "id"
+  | "title"
+  | "description"
+  | "status"
+  | "valid_until"
+  | "currency"
+  | "discount_type"
+  | "discount_value"
+  | "tax_rate"
+  | "notes"
+  | "created_at"
+  | "service_start_date"
+  | "payment_terms_preset"
+  | "payment_terms_notes"
+> & {
+  items: Pick<QuoteItem, "id" | "type" | "label" | "description" | "quantity" | "unit_price" | "order">[]
+  company: QuoteCompanyRef | null
+  agency: QuoteAgencyRef | null
+}
 
 // Allowed status transitions
 export const ALLOWED_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {

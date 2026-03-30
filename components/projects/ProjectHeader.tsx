@@ -5,8 +5,16 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Figma, Github, Globe, Layout, KanbanSquare, Settings, ArrowLeft, ListChecks, Tag, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { ProjectContextValue } from "@/providers/project-provider";
 
-export function ProjectHeader({ project }: { project: any }) {
+type ProjectHeaderProject = ProjectContextValue & {
+    is_internal?: boolean | null;
+    company?: {
+        name: string | null;
+    } | null;
+};
+
+export function ProjectHeader({ project }: { project: ProjectHeaderProject }) {
     const pathname = usePathname();
     const baseUrl = `/app/projects/${project.slug}`;
 

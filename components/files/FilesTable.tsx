@@ -22,6 +22,8 @@ interface FilesTableProps {
     projectId: string | null; // null = workspace-level
 }
 
+type LinkedTaskFile = NonNullable<FileRecord["task_files"]>[number];
+
 export function FilesTable({ initialFiles, projectId }: FilesTableProps) {
     const [files, setFiles] = useState<FileRecord[]>(initialFiles);
     const [uploadOpen, setUploadOpen] = useState(false);
@@ -121,7 +123,7 @@ export function FilesTable({ initialFiles, projectId }: FilesTableProps) {
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex flex-wrap gap-1">
-                                            {(file.task_files ?? []).map((tf: any) => (
+                                            {(file.task_files ?? []).map((tf: LinkedTaskFile) => (
                                                 <a
                                                     key={tf.task_id}
                                                     href={`/app/projects/${tf.task.project.slug}/board`}

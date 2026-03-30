@@ -1,12 +1,32 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications";
 
-const supabaseAdmin = createClient(
+const supabaseAdmin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "Une erreur inattendue s'est produite";
+}
+
+function isAbsoluteUrl(value: string | null | undefined): value is string {
+    return typeof value === "string" && /^https?:\/\//.test(value);
+}
+
+async function createPortalSignedUrl(pathOrUrl: string): Promise<string> {
+    if (isAbsoluteUrl(pathOrUrl)) return pathOrUrl;
+
+    const { data, error } = await supabaseAdmin.storage
+        .from("portal_uploads")
+        .createSignedUrl(pathOrUrl, 3600);
+
+    if (error) throw error;
+    return data.signedUrl;
+}
 
 export async function getPortalData(magicToken: string) {
     try {
@@ -35,8 +55,8 @@ export async function getPortalData(magicToken: string) {
             .order("created_at", { ascending: true });
 
         return { success: true, project, checklists: checklists || [] };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -106,7 +126,7 @@ export async function submitClientContent(magicToken: string, itemId: string, fo
             }
 
             const fileExt = file.name.split('.').pop();
-            const fileName = `${crypto.randomUUID()}-${Date.now()}.${fileExt}`;
+            const fileName = `${project.id}/${itemId}/${crypto.randomUUID()}-${Date.now()}.${fileExt ?? "bin"}`;
 
             // Upload dans le bucket qu'on vient de créer
             const { error: uploadError } = await supabaseAdmin.storage
@@ -115,12 +135,7 @@ export async function submitClientContent(magicToken: string, itemId: string, fo
 
             if (uploadError) throw uploadError;
 
-            // Récupérer l'URL publique
-            const { data: publicUrlData } = supabaseAdmin.storage
-                .from("portal_uploads")
-                .getPublicUrl(fileName);
-
-            fileUrl = publicUrlData.publicUrl;
+            fileUrl = fileName;
             finalResponse = file.name; // On sauvegarde le nom du fichier comme texte
         }
 
@@ -158,8 +173,68 @@ export async function submitClientContent(magicToken: string, itemId: string, fo
             });
 
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Erreur upload:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: getErrorMessage(error) };
+    }
+}
+
+export async function getPortalUploadUrl(magicToken: string, itemId: string) {
+    try {
+        const { data: project, error: projectError } = await supabaseAdmin
+            .from("projects")
+            .select("id, is_portal_active")
+            .eq("magic_token", magicToken)
+            .single();
+
+        if (projectError || !project) return { success: false, error: "Lien invalide." };
+        if (!project.is_portal_active) return { success: false, error: "Ce portail a été suspendu." };
+
+        const { data: item, error: itemError } = await supabaseAdmin
+            .from("project_checklists")
+            .select("project_id, file_url")
+            .eq("id", itemId)
+            .single();
+
+        if (itemError || !item || item.project_id !== project.id || !item.file_url) {
+            return { success: false, error: "Fichier introuvable." };
+        }
+
+        const url = await createPortalSignedUrl(item.file_url);
+        return { success: true, url };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
+    }
+}
+
+export async function getAgencyPortalUploadUrl(itemId: string) {
+    try {
+        const appSupabase = await createClient();
+        const { data: { user }, error: authError } = await appSupabase.auth.getUser();
+        if (authError || !user) return { success: false, error: "Non authentifié" };
+
+        const { data: profile } = await appSupabase
+            .from("profiles")
+            .select("agency_id")
+            .eq("id", user.id)
+            .single();
+
+        if (!profile?.agency_id) return { success: false, error: "Agence introuvable" };
+
+        const { data: item, error: itemError } = await supabaseAdmin
+            .from("project_checklists")
+            .select("file_url, project:projects!project_checklists_project_id_fkey(agency_id)")
+            .eq("id", itemId)
+            .single();
+
+        const projectAgencyId = Array.isArray(item?.project) ? item.project[0]?.agency_id : item?.project?.agency_id;
+        if (itemError || !item?.file_url || projectAgencyId !== profile.agency_id) {
+            return { success: false, error: "Fichier introuvable" };
+        }
+
+        const url = await createPortalSignedUrl(item.file_url);
+        return { success: true, url };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }

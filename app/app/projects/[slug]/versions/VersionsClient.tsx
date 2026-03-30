@@ -7,14 +7,29 @@ import { createVersion, releaseVersion, deleteVersion } from "@/actions/version.
 import type { ProjectVersion } from "@/actions/version.server";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import type { ProjectContextValue } from "@/providers/project-provider";
 import {
     Tag, Plus, CheckCircle2, Circle, Loader2, Trash2, Rocket, ChevronDown, ChevronRight,
     Inbox, PlayCircle, Clock,
+    type LucideIcon,
 } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 
-const STATUS_CONFIG: Record<string, { icon: any; label: string; color: string }> = {
+type VersionTask = {
+    id: string;
+    title: string;
+    status: string | null;
+    version_id: string | null;
+    task_number: number | null;
+    assignee?: {
+        first_name: string | null;
+        last_name: string | null;
+        email: string | null;
+    } | null;
+};
+
+const STATUS_CONFIG: Record<string, { icon: LucideIcon; label: string; color: string }> = {
     todo:        { icon: Inbox,        label: "À faire",  color: "text-muted-foreground" },
     in_progress: { icon: PlayCircle,   label: "En cours", color: "text-blue-500" },
     review:      { icon: Clock,        label: "En revue", color: "text-amber-500" },
@@ -22,9 +37,9 @@ const STATUS_CONFIG: Record<string, { icon: any; label: string; color: string }>
 };
 
 interface VersionsClientProps {
-    project: any;
+    project: ProjectContextValue;
     versions: ProjectVersion[];
-    tasks: any[];
+    tasks: VersionTask[];
 }
 
 export function VersionsClient({ project, versions: initialVersions, tasks }: VersionsClientProps) {
@@ -35,7 +50,7 @@ export function VersionsClient({ project, versions: initialVersions, tasks }: Ve
     const [releasing, setReleasing] = useState<string | null>(null);
     const [deleting, setDeleting] = useState<string | null>(null);
     const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-    const taskPrefix = (project as any)?.task_prefix ?? "TCK";
+    const taskPrefix = project.task_prefix ?? "TCK";
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -193,7 +208,7 @@ function VersionCard({
     onRelease, onDelete, releasing, deleting,
 }: {
     version: ProjectVersion;
-    versionTasks: any[];
+    versionTasks: VersionTask[];
     taskPrefix: string;
     collapsed: boolean;
     onToggle: () => void;
@@ -283,7 +298,7 @@ function VersionCard({
     );
 }
 
-function TaskRow({ task, taskPrefix }: { task: any; taskPrefix: string }) {
+function TaskRow({ task, taskPrefix }: { task: VersionTask; taskPrefix: string }) {
     const statusConf = STATUS_CONFIG[task.status ?? "todo"];
     const StatusIcon = statusConf.icon;
     const taskSlug = task.task_number ? `${taskPrefix}-${task.task_number}` : null;

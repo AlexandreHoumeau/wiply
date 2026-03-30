@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Bell, Check, MessageSquare, UserPlus, TrendingUp, Inbox, Settings2, Sparkles } from "lucide-react"
+import { Bell, Check, MessageSquare, UserPlus, TrendingUp, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"

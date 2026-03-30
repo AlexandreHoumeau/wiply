@@ -1,6 +1,6 @@
 "use client";
 
-import { getTrackingLinkAnalytics } from "@/actions/tracking.server";
+import { getTrackingLinkAnalytics, type LinkAnalyticsResult } from "@/actions/tracking.server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,7 +17,7 @@ import {
 import { useEffect, useState } from "react";
 
 export function OpportunityAnalytics({ opportunityId }: { opportunityId: string }) {
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<LinkAnalyticsResult | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -94,7 +94,7 @@ export function OpportunityAnalytics({ opportunityId }: { opportunityId: string 
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-5">
-                            {Object.entries(analytics.deviceBreakdown).length > 0 ? Object.entries(analytics.deviceBreakdown).map(([device, count]: any) => (
+                            {Object.entries(analytics.deviceBreakdown).length > 0 ? Object.entries(analytics.deviceBreakdown).map(([device, count]) => (
                                 <div key={device} className="space-y-2">
                                     <div className="flex justify-between items-center text-xs">
                                         <div className="flex items-center gap-2 text-muted-foreground capitalize">
@@ -142,7 +142,7 @@ export function OpportunityAnalytics({ opportunityId }: { opportunityId: string 
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="divide-y divide-border/30 max-h-[450px] overflow-y-auto">
-                            {clicks.length > 0 ? clicks.map((click: any, idx: number) => (
+                            {clicks.length > 0 ? clicks.map((click, idx: number) => (
                                 <div key={idx} className="flex items-center justify-between p-4 px-6 hover:bg-muted/50 transition-colors group">
                                     <div className="flex items-center gap-4">
                                         <div className="h-10 w-10 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground group-hover:bg-card group-hover:shadow-sm transition-all">

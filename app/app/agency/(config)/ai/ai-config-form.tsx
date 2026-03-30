@@ -31,11 +31,6 @@ export default function AIConfigForm() {
     const [selectedTone, setSelectedTone] = useState(ai?.tone || 'professional')
     const [state, formAction, isPending] = useActionState(updateAIConfigAction, null)
 
-    // Synchronisation du ton si les données changent dans le contexte
-    useEffect(() => {
-        if (ai?.tone) setSelectedTone(ai.tone)
-    }, [ai?.tone])
-
     useEffect(() => {
         if (state?.success) toast.success(state.message)
         if (state?.error) toast.error(state.error)

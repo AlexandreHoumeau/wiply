@@ -18,14 +18,28 @@ import { TaskComments } from "./TaskComments";
 import { TaskSidebar } from "./TaskSidebar";
 import dayjs from "dayjs";
 
+type TaskItem = {
+    id: string;
+    title?: string | null;
+    description?: string | null;
+    status?: string | null;
+    priority?: string | null;
+    type?: string | null;
+    assignee_id?: string | null;
+    due_date?: string | null;
+    version_id?: string | null;
+    parent_id?: string | null;
+    task_number?: number | null;
+};
+
 interface TaskSlideOverProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    task: any | null;
+    task: TaskItem | null;
     projectId: string;
-    allTasks?: any[];
+    allTasks?: TaskItem[];
     onSaved: () => void;
-    onOpenTask?: (task: any) => void;
+    onOpenTask?: (task: TaskItem) => void;
     initialStatus?: string;
     initialDueDate?: string;
 }
@@ -34,19 +48,41 @@ export function TaskSlideOver({
     open, onOpenChange, task, projectId, allTasks = [], onSaved, onOpenTask,
     initialStatus, initialDueDate,
 }: TaskSlideOverProps) {
+    const resetKey = `${task?.id ?? "new"}:${open ? "open" : "closed"}:${initialStatus ?? ""}:${initialDueDate ?? ""}`;
+
+    return (
+        <TaskSlideOverInner
+            key={resetKey}
+            open={open}
+            onOpenChange={onOpenChange}
+            task={task}
+            projectId={projectId}
+            allTasks={allTasks}
+            onSaved={onSaved}
+            onOpenTask={onOpenTask}
+            initialStatus={initialStatus}
+            initialDueDate={initialDueDate}
+        />
+    );
+}
+
+function TaskSlideOverInner({
+    open, onOpenChange, task, projectId, allTasks = [], onSaved, onOpenTask,
+    initialStatus, initialDueDate,
+}: TaskSlideOverProps) {
     const { profile } = useUserProfile();
     const project = useProject();
-    const taskPrefix = (project as any)?.task_prefix ?? "TCK";
+    const taskPrefix = project?.task_prefix ?? "TCK";
 
     const [isLoading, setIsLoading] = useState(false);
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [status, setStatus] = useState(initialStatus || "todo");
-    const [priority, setPriority] = useState("medium");
-    const [type, setType] = useState("feature");
-    const [assigneeId, setAssigneeId] = useState<string | null>(null);
-    const [dueDate, setDueDate] = useState<string>("");
-    const [versionId, setVersionId] = useState<string | null>(null);
+    const [title, setTitle] = useState(task?.title || "");
+    const [description, setDescription] = useState(task?.description || "");
+    const [status, setStatus] = useState(task?.status || initialStatus || "todo");
+    const [priority, setPriority] = useState(task?.priority || "medium");
+    const [type, setType] = useState(task?.type || "feature");
+    const [assigneeId, setAssigneeId] = useState<string | null>(task?.assignee_id ?? null);
+    const [dueDate, setDueDate] = useState<string>(task?.due_date ?? initialDueDate ?? "");
+    const [versionId, setVersionId] = useState<string | null>(task?.version_id ?? null);
     const [members, setMembers] = useState<AgencyMember[]>([]);
     const [versions, setVersions] = useState<ProjectVersion[]>([]);
 
@@ -58,27 +94,7 @@ export function TaskSlideOver({
 
     const [newSubTitle, setNewSubTitle] = useState("");
     const [isCreatingSubTask, setIsCreatingSubTask] = useState(false);
-    const [localSubTasks, setLocalSubTasks] = useState<any[]>([]);
-
-    useEffect(() => {
-        if (task) {
-            setTitle(task.title || "");
-            setDescription(task.description || "");
-            setStatus(task.status || "todo");
-            setPriority(task.priority || "medium");
-            setType(task.type || "feature");
-            setAssigneeId(task.assignee_id ?? null);
-            setDueDate(task.due_date ?? "");
-            setVersionId(task.version_id ?? null);
-        } else {
-            setTitle(""); setDescription(""); setStatus(initialStatus || "todo");
-            setPriority("medium"); setType("feature"); setAssigneeId(null);
-            setDueDate(initialDueDate ?? ""); setVersionId(null);
-        }
-        setLocalSubTasks([]);
-        setNewSubTitle("");
-        setCommentHtml("");
-    }, [task?.id, open, initialDueDate, initialStatus]);
+    const [localSubTasks, setLocalSubTasks] = useState<TaskItem[]>([]);
 
     useEffect(() => { getAgencyMembers().then(setMembers); }, []);
     useEffect(() => {
@@ -88,10 +104,22 @@ export function TaskSlideOver({
     }, [projectId]);
 
     useEffect(() => {
-        if (!task?.id || !open) { setComments([]); return; }
-        getTaskComments(task.id).then((r) => {
-            if (r.success && r.data) setComments(r.data);
-        });
+        if (!task?.id || !open) return;
+
+        let cancelled = false;
+
+        const fetchComments = async () => {
+            const result = await getTaskComments(task.id);
+            if (!cancelled && result.success && result.data) {
+                setComments(result.data);
+            }
+        };
+
+        void fetchComments();
+
+        return () => {
+            cancelled = true;
+        };
     }, [task?.id, open]);
 
     const subTasks = [
@@ -250,7 +278,7 @@ export function TaskSlideOver({
                             commentKey={commentKey}
                             isSubmittingComment={isSubmittingComment}
                             isDeletingComment={isDeletingComment}
-                            myUserId={(profile as any)?.id}
+                            myUserId={profile?.id}
                             profile={profile}
                             members={members}
                             onCommentChange={setCommentHtml}
