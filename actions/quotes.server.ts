@@ -10,8 +10,49 @@ import {
   CreateQuoteItemInput,
   ALLOWED_TRANSITIONS,
   QuoteStatus,
+  type PublicQuote,
+  type QuoteCompanyRef,
+  type QuoteDetail,
+  type QuoteItem,
+  type QuoteListItem,
+  type QuoteOpportunityRef,
 } from "@/lib/validators/quotes"
 import { nanoid } from "nanoid"
+
+type QuoteItemOwnership = {
+  quote_id: string
+  quotes: {
+    agency_id: string
+  }
+}
+
+type OpportunitySelectRow = {
+  id: string
+  name: string
+  company_id: string | null
+  company: QuoteCompanyRef | QuoteCompanyRef[] | null
+}
+
+type QuoteAiContextRow = {
+  id: string
+  title: string
+  opportunity: QuoteOpportunityRef | QuoteOpportunityRef[] | null
+  company: QuoteCompanyRef | QuoteCompanyRef[] | null
+}
+
+type OpportunityEventRow = {
+  metadata?: {
+    text?: string
+  } | null
+}
+
+function getSingleRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) {
+    return value[0] ?? null
+  }
+
+  return value ?? null
+}
 
 async function getAgencyId(): Promise<string> {
   const supabase = await createClient()
@@ -32,7 +73,7 @@ export async function getQuotes(filters?: {
   status?: string
   company_id?: string
   search?: string
-}) {
+}): Promise<QuoteListItem[]> {
   const supabase = await createClient()
   const agencyId = await getAgencyId()
 
@@ -54,10 +95,14 @@ export async function getQuotes(filters?: {
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
-  return data
+  return (data ?? []).map((quote) => ({
+    ...(quote as Omit<QuoteListItem, "company" | "opportunity">),
+    company: getSingleRelation(quote.company as QuoteCompanyRef | QuoteCompanyRef[] | null | undefined),
+    opportunity: getSingleRelation(quote.opportunity as QuoteOpportunityRef | QuoteOpportunityRef[] | null | undefined),
+  }))
 }
 
-export async function getQuote(id: string) {
+export async function getQuote(id: string): Promise<QuoteDetail> {
   const supabase = await createClient()
   const agencyId = await getAgencyId()
 
@@ -69,10 +114,15 @@ export async function getQuote(id: string) {
     .single()
 
   if (error || !data) throw new Error("Devis introuvable")
-  return data
+  return {
+    ...(data as Omit<QuoteDetail, "items" | "company" | "opportunity">),
+    items: (data.items ?? []) as QuoteItem[],
+    company: getSingleRelation(data.company as QuoteCompanyRef | QuoteCompanyRef[] | null | undefined),
+    opportunity: getSingleRelation(data.opportunity as QuoteOpportunityRef | QuoteOpportunityRef[] | null | undefined),
+  }
 }
 
-export async function getPublicQuote(token: string) {
+export async function getPublicQuote(token: string): Promise<PublicQuote | null> {
   const { data: quote, error } = await supabaseAdmin
     .from("quotes")
     .select("id, title, description, status, valid_until, currency, discount_type, discount_value, tax_rate, notes, created_at, service_start_date, payment_terms_preset, payment_terms_notes, company:companies(name, billing_address), agency:agencies(name, legal_name, legal_form, rcs_number, vat_number, address, phone, email, logo_url, primary_color, secondary_color)")
@@ -87,7 +137,12 @@ export async function getPublicQuote(token: string) {
     .eq("quote_id", quote.id)
     .order("order", { ascending: true })
 
-  return { ...quote, items: items ?? [] }
+  return {
+    ...(quote as Omit<PublicQuote, "items" | "company" | "agency">),
+    items: ((items ?? []) as PublicQuote["items"]).slice(),
+    company: getSingleRelation(quote.company as QuoteCompanyRef | QuoteCompanyRef[] | null | undefined),
+    agency: getSingleRelation(quote.agency as PublicQuote["agency"] | PublicQuote["agency"][] | null | undefined),
+  }
 }
 
 export async function createQuote(input: CreateQuoteInput) {
@@ -223,7 +278,9 @@ export async function updateQuoteItem(id: string, item: Partial<CreateQuoteItemI
     .eq("id", id)
     .single()
 
-  if (!existing || (existing.quotes as any).agency_id !== agencyId) {
+  const typedExisting = existing as QuoteItemOwnership | null
+
+  if (!typedExisting || typedExisting.quotes.agency_id !== agencyId) {
     return { error: "Non autorisé" }
   }
 
@@ -235,7 +292,7 @@ export async function updateQuoteItem(id: string, item: Partial<CreateQuoteItemI
     .single()
 
   if (error) return { error: error.message }
-  revalidatePath(`/app/quotes/${existing.quote_id}`)
+  revalidatePath(`/app/quotes/${typedExisting.quote_id}`)
   return { data }
 }
 
@@ -249,7 +306,9 @@ export async function deleteQuoteItem(id: string) {
     .eq("id", id)
     .single()
 
-  if (!existing || (existing.quotes as any).agency_id !== agencyId) {
+  const typedExisting = existing as QuoteItemOwnership | null
+
+  if (!typedExisting || typedExisting.quotes.agency_id !== agencyId) {
     return { error: "Non autorisé" }
   }
 
@@ -259,7 +318,7 @@ export async function deleteQuoteItem(id: string) {
     .eq("id", id)
 
   if (error) return { error: error.message }
-  revalidatePath(`/app/quotes/${existing.quote_id}`)
+  revalidatePath(`/app/quotes/${typedExisting.quote_id}`)
   return { success: true }
 }
 
@@ -302,12 +361,12 @@ export async function listOpportunitiesForSelect(search?: string) {
     query = query.ilike("name", `%${search.trim()}%`)
   }
   const { data } = await query
-  return (data ?? []).map(o => ({
-    id: o.id as string,
-    name: o.name as string,
-    company_id: o.company_id as string | null,
-    company: Array.isArray(o.company) ? (o.company[0] ?? null) : (o.company as any ?? null),
-  })) as Array<{ id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }>
+  return ((data ?? []) as OpportunitySelectRow[]).map((opportunity) => ({
+    id: opportunity.id,
+    name: opportunity.name,
+    company_id: opportunity.company_id,
+    company: getSingleRelation(opportunity.company),
+  }))
 }
 
 export async function getOpportunityForSelect(id: string) {
@@ -321,11 +380,11 @@ export async function getOpportunityForSelect(id: string) {
     .single()
   if (!data) return null
   return {
-    id: data.id as string,
-    name: data.name as string,
-    company_id: data.company_id as string | null,
-    company: Array.isArray(data.company) ? (data.company[0] ?? null) : (data.company as any ?? null),
-  } as { id: string; name: string; company_id: string | null; company: { id: string; name: string } | null }
+    id: data.id,
+    name: data.name,
+    company_id: data.company_id,
+    company: getSingleRelation((data as OpportunitySelectRow).company),
+  }
 }
 
 export async function generateQuoteWithAI({
@@ -367,8 +426,9 @@ export async function generateQuoteWithAI({
     .single()
   if (!quote) return { error: "Devis introuvable" }
 
-  const opportunity = quote.opportunity as any
-  const company = quote.company as any
+  const typedQuote = quote as QuoteAiContextRow
+  const opportunity = getSingleRelation(typedQuote.opportunity)
+  const company = getSingleRelation(typedQuote.company)
 
   // error intentionally ignored — agency config is optional enrichment; generation proceeds without it
   const { data: aiConfig } = await supabase
@@ -388,9 +448,10 @@ export async function generateQuoteWithAI({
       .order("created_at", { ascending: false })
       .limit(5)
     if (noteEvents) {
-      opportunityNotes = noteEvents
-        .map((e: any) => e.metadata?.text)
+      opportunityNotes = (noteEvents as OpportunityEventRow[])
+        .map((event) => event.metadata?.text)
         .filter(Boolean)
+        .map((text) => text as string)
     }
   }
 

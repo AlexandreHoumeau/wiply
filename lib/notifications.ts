@@ -6,7 +6,7 @@ export async function createNotification(input: {
   type: string
   title: string
   body?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }) {
   await supabaseAdmin.from("notifications").insert({
     agency_id: input.agencyId,

@@ -20,6 +20,14 @@ export type RecentProject = {
   company: { name: string } | null;
 };
 
+type DashboardOpportunity = {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  companies: { name: string | null } | null;
+};
+
 export type PipelineRow = {
   status: OpportunityStatus;
   count: number;
@@ -352,7 +360,7 @@ export async function getDashboardEngagement(agencyId: string): Promise<Dashboar
     const linkClicks7d = clicksByLink[link.id] ?? 0;
     if (linkClicks7d === 0) continue;
 
-    const opp = link.opportunities as any;
+    const opp = link.opportunities as DashboardOpportunity | null;
     if (!opp || opp.status === "won" || opp.status === "lost") continue;
 
     const existing = oppMap.get(opp.id);
@@ -367,7 +375,7 @@ export async function getDashboardEngagement(agencyId: string): Promise<Dashboar
         name: opp.name,
         slug: opp.slug,
         status: opp.status,
-        company_name: (opp.companies as any)?.name ?? null,
+        company_name: opp.companies?.name ?? null,
         last_click_at: link.last_clicked_at ?? sevenDaysAgo,
         clicks_7d: linkClicks7d,
       });

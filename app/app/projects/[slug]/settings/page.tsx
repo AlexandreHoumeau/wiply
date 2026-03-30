@@ -10,23 +10,24 @@ import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toast } from "sonner";
 import { Loader2, LinkIcon, Copy, Save, Sparkles, PlayCircle, PauseCircle, LayoutTemplate, Tag } from "lucide-react";
+import type { ProjectContextValue } from "@/providers/project-provider";
 
 export default function ProjectSettingsPage() {
-    const project = useProject();
+    const project = useProject() as ProjectContextValue | null;
 
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingToken, setIsGeneratingToken] = useState(false);
 
     const [formData, setFormData] = useState({
-        name: (project as any)?.name || "",
-        description: (project as any)?.description || "",
-        task_prefix: (project as any)?.task_prefix || "",
-        start_date: (project as any)?.start_date || "",
-        figma_url: (project as any)?.figma_url || "",
-        github_url: (project as any)?.github_url || "",
-        deployment_url: (project as any)?.deployment_url || "",
-        portal_message: (project as any)?.portal_message || "",
-        portal_show_progress: (project as any)?.portal_show_progress ?? true,
+        name: project?.name ?? "",
+        description: project?.description ?? "",
+        task_prefix: project?.task_prefix ?? "",
+        start_date: project?.start_date ?? "",
+        figma_url: project?.figma_url ?? "",
+        github_url: project?.github_url ?? "",
+        deployment_url: project?.deployment_url ?? "",
+        portal_message: project?.portal_message ?? "",
+        portal_show_progress: project?.portal_show_progress ?? true,
     });
 
     if (!project) return null;

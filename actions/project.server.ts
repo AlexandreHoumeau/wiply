@@ -14,6 +14,27 @@ import type {
   ProjectSettingsData,
   TaskData,
 } from "@/lib/validators/project";
+import type { ProjectContextValue } from "@/providers/project-provider";
+
+type ProjectWithCompany = ProjectContextValue & {
+  is_internal?: boolean | null;
+  company: {
+    id: string;
+    name: string | null;
+  } | null;
+};
+
+type ProjectNotificationInfo = {
+  slug: string | null;
+  task_prefix: string | null;
+};
+
+type CurrentTaskNotificationInfo = {
+  assignee_id: string | null;
+  agency_id: string;
+  task_number: number | null;
+  project: ProjectNotificationInfo | null;
+};
 
 // ─── Slug & prefix utilities ───────────────────────────────────────────────
 
@@ -254,7 +275,7 @@ export async function deleteProject(
 
 export async function getProjectBySlug(
   slug: string
-): Promise<ActionResult<any>> {
+): Promise<ActionResult<ProjectWithCompany>> {
   const supabase = await createClient();
 
   try {
@@ -265,7 +286,7 @@ export async function getProjectBySlug(
       .single();
 
     if (error) throw error;
-    return { success: true, data: project };
+    return { success: true, data: project as ProjectWithCompany };
   } catch (error) {
     console.error("Erreur fetch projet:", error);
     return { success: false, error: (error as Error).message };
@@ -407,7 +428,7 @@ export async function createTask(
         title: "Tâche assignée",
         body: `Vous avez été assigné à "${data.title}"`,
         metadata: {
-          task_id: (newTask as any).id,
+          task_id: newTask.id,
           project_slug: projectInfo?.slug ?? null,
           task_number: nextNumber,
           task_prefix: projectInfo?.task_prefix ?? null,
@@ -432,11 +453,13 @@ export async function updateTaskDetails(
     const { data: { user } } = await supabase.auth.getUser();
 
     // Fetch current task to detect assignee change
-    const { data: currentTask } = await supabase
+    const { data: currentTaskData } = await supabase
       .from("tasks")
       .select("assignee_id, agency_id, task_number, project:projects!tasks_project_id_fkey(slug, task_prefix)")
       .eq("id", taskId)
       .single();
+
+    const currentTask = currentTaskData as CurrentTaskNotificationInfo | null;
 
     const { error } = await supabase
       .from("tasks")
@@ -473,9 +496,9 @@ export async function updateTaskDetails(
         body: `Vous avez été assigné à "${data.title}"`,
         metadata: {
           task_id: taskId,
-          project_slug: (currentTask.project as any)?.slug ?? null,
+          project_slug: currentTask.project?.slug ?? null,
           task_number: currentTask.task_number,
-          task_prefix: (currentTask.project as any)?.task_prefix ?? null,
+          task_prefix: currentTask.project?.task_prefix ?? null,
         },
       });
     }
@@ -495,9 +518,9 @@ export async function updateTaskDetails(
             body: `Vous avez été mentionné dans la description de "${data.title}"`,
             metadata: {
               task_id: taskId,
-              project_slug: (currentTask.project as any)?.slug ?? null,
+              project_slug: currentTask.project?.slug ?? null,
               task_number: currentTask.task_number,
-              task_prefix: (currentTask.project as any)?.task_prefix ?? null,
+              task_prefix: currentTask.project?.task_prefix ?? null,
             },
           });
         }

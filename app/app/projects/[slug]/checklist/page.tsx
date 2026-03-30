@@ -6,13 +6,24 @@ import { getProjectChecklists, createChecklistItem, deleteChecklistItem } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PortalUploadAccessButton } from "@/components/files/PortalUploadAccessButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Plus, Type, FileImage, File, Trash2, CheckCircle2, Clock, Download } from "lucide-react";
+import { Loader2, Plus, Type, FileImage, File, Trash2, CheckCircle2, Clock } from "lucide-react";
+
+type ChecklistItem = {
+    id: string;
+    title: string;
+    description: string | null;
+    expected_type: string;
+    status: "pending" | "uploaded";
+    client_response: string | null;
+    file_url: string | null;
+};
 
 export default function ProjectChecklistPage() {
     const project = useProject();
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<ChecklistItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,17 +32,32 @@ export default function ProjectChecklistPage() {
     const [description, setDescription] = useState("");
     const [expectedType, setExpectedType] = useState("text");
 
-    useEffect(() => {
-        if (project) loadChecklists();
-    }, [project]);
-
     const loadChecklists = async () => {
         if (!project) return;
         setIsLoading(true);
         const res = await getProjectChecklists(project.id);
-        if (res.success && res.data) setItems(res.data);
+        if (res.success && res.data) setItems(res.data as ChecklistItem[]);
         setIsLoading(false);
     };
+
+    useEffect(() => {
+        if (!project) return;
+
+        let cancelled = false;
+
+        const fetchChecklists = async () => {
+            setIsLoading(true);
+            const res = await getProjectChecklists(project.id);
+            if (!cancelled && res.success && res.data) setItems(res.data as ChecklistItem[]);
+            if (!cancelled) setIsLoading(false);
+        };
+
+        void fetchChecklists();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [project]);
 
     const handleAddItem = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -157,15 +183,12 @@ export default function ProjectChecklistPage() {
                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Réponse du client :</p>
 
                                     {item.file_url ? (
-                                        <a
-                                            href={item.file_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-sm transition-all"
+                                        <PortalUploadAccessButton
+                                            itemId={item.id}
+                                            className="inline-flex gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-sm transition-all"
                                         >
-                                            <Download className="w-4 h-4" />
                                             Télécharger / Voir le fichier ({item.client_response})
-                                        </a>
+                                        </PortalUploadAccessButton>
                                     ) : (
                                         <p className="text-sm text-foreground whitespace-pre-wrap">{item.client_response}</p>
                                     )}

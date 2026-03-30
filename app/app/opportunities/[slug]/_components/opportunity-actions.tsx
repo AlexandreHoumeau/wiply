@@ -4,8 +4,9 @@ import { useRouter } from "next/navigation"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText } from "lucide-react"
+import type { OpportunityWithCompany } from "@/lib/validators/oppotunities"
 
-export default function OpportunityActions({ opportunity }: any) {
+export default function OpportunityActions({ opportunity }: { opportunity: OpportunityWithCompany }) {
   const router = useRouter()
 
   const handleCreateQuote = () => {

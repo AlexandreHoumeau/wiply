@@ -14,7 +14,8 @@ import {
     CreditCard,
     Mail,
     Layout,
-    HelpCircle
+    HelpCircle,
+    type LucideIcon,
 } from 'lucide-react'
 
 type BillingData = {
@@ -32,7 +33,7 @@ function UsageBar({ label, current, max, icon: Icon }: {
     label: string;
     current: number;
     max: number | typeof Infinity;
-    icon: any
+    icon: LucideIcon
 }) {
     const isUnlimited = max === Infinity
     const percentage = isUnlimited ? 0 : Math.min((current / max) * 100, 100)

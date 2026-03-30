@@ -19,6 +19,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { OpportunityAIContext } from "@/lib/email_generator/utils";
 import { ContactVia, OpportunityStatus, mapOpportunityStatusLabel } from "@/lib/validators/oppotunities";
 import { cn } from "@/lib/utils";
+import type { LinkRecord } from "@/actions/tracking.server";
 
 // --- Pipeline order for stage pills ---
 const PIPELINE_ORDER: OpportunityStatus[] = [
@@ -202,83 +203,55 @@ export function AIMessageGenerator({
 }) {
     const { profile } = useUserProfile();
     const refForm = useRef<HTMLFormElement>(null);
-    const allMessagesRef = useRef<AIMessageRow[]>(initialMessages);
-
     const [allMessages, setAllMessages] = useState<AIMessageRow[]>(initialMessages);
+
+    const getLatestMessageForStage = (
+        stage: OpportunityStatus,
+        messages: AIMessageRow[]
+    ): AIMessageRow | null =>
+        messages
+            .filter((message) => message.opportunity_status === stage)
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] ?? null;
+
+    const initialStageMessage = getLatestMessageForStage(
+        opportunity.status as OpportunityStatus,
+        initialMessages
+    );
+
     const [selectedStage, setSelectedStage] = useState<OpportunityStatus>(
         opportunity.status as OpportunityStatus
     );
 
     // Editor
-    const [editedSubject, setEditedSubject] = useState("");
-    const [editedBody, setEditedBody] = useState("");
-    const [messageId, setMessageId] = useState<string | null>(null);
-    const [isSaved, setIsSaved] = useState(false);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [savedSubject, setSavedSubject] = useState("");
-    const [savedBody, setSavedBody] = useState("");
+    const [editedSubject, setEditedSubject] = useState(initialStageMessage?.subject || "");
+    const [editedBody, setEditedBody] = useState(initialStageMessage?.body || "");
+    const [messageId, setMessageId] = useState<string | null>(initialStageMessage?.id ?? null);
+    const [isSaved, setIsSaved] = useState(Boolean(initialStageMessage));
+    const [savedSubject, setSavedSubject] = useState(initialStageMessage?.subject || "");
+    const [savedBody, setSavedBody] = useState(initialStageMessage?.body || "");
 
     // Config
     const [selectedChannel, setSelectedChannel] = useState<ContactVia>(
-        (opportunity.contact_via as ContactVia) || "email"
+        ((initialStageMessage?.channel as ContactVia | undefined) ?? (opportunity.contact_via as ContactVia)) || "email"
     );
-    const [tone, setTone] = useState("friendly");
-    const [length, setLength] = useState("medium");
-    const [customContext, setCustomContext] = useState("");
+    const [tone, setTone] = useState(initialStageMessage?.tone ?? "friendly");
+    const [length, setLength] = useState(initialStageMessage?.length ?? "medium");
+    const [customContext, setCustomContext] = useState(initialStageMessage?.custom_context || "");
     const [hasTrackingLink, setHasTrackingLink] = useState(false);
 
     // Generation
     const [isPending, startTransition] = useTransition();
     const [generationError, setGenerationError] = useState<string | null>(null);
 
-    useEffect(() => { allMessagesRef.current = allMessages; }, [allMessages]);
-
     useEffect(() => {
         getTrackingLinks(opportunity.id).then((result) => {
             if (result.success && result.data) {
-                setHasTrackingLink(result.data.some((l: any) => l.is_active));
+                setHasTrackingLink(result.data.some((link: LinkRecord) => link.is_active));
             }
         });
     }, [opportunity.id]);
 
-    // Load latest message when stage changes (uses ref to avoid stale closure)
-    useEffect(() => {
-        const msgs = allMessagesRef.current
-            .filter((m) => m.opportunity_status === selectedStage)
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-        if (msgs.length > 0) {
-            const latest = msgs[0];
-            setEditedSubject(latest.subject || "");
-            setEditedBody(latest.body);
-            setSavedSubject(latest.subject || "");
-            setSavedBody(latest.body);
-            setMessageId(latest.id);
-            setIsSaved(true);
-            setHasUnsavedChanges(false);
-            setSelectedChannel(latest.channel as ContactVia);
-            setTone(latest.tone);
-            setLength(latest.length);
-            setCustomContext(latest.custom_context || "");
-        } else {
-            setEditedSubject("");
-            setEditedBody("");
-            setSavedSubject("");
-            setSavedBody("");
-            setMessageId(null);
-            setIsSaved(false);
-            setHasUnsavedChanges(false);
-        }
-        setGenerationError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedStage]);
-
-    // Detect unsaved changes
-    useEffect(() => {
-        if (isSaved && messageId) {
-            setHasUnsavedChanges(editedSubject !== savedSubject || editedBody !== savedBody);
-        }
-    }, [editedSubject, editedBody, isSaved, messageId, savedSubject, savedBody]);
+    const hasUnsavedChanges = isSaved && !!messageId && (editedSubject !== savedSubject || editedBody !== savedBody);
 
     // Stage pills: show stages with messages + current opportunity stage
     const { visibleStages, messageCounts } = useMemo(() => {
@@ -290,13 +263,36 @@ export function AIMessageGenerator({
         return { visibleStages: stages, messageCounts: counts };
     }, [allMessages, opportunity.status]);
 
-    // All messages for selected stage sorted newest-first
-    const stageMessages = useMemo(
-        () => allMessages
-            .filter((m) => m.opportunity_status === selectedStage)
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-        [allMessages, selectedStage]
-    );
+    const loadStageMessage = (stage: OpportunityStatus) => {
+        const latest = getLatestMessageForStage(stage, allMessages);
+
+        if (latest) {
+            setEditedSubject(latest.subject || "");
+            setEditedBody(latest.body);
+            setSavedSubject(latest.subject || "");
+            setSavedBody(latest.body);
+            setMessageId(latest.id);
+            setIsSaved(true);
+            setSelectedChannel(latest.channel as ContactVia);
+            setTone(latest.tone);
+            setLength(latest.length);
+            setCustomContext(latest.custom_context || "");
+        } else {
+            setEditedSubject("");
+            setEditedBody("");
+            setSavedSubject("");
+            setSavedBody("");
+            setMessageId(null);
+            setIsSaved(false);
+        }
+
+        setGenerationError(null);
+    };
+
+    const handleSelectStage = (stage: OpportunityStatus) => {
+        setSelectedStage(stage);
+        loadStageMessage(stage);
+    };
 
     const handleLoadMessage = (msg: AIMessageRow) => {
         setEditedSubject(msg.subject || "");
@@ -305,7 +301,6 @@ export function AIMessageGenerator({
         setSavedBody(msg.body);
         setMessageId(msg.id);
         setIsSaved(true);
-        setHasUnsavedChanges(false);
         setSelectedChannel(msg.channel as ContactVia);
         setTone(msg.tone);
         setLength(msg.length);
@@ -338,7 +333,6 @@ export function AIMessageGenerator({
                 setSavedBody(result.body);
                 setMessageId(result.id);
                 setIsSaved(true);
-                setHasUnsavedChanges(false);
 
                 if (result.id) {
                     const newMsg: AIMessageRow = {
@@ -382,7 +376,6 @@ export function AIMessageGenerator({
         if (result.success) {
             setSavedSubject(editedSubject);
             setSavedBody(editedBody);
-            setHasUnsavedChanges(false);
             setAllMessages((prev) =>
                 prev.map((m) => m.id === messageId ? { ...m, subject: editedSubject || null, body: editedBody } : m)
             );
@@ -431,7 +424,7 @@ export function AIMessageGenerator({
                     messageCounts={messageCounts}
                     currentStatus={opportunity.status as OpportunityStatus}
                     selectedStage={selectedStage}
-                    onSelect={setSelectedStage}
+                    onSelect={handleSelectStage}
                 />
             </div>
 

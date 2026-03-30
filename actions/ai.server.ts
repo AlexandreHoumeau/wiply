@@ -11,7 +11,7 @@ export type AIConfigState = {
     message?: string
 }
 
-export async function updateAIConfigAction(prevState: any, formData: FormData): Promise<AIConfigState> {
+export async function updateAIConfigAction(_prevState: unknown, formData: FormData): Promise<AIConfigState> {
     const supabase = await createClient()
 
     // 1. Récupérer l'utilisateur et son agence

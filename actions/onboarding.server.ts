@@ -30,14 +30,14 @@ export async function completeOnboarding({
 
     if (!user) throw new Error("Not authenticated");
 
-    // Guard: if profile already exists, skip
-    const { data: existingProfile } = await supabase
+    // Guard: if profile already exists with an agency, skip onboarding
+    const { data: existingProfile } = await supabaseAdmin
         .from("profiles")
-        .select("id")
+        .select("id, agency_id")
         .eq("id", user.id)
         .single();
 
-    if (existingProfile) return { success: true };
+    if (existingProfile?.agency_id) return { success: true };
 
     const slug = generateSlug(agencyName.trim());
 
@@ -53,17 +53,29 @@ export async function completeOnboarding({
         throw new Error("Impossible de créer l'agence");
     }
 
-    // Step 2: Create profile (now the agency exists so agency_id FK is satisfied)
-    const { error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .insert({
-            id: user.id,
-            agency_id: agency.id,
-            role: "agency_admin",
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            email: user.email,
-        });
+    // Step 2: Attach the current user to the new agency.
+    // If the profile already exists but was detached from any agency, update it in place.
+    const profilePayload = {
+        agency_id: agency.id,
+        role: "agency_admin" as const,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: user.email,
+    };
+
+    const profileMutation = existingProfile
+        ? supabaseAdmin
+            .from("profiles")
+            .update(profilePayload)
+            .eq("id", user.id)
+        : supabaseAdmin
+            .from("profiles")
+            .insert({
+                id: user.id,
+                ...profilePayload,
+            });
+
+    const { error: profileError } = await profileMutation;
 
     if (profileError) {
         // Rollback agency

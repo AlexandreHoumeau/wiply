@@ -20,7 +20,6 @@ export function useAIMessage(opportunity: OpportunityAIContext) {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaved, setIsSaved] = useState(false);
     const [messageId, setMessageId] = useState<string | null>(null);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -43,11 +42,11 @@ export function useAIMessage(opportunity: OpportunityAIContext) {
         load();
     }, [opportunity.id]);
 
-    useEffect(() => {
-        if (isSaved && messageId) {
-            setHasUnsavedChanges(editedSubject !== (state.subject || "") || editedBody !== (state.body || ""));
-        }
-    }, [editedSubject, editedBody, isSaved, messageId, state.subject, state.body]);
+    const hasUnsavedChanges = Boolean(
+        isSaved &&
+        messageId &&
+        (editedSubject !== (state.subject || "") || editedBody !== (state.body || ""))
+    );
 
     const handleGenerate = () => {
         setIsSaved(false);
@@ -79,7 +78,6 @@ export function useAIMessage(opportunity: OpportunityAIContext) {
         if (!messageId) return;
         const result = await updateAIGeneratedMessage(messageId, { subject: editedSubject, body: editedBody });
         if (result.success) {
-            setHasUnsavedChanges(false);
             setState(prev => ({ ...prev, subject: editedSubject, body: editedBody }));
             toast.success("Mis à jour");
         }

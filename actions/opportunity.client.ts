@@ -6,7 +6,7 @@ async function logEvent(
     supabase: ReturnType<typeof createSupabaseBrowserClient>,
     opportunityId: string,
     eventType: string,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, unknown> = {}
 ) {
     try {
         const { data: { user } } = await supabase.auth.getUser();

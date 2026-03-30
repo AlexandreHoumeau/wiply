@@ -12,9 +12,6 @@ vi.mock("@/lib/supabase/admin", () => ({
 }))
 
 // Mock Supabase server client
-const mockSingle = vi.fn()
-const mockUpdate = vi.fn()
-const mockEq = vi.fn()
 const mockFrom = vi.fn()
 const mockGetUser = vi.fn()
 const mockAuth = { getUser: mockGetUser }

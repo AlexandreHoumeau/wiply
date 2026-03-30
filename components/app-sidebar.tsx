@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useEffect, useSyncExternalStore, useTransition } from "react"
 import { useUpgradeDialog } from '@/providers/UpgradeDialogProvider'
 import { createCheckoutSession } from '@/actions/billing.server'
@@ -38,7 +39,7 @@ type NavConfigItem = {
 const mainNav: NavConfigItem[] = [
     { label: "Tableau de bord", href: "/app", icon: LayoutDashboard },
     { label: "Opportunités", href: "/app/opportunities", icon: Briefcase },
-    { label: "Devis", href: "/app/quotes", icon: FileText, proOnly: true },
+    { label: "Devis", href: "/app/quotes", icon: FileText },
     { label: "Projets", href: "/app/projects", icon: Kanban },
 ]
 
@@ -46,7 +47,7 @@ const secondaryNav: NavConfigItem[] = [
     { label: "Clients", href: "/app/companies", icon: Building2 },
     { label: "Agence", href: "/app/agency", icon: Users },
     { label: "Espace interne", href: "/app/workspace", icon: Layers },
-    { label: "Fichiers", href: "/app/files", icon: FolderOpen, proOnly: true },
+    { label: "Fichiers", href: "/app/files", icon: FolderOpen },
 ]
 
 interface AppSidebarProps {
@@ -100,7 +101,7 @@ export function AppSidebar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMob
                 )}>
                     <div className="flex shrink-0 aspect-square size-8 items-center justify-center rounded-xl text-white overflow-hidden" style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px ${primaryColor}55` }}>
                         {agency?.logo_url ? (
-                            <img src={agency.logo_url} alt={agency.name} className="w-full h-full object-contain p-0.5" />
+                            <Image src={agency.logo_url} alt={agency.name ?? "Agence"} width={32} height={32} unoptimized className="w-full h-full object-contain p-0.5" />
                         ) : (
                             <span className="text-xs font-bold">{agency?.name?.charAt(0)?.toUpperCase() || "A"}</span>
                         )}
@@ -378,12 +379,7 @@ function NavItem({ item, active, isCollapsed, primaryColor, locked, agencyId, op
                 </motion.span>
             )}
 
-            {/* Pro Badge or Lock icon */}
-            {locked && !isCollapsed && (
-                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white shrink-0">
-                    PRO
-                </span>
-            )}
+            {/* Lock icon */}
             {locked && isCollapsed && (
                 <Lock className="absolute bottom-1 right-1 w-2.5 h-2.5 text-amber-600/60" />
             )}

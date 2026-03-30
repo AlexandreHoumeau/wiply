@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { updateTaskStatusAndPosition } from "@/actions/task.server";
-import { AlignLeft, Bug, LayoutTemplate, PenTool, Settings, ArrowUp, ArrowDown, Equal, AlertOctagon, MessageSquare, CalendarDays, GitBranch } from "lucide-react";
+import { AlignLeft, Bug, LayoutTemplate, PenTool, Settings, ArrowUp, ArrowDown, Equal, AlertOctagon, MessageSquare, CalendarDays, GitBranch, type LucideIcon } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 import { cn } from "@/lib/utils";
-import { useProject } from "@/providers/project-provider";
+import { useProject, type ProjectContextValue } from "@/providers/project-provider";
 import { toast } from "sonner";
+import type { ProjectTask } from "./types";
 
 // Définition des colonnes du Kanban
 const COLUMNS = [
@@ -19,17 +20,17 @@ const COLUMNS = [
 ];
 
 interface KanbanBoardProps {
-    projectId: string;
-    tasks: any[];
-    allTasks: any[];
-    onOpenTask: (task: any) => void;
+    _projectId: string;
+    tasks: ProjectTask[];
+    allTasks: ProjectTask[];
+    onOpenTask: (task: ProjectTask) => void;
     onNewTask: (status: string) => void;
 }
 
-export function KanbanBoard({ projectId, tasks: initialTasks, allTasks, onOpenTask, onNewTask }: KanbanBoardProps) {
+export function KanbanBoard({ _projectId, tasks: initialTasks, allTasks, onOpenTask, onNewTask }: KanbanBoardProps) {
     const [isMounted, setIsMounted] = useState(false);
     const [tasks, setTasks] = useState(initialTasks);
-    const project = useProject() as any;
+    const project = useProject() as ProjectContextValue | null;
     const taskPrefix = project?.task_prefix ?? "TCK";
 
     useEffect(() => { setIsMounted(true); }, []);
@@ -127,16 +128,16 @@ export function KanbanBoard({ projectId, tasks: initialTasks, allTasks, onOpenTa
 }
 
 function TaskCard({ task, index, taskPrefix, subTaskCount, onClick }: {
-    task: any; index: number; taskPrefix: string; subTaskCount: number; onClick: () => void;
+    task: ProjectTask; index: number; taskPrefix: string; subTaskCount: number; onClick: () => void;
 }) {
-    const TYPE_STYLES: Record<string, { icon: any; label: string; color: string }> = {
+    const TYPE_STYLES: Record<string, { icon: LucideIcon; label: string; color: string }> = {
         feature: { icon: AlignLeft,      label: "Feature",  color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40" },
         bug:     { icon: Bug,            label: "Bug",      color: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40" },
         design:  { icon: LayoutTemplate, label: "Design",   color: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40" },
         content: { icon: PenTool,        label: "Contenu",  color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40" },
         setup:   { icon: Settings,       label: "Setup",    color: "text-muted-foreground bg-muted" },
     };
-    const PRIORITY_ICONS: Record<string, { icon: any; color: string }> = {
+    const PRIORITY_ICONS: Record<string, { icon: LucideIcon; color: string }> = {
         low:    { icon: ArrowDown,    color: "text-muted-foreground" },
         medium: { icon: Equal,        color: "text-muted-foreground" },
         high:   { icon: ArrowUp,      color: "text-orange-500" },

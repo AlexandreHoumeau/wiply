@@ -4,17 +4,18 @@ import { ChevronRight, Loader2, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TYPE_CONFIG, STATUS_CONFIG } from "./task-config";
+import type { ProjectTask } from "./types";
 
 interface TaskHeaderProps {
-    task: any | null;
+    task: ProjectTask | null;
     taskSlug: string | null;
     taskPrefix: string;
-    parentTask: any | null;
+    parentTask: ProjectTask | null;
     status: string;
     type: string;
     isOverdue: boolean;
     isLoading: boolean;
-    onOpenTask?: (task: any) => void;
+    onOpenTask?: (task: ProjectTask) => void;
     onDelete: () => void;
     onSave: () => void;
     onClose: () => void;

@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskSlideOver } from "./TaskSlideOver";
 import { useRouter } from "next/navigation";
+import type { ProjectTask } from "./types";
 import dayjs from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import "dayjs/locale/fr";
@@ -21,10 +22,10 @@ const TYPE_COLORS: Record<string, string> = {
 
 const DAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-export function CalendarView({ projectId, tasks }: { projectId: string; tasks: any[] }) {
+export function CalendarView({ projectId, tasks }: { projectId: string; tasks: ProjectTask[] }) {
     const router = useRouter();
     const [slideOverOpen, setSlideOverOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<any | null>(null);
+    const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
     const [newTaskDate, setNewTaskDate] = useState<string | undefined>(undefined);
     const [month, setMonth] = useState(() => dayjs().startOf("month"));
 
@@ -46,7 +47,7 @@ export function CalendarView({ projectId, tasks }: { projectId: string; tasks: a
 
     // Normalize due_date → "YYYY-MM-DD" regardless of what Supabase returns
     const tasksByDate = useMemo(() => {
-        const map: Record<string, any[]> = {};
+        const map: Record<string, ProjectTask[]> = {};
         for (const t of tasks) {
             if (!t.due_date) continue;
             const key = dayjs(t.due_date).format("YYYY-MM-DD");
@@ -64,7 +65,7 @@ export function CalendarView({ projectId, tasks }: { projectId: string; tasks: a
         setSlideOverOpen(true);
     };
 
-    const openEditTask = (task: any) => {
+    const openEditTask = (task: ProjectTask) => {
         setSelectedTask(task);
         setNewTaskDate(undefined);
         setSlideOverOpen(true);

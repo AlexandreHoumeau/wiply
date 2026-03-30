@@ -1,8 +1,7 @@
-import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import React from "react";
 
 // ── Colors & Theme ───────────────────────────────────────────────────────────
-const BG = "#FAFAFA";
 const SLATE_900 = "#0F172A";
 const SLATE_600 = "#475569";
 const SLATE_500 = "#64748B";
@@ -18,8 +17,6 @@ const BLUE_50 = "#EFF6FF";
 
 const EMERALD_600 = "#059669";
 const EMERALD_100 = "#D1FAE5";
-const EMERALD_50 = "#ECFDF5";
-
 // ── Generated Text ───────────────────────────────────────────────────────────
 const SUBJECT_TEXT = "Votre stratégie d'acquisition – Retour sur notre échange";
 const BODY_TEXT = `Bonjour Sophie,

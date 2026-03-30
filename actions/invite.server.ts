@@ -2,12 +2,26 @@
 
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { checkMemberLimit } from "@/lib/billing/checkLimit"
+import { enforceAgencySeatPolicy } from "@/lib/billing/enforceSeatPolicy"
 import { createNotification } from "@/lib/notifications"
 import { sendEmail } from "@/lib/email"
 import { MemberJoinedEmail } from "@/emails/member-joined"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+
+type InviteWithAgency = {
+    id: string
+    agency_id: string
+    role: string
+    email: string
+    accepted: boolean
+    expires_at: string
+    agencies: {
+        name: string | null
+    } | null
+}
 
 export async function acceptInvitation(token: string) {
     const supabase = await createClient()
@@ -19,12 +33,14 @@ export async function acceptInvitation(token: string) {
         .eq('token', token)
         .single()
 
-    if (inviteError || !invite) {
+    const typedInvite = invite as InviteWithAgency | null
+
+    if (inviteError || !typedInvite) {
         return { error: "Invitation introuvable ou invalide." }
     }
 
     // 2. Vérifier l'expiration
-    if (new Date(invite.expires_at) < new Date() || invite.accepted) {
+    if (new Date(typedInvite.expires_at) < new Date() || typedInvite.accepted) {
         return { error: "Cette invitation a expiré ou a déjà été utilisée." }
     }
 
@@ -34,8 +50,20 @@ export async function acceptInvitation(token: string) {
         redirect(`/auth/login?next=${encodeURIComponent(`/invite?token=${token}`)}`)
     }
 
-    if (user.email !== invite.email) {
-        return { error: `Cette invitation est destinée à ${invite.email}. Vous êtes connecté en tant que ${user.email}.` }
+    if (user.email !== typedInvite.email) {
+        return { error: `Cette invitation est destinée à ${typedInvite.email}. Vous êtes connecté en tant que ${user.email}.` }
+    }
+
+    await enforceAgencySeatPolicy(typedInvite.agency_id)
+
+    const limitCheck = await checkMemberLimit(typedInvite.agency_id)
+    if (!limitCheck.allowed) {
+        await supabaseAdmin
+            .from("agency_invites")
+            .delete()
+            .eq("id", typedInvite.id);
+
+        return { error: "Cette invitation n'est plus valide car l'agence n'a plus de places disponibles sur son plan actuel." }
     }
 
     // 4. TRANSACTION : Mettre à jour le profil + Marquer l'invitation comme acceptée
@@ -44,8 +72,8 @@ export async function acceptInvitation(token: string) {
     const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({
-            agency_id: invite.agency_id,
-            role: invite.role
+            agency_id: typedInvite.agency_id,
+            role: typedInvite.role
         })
         .eq('id', user.id)
 
@@ -57,7 +85,7 @@ export async function acceptInvitation(token: string) {
     await supabase
         .from('agency_invites')
         .update({ accepted: true })
-        .eq('id', invite.id)
+        .eq('id', typedInvite.id)
 
     // Fetch new member's profile for display name
     const { data: memberProfile } = await supabaseAdmin
@@ -69,19 +97,19 @@ export async function acceptInvitation(token: string) {
     const memberName = memberProfile
         ? `${memberProfile.first_name} ${memberProfile.last_name}`.trim()
         : user.email ?? ''
-    const agencyName = (invite as any).agencies?.name ?? 'l\'agence'
+    const agencyName = typedInvite.agencies?.name ?? 'l\'agence'
     const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://wiply.fr'
 
     // Notify all agency admins (in-app + immediate email)
     const { data: admins } = await supabaseAdmin
         .from('profiles')
         .select('id, email')
-        .eq('agency_id', invite.agency_id)
+        .eq('agency_id', typedInvite.agency_id)
         .eq('role', 'agency_admin')
 
     for (const admin of admins ?? []) {
         await createNotification({
-            agencyId: invite.agency_id,
+            agencyId: typedInvite.agency_id,
             userId: admin.id,
             type: 'member_joined',
             title: 'Nouveau membre',
@@ -108,8 +136,8 @@ export async function acceptInvitation(token: string) {
         distinctId: user.id,
         event: "invitation_accepted",
         properties: {
-            agency_id: invite.agency_id,
-            role: invite.role,
+            agency_id: typedInvite.agency_id,
+            role: typedInvite.role,
         },
     })
     await posthog?.shutdown()

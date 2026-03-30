@@ -6,6 +6,10 @@ import { checkFilesEnabled, checkStorageLimit, getUsedStorageBytes } from "@/lib
 import { PLANS } from "@/lib/config/plans";
 import { z } from "zod";
 
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "Une erreur inattendue s'est produite";
+}
+
 // ─── Auth helper ─────────────────────────────────────────────────────────────
 
 async function getAuthContext() {
@@ -21,6 +25,45 @@ async function getAuthContext() {
 
     if (!profile?.agency_id) throw new Error("Agence introuvable");
     return { supabase, userId: user.id, agencyId: profile.agency_id as string };
+}
+
+async function getProjectScope(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    projectId: string
+): Promise<{ id: string; agency_id: string } | null> {
+    const { data } = await supabase
+        .from("projects")
+        .select("id, agency_id")
+        .eq("id", projectId)
+        .maybeSingle();
+
+    return data ?? null;
+}
+
+async function getTaskScope(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    taskId: string
+): Promise<{ id: string; agency_id: string; project_id: string | null } | null> {
+    const { data } = await supabase
+        .from("tasks")
+        .select("id, agency_id, project_id")
+        .eq("id", taskId)
+        .maybeSingle();
+
+    return data ?? null;
+}
+
+async function getFolderScope(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    folderId: string
+): Promise<{ id: string; agency_id: string; project_id: string | null } | null> {
+    const { data } = await supabase
+        .from("folders")
+        .select("id, agency_id, project_id")
+        .eq("id", folderId)
+        .maybeSingle();
+
+    return data ?? null;
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -78,8 +121,8 @@ export async function getAgencyFiles(): Promise<{ success: boolean; data?: FileR
 
         if (error) throw error;
         return { success: true, data: (data ?? []) as FileRecord[] };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -99,8 +142,8 @@ export async function getProjectFiles(projectId: string): Promise<{ success: boo
 
         if (error) throw error;
         return { success: true, data: (data ?? []) as FileRecord[] };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -116,8 +159,8 @@ export async function getProjectClientUploads(projectId: string): Promise<{ succ
 
         if (error) throw error;
         return { success: true, data: (data ?? []) as ClientUpload[] };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -140,10 +183,10 @@ export async function getTaskFiles(taskId: string): Promise<{ success: boolean; 
             .eq("task_id", taskId);
 
         if (error) throw error;
-        const files = (data ?? []).map((row: any) => row.file).filter(Boolean);
+        const files = (data ?? []).map((row) => row.file).filter(Boolean);
         return { success: true, data: files as FileRecord[] };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -156,8 +199,8 @@ export async function getStorageUsage(): Promise<{ success: boolean; data?: { us
         const plan = (data?.demo_ends_at && new Date(data.demo_ends_at) > new Date()) ? "PRO" : ((data?.plan as keyof typeof PLANS) || "FREE");
         const limitBytes = PLANS[plan].max_storage_bytes;
         return { success: true, data: { usedBytes, limitBytes } };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -172,6 +215,23 @@ export async function uploadFile(formData: FormData): Promise<{ success: boolean
         const taskId = formData.get("taskId") as string | null || null;
 
         if (!file) return { success: false, error: "Aucun fichier fourni" };
+
+        if (projectId) {
+            const project = await getProjectScope(supabase, projectId);
+            if (!project || project.agency_id !== agencyId) {
+                return { success: false, error: "Projet introuvable" };
+            }
+        }
+
+        if (taskId) {
+            const task = await getTaskScope(supabase, taskId);
+            if (!task || task.agency_id !== agencyId) {
+                return { success: false, error: "Ticket introuvable" };
+            }
+            if (projectId && task.project_id !== projectId) {
+                return { success: false, error: "Ce ticket n'appartient pas au projet sélectionné" };
+            }
+        }
 
         const filesCheck = await checkFilesEnabled(agencyId);
         if (!filesCheck.allowed) return { success: false, error: filesCheck.reason };
@@ -220,8 +280,8 @@ export async function uploadFile(formData: FormData): Promise<{ success: boolean
         }
 
         return { success: true, data: fileRow as FileRecord };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -245,6 +305,23 @@ export async function addLink(
         if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message };
 
         const { supabase, userId, agencyId } = await getAuthContext();
+
+        if (projectId) {
+            const project = await getProjectScope(supabase, projectId);
+            if (!project || project.agency_id !== agencyId) {
+                return { success: false, error: "Projet introuvable" };
+            }
+        }
+
+        if (taskId) {
+            const task = await getTaskScope(supabase, taskId);
+            if (!task || task.agency_id !== agencyId) {
+                return { success: false, error: "Ticket introuvable" };
+            }
+            if (projectId && task.project_id !== projectId) {
+                return { success: false, error: "Ce ticket n'appartient pas au projet sélectionné" };
+            }
+        }
 
         const filesCheck = await checkFilesEnabled(agencyId);
         if (!filesCheck.allowed) return { success: false, error: filesCheck.reason };
@@ -272,8 +349,8 @@ export async function addLink(
         }
 
         return { success: true, data: fileRow as FileRecord };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -287,11 +364,17 @@ export async function linkFileToTask(taskId: string, fileId: string): Promise<{ 
         const { data: file } = await supabase.from("files").select("agency_id, project_id").eq("id", fileId).single();
         if (!file || file.agency_id !== agencyId) return { success: false, error: "Fichier introuvable" };
 
+        const task = await getTaskScope(supabase, taskId);
+        if (!task || task.agency_id !== agencyId) return { success: false, error: "Ticket introuvable" };
+        if (file.project_id && task.project_id !== file.project_id) {
+            return { success: false, error: "Ce fichier ne peut être lié qu'aux tickets de son projet" };
+        }
+
         const { error } = await supabase.from("task_files").insert({ task_id: taskId, file_id: fileId, linked_by: userId });
         if (error) throw error;
         return { success: true };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -306,8 +389,8 @@ export async function unlinkFileFromTask(taskId: string, fileId: string): Promis
         const { error } = await supabase.from("task_files").delete().eq("task_id", taskId).eq("file_id", fileId);
         if (error) throw error;
         return { success: true };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -333,8 +416,8 @@ export async function deleteFile(fileId: string): Promise<{ success: boolean; er
         }
 
         return { success: true };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -360,8 +443,8 @@ export async function getSignedUrl(storagePath: string): Promise<{ success: bool
 
         if (error) throw error;
         return { success: true, url: data.signedUrl };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -379,8 +462,8 @@ export async function getFolders(projectId?: string | null): Promise<{ success: 
         const { data, error } = await query;
         if (error) throw error;
         return { success: true, data: (data ?? []) as FolderRecord[] };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -389,6 +472,12 @@ export async function createFolder(name: string, projectId?: string | null): Pro
         const trimmed = name.trim();
         if (!trimmed) return { success: false, error: "Le nom du dossier ne peut pas être vide" };
         const { supabase, agencyId } = await getAuthContext();
+        if (projectId) {
+            const project = await getProjectScope(supabase, projectId);
+            if (!project || project.agency_id !== agencyId) {
+                return { success: false, error: "Projet introuvable" };
+            }
+        }
         const { data, error } = await supabase
             .from("folders")
             .insert({ agency_id: agencyId, name: trimmed, project_id: projectId ?? null })
@@ -396,8 +485,8 @@ export async function createFolder(name: string, projectId?: string | null): Pro
             .single();
         if (error) throw error;
         return { success: true, data: data as FolderRecord };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -411,8 +500,8 @@ export async function renameFolder(folderId: string, name: string): Promise<{ su
         const { error } = await supabase.from("folders").update({ name: trimmed }).eq("id", folderId);
         if (error) throw error;
         return { success: true };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -425,8 +514,8 @@ export async function deleteFolder(folderId: string): Promise<{ success: boolean
         const { error } = await supabase.from("folders").delete().eq("id", folderId);
         if (error) throw error;
         return { success: true };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }
 
@@ -435,10 +524,17 @@ export async function moveFileToFolder(fileId: string, folderId: string | null):
         const { supabase, agencyId } = await getAuthContext();
         const { data: file } = await supabase.from("files").select("agency_id, project_id").eq("id", fileId).single();
         if (!file || file.agency_id !== agencyId) return { success: false, error: "Fichier introuvable" };
+        if (folderId) {
+            const folder = await getFolderScope(supabase, folderId);
+            if (!folder || folder.agency_id !== agencyId) return { success: false, error: "Dossier introuvable" };
+            if ((folder.project_id ?? null) !== (file.project_id ?? null)) {
+                return { success: false, error: "Le dossier cible n'appartient pas au même espace que le fichier" };
+            }
+        }
         const { error } = await supabase.from("files").update({ folder_id: folderId }).eq("id", fileId);
         if (error) throw error;
         return { success: true };
-    } catch (err: any) {
-        return { success: false, error: err.message };
+    } catch (error: unknown) {
+        return { success: false, error: getErrorMessage(error) };
     }
 }

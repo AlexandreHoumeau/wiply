@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { TaskSlideOver } from "./TaskSlideOver";
 import { useRouter } from "next/navigation";
+import type { ProjectTask } from "./types";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import "dayjs/locale/fr";
@@ -21,10 +22,10 @@ const TYPE_COLORS: Record<string, { bar: string; dot: string }> = {
 
 const WINDOW_DAYS = 90;
 
-export function GanttView({ projectId, tasks }: { projectId: string; tasks: any[] }) {
+export function GanttView({ projectId, tasks }: { projectId: string; tasks: ProjectTask[] }) {
     const router = useRouter();
     const [slideOverOpen, setSlideOverOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<any | null>(null);
+    const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
     const [windowStart, setWindowStart] = useState(() => dayjs().startOf("month"));
 
     const windowEnd = windowStart.add(WINDOW_DAYS - 1, "day");

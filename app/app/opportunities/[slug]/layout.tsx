@@ -2,6 +2,7 @@ import { getOpportunityBySlug } from "@/actions/opportunity.server";
 import { OpportunityProvider } from "./_components/opportunity-context";
 import OpportunityHeader from "./_components/opportunity-header";
 import OpportunitySidebarWrapper from "./_components/opportunity-sidebar-wrapper";
+import { notFound } from "next/navigation";
 
 export default async function OpportunityLayout({
   children,
@@ -14,7 +15,7 @@ export default async function OpportunityLayout({
   const opportunity = await getOpportunityBySlug(slug);
 
   if (!opportunity) {
-    return <div className="p-10 text-center">Opportunity not found</div>;
+    notFound();
   }
 
   return (

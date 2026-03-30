@@ -13,16 +13,16 @@ export default async function OnboardingPage() {
     // Check if profile already exists — use admin client to bypass RLS
     const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("id")
+        .select("id, agency_id")
         .eq("id", user.id)
         .single();
 
-    if (profile) redirect("/app");
+    if (profile?.agency_id) redirect("/app");
 
     const meta = user.user_metadata;
 
     // Email/password users already provided their info at signup — auto-bootstrap
-    if (meta?.agency_name) {
+    if (meta?.agency_name && !profile) {
         await bootstrapUser();
         redirect("/app");
     }
