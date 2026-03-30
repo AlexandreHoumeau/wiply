@@ -21,8 +21,9 @@ export function DemoBanner() {
 
     if (!agency?.demo_ends_at) return null
 
+    if (new Date(agency.demo_ends_at) <= new Date()) return null
+
     const days = getDaysRemaining(agency.demo_ends_at)
-    if (days < 0) return null
 
     const isUrgent = days <= 3
 

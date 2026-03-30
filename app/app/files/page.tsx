@@ -3,10 +3,12 @@ import { DriveClient } from "@/components/files/DriveClient";
 import { getAuthenticatedUserContext } from "@/actions/profile.server";
 import { isProPlan } from "@/lib/validators/agency";
 import { redirect } from "next/navigation";
+import { ProPageGate } from "@/components/pro-page-gate";
 
 export default async function FilesPage() {
     const ctx = await getAuthenticatedUserContext();
-    if (!ctx || !isProPlan(ctx.agency)) redirect("/app");
+    if (!ctx) redirect("/auth/login");
+    if (!isProPlan(ctx.agency)) return <ProPageGate feature="files" />;
 
     const [filesResult, foldersResult, storageResult] = await Promise.all([
         getAgencyFiles(),

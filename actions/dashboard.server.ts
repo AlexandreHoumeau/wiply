@@ -1,5 +1,6 @@
 "use server";
 
+import { PLANS, type PlanId } from "@/lib/config/plans";
 import { createClient } from "@/lib/supabase/server";
 import { OpportunityStatus } from "@/lib/validators/oppotunities";
 
@@ -43,6 +44,25 @@ export type DashboardData = {
   pipelineRows: PipelineRow[];
   pipelineTotal: number;
   favoriteOpps: FavoriteOpp[];
+};
+
+export type DashboardActionItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  ctaLabel: string;
+  tone: "default" | "warning" | "success";
+};
+
+export type DashboardSnapshot = {
+  sentQuotesCount: number;
+  draftQuotesCount: number;
+  inProgressTasksCount: number;
+  overdueTasksCount: number;
+  memberCount: number;
+  companyCount: number;
+  trackingLinksThisMonth: number;
 };
 
 const PIPELINE_STATUSES: OpportunityStatus[] = [
@@ -111,6 +131,182 @@ export async function getDashboardData(agencyId: string): Promise<DashboardData>
     pipelineRows,
     pipelineTotal,
     favoriteOpps: (favoriteOppsData ?? []) as unknown as FavoriteOpp[],
+  };
+}
+
+export async function getDashboardActionItems(agencyId: string): Promise<DashboardActionItem[]> {
+  const supabase = await createClient();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600e3).toISOString();
+
+  const [
+    { data: agency },
+    { count: staleOpportunitiesCount },
+    { count: sentQuotesCount },
+    { count: memberCount },
+  ] = await Promise.all([
+    supabase
+      .from("agencies")
+      .select("plan, demo_ends_at, logo_url, website, legal_name")
+      .eq("id", agencyId)
+      .single(),
+    supabase
+      .from("opportunities")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .not("status", "in", '("won","lost")')
+      .lt("updated_at", sevenDaysAgo),
+    supabase
+      .from("quotes")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .eq("status", "sent")
+      .lt("updated_at", sevenDaysAgo),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId),
+  ]);
+
+  const effectivePlan: PlanId =
+    agency?.demo_ends_at && new Date(agency.demo_ends_at) > new Date()
+      ? "PRO"
+      : ((agency?.plan as PlanId | null) ?? "FREE");
+
+  const items: DashboardActionItem[] = [];
+
+  if ((staleOpportunitiesCount ?? 0) > 0) {
+    items.push({
+      id: "stale-opportunities",
+      title: "Relances à reprendre",
+      description: `${staleOpportunitiesCount} opportunité${(staleOpportunitiesCount ?? 0) > 1 ? "s" : ""} n'ont pas bougé depuis plus de 7 jours.`,
+      href: "/app/opportunities",
+      ctaLabel: "Voir le pipeline",
+      tone: "warning",
+    });
+  }
+
+  if ((sentQuotesCount ?? 0) > 0) {
+    items.push({
+      id: "sent-quotes",
+      title: "Devis en attente de retour",
+      description: `${sentQuotesCount} devis envoyé${(sentQuotesCount ?? 0) > 1 ? "s" : ""} mérite${(sentQuotesCount ?? 0) > 1 ? "nt" : ""} une relance commerciale.`,
+      href: "/app/quotes",
+      ctaLabel: "Ouvrir les devis",
+      tone: "default",
+    });
+  }
+
+  if (!agency?.logo_url || !agency.website || !agency.legal_name) {
+    const missingFields = [
+      !agency?.logo_url ? "logo" : null,
+      !agency?.website ? "site web" : null,
+      !agency?.legal_name ? "mentions légales" : null,
+    ].filter(Boolean);
+
+    items.push({
+      id: "agency-profile",
+      title: "Finaliser votre agence",
+      description: `Complétez ${missingFields.join(", ")} pour renforcer votre image et vos devis.`,
+      href: "/app/agency/settings",
+      ctaLabel: "Compléter les réglages",
+      tone: "default",
+    });
+  }
+
+  if (effectivePlan === "PRO") {
+    const { getUsedStorageBytes } = await import("@/lib/billing/checkLimit");
+    const usedBytes = await getUsedStorageBytes(agencyId);
+    const limitBytes = PLANS.PRO.max_storage_bytes;
+    const usageRatio = limitBytes > 0 ? usedBytes / limitBytes : 0;
+
+    if (usageRatio >= 0.8) {
+      items.push({
+        id: "storage-usage",
+        title: "Stockage bientôt saturé",
+        description: `${Math.round(usageRatio * 100)}% du stockage PRO est déjà utilisé dans le drive.`,
+        href: "/app/files",
+        ctaLabel: "Nettoyer le drive",
+        tone: "warning",
+      });
+    }
+
+    if ((memberCount ?? 0) <= 1) {
+      items.push({
+        id: "invite-team",
+        title: "Inviter votre équipe",
+        description: "Vous utilisez encore l'espace seul. Ajoutez un collaborateur pour centraliser delivery et relances.",
+        href: "/app/agency/settings",
+        ctaLabel: "Inviter un membre",
+        tone: "success",
+      });
+    }
+  }
+
+  return items.slice(0, 4);
+}
+
+export async function getDashboardSnapshot(agencyId: string): Promise<DashboardSnapshot> {
+  const supabase = await createClient();
+  const startOfMonth = new Date();
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [
+    { count: sentQuotesCount },
+    { count: draftQuotesCount },
+    { count: inProgressTasksCount },
+    { count: overdueTasksCount },
+    { count: memberCount },
+    { count: companyCount },
+    { count: trackingLinksThisMonth },
+  ] = await Promise.all([
+    supabase
+      .from("quotes")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .eq("status", "sent"),
+    supabase
+      .from("quotes")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .eq("status", "draft"),
+    supabase
+      .from("tasks")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .eq("status", "in_progress"),
+    supabase
+      .from("tasks")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .not("status", "eq", "done")
+      .lt("due_date", today.toISOString()),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId),
+    supabase
+      .from("companies")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId),
+    supabase
+      .from("tracking_links")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .gte("created_at", startOfMonth.toISOString()),
+  ]);
+
+  return {
+    sentQuotesCount: sentQuotesCount ?? 0,
+    draftQuotesCount: draftQuotesCount ?? 0,
+    inProgressTasksCount: inProgressTasksCount ?? 0,
+    overdueTasksCount: overdueTasksCount ?? 0,
+    memberCount: memberCount ?? 0,
+    companyCount: companyCount ?? 0,
+    trackingLinksThisMonth: trackingLinksThisMonth ?? 0,
   };
 }
 

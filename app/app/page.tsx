@@ -3,12 +3,16 @@ import {
   getDashboardData,
   getDashboardRecentProjects,
   getDashboardEngagement,
+  getDashboardActionItems,
+  getDashboardSnapshot,
 } from "@/actions/dashboard.server";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { PipelineBreakdown } from "@/components/dashboard/PipelineBreakdown";
 import { ActiveProjectsList } from "@/components/dashboard/ActiveProjectsList";
 import { PriorityOpportunities } from "@/components/dashboard/PriorityOpportunities";
 import { RelanceSuggestions } from "@/components/dashboard/RelanceSuggestions";
+import { PriorityActions } from "@/components/dashboard/PriorityActions";
+import { DashboardSnapshot } from "@/components/dashboard/DashboardSnapshot";
 import Link from "next/link";
 import {
   Briefcase,
@@ -24,10 +28,12 @@ export default async function DashboardPage() {
 
   const agencyId = userContext.agency.id;
 
-  const [data, recentProjects, engagement] = await Promise.all([
+  const [data, recentProjects, engagement, actionItems, snapshot] = await Promise.all([
     getDashboardData(agencyId),
     getDashboardRecentProjects(agencyId),
     getDashboardEngagement(agencyId),
+    getDashboardActionItems(agencyId),
+    getDashboardSnapshot(agencyId),
   ]);
 
   const {
@@ -121,6 +127,10 @@ export default async function DashboardPage() {
 
       {/* Relances suggérées */}
       <RelanceSuggestions relances={relances} />
+
+      <DashboardSnapshot snapshot={snapshot} />
+
+      <PriorityActions items={actionItems} />
 
       {/* Pipeline + Projects */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
