@@ -14,6 +14,7 @@ type SignupInput = {
     firstName: string;
     lastName: string;
     redirectTo?: string;
+    campaignCode?: string | null;
 };
 
 export async function signup(data: SignupInput) {
@@ -34,6 +35,7 @@ export async function signup(data: SignupInput) {
                 ...(data.agencyName && { agency_name: data.agencyName }),
                 first_name: data.firstName,
                 last_name: data.lastName,
+                ...(data.campaignCode && { campaign_code: data.campaignCode }),
             },
         },
     });

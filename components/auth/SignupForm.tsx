@@ -40,6 +40,7 @@ function GoogleIcon() {
 export function SignupForm() {
     const searchParams = useSearchParams();
     const next = searchParams.get("next");
+    const campaignCode = searchParams.get("campaign");
     const isInvited = !!next;
 
     const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +65,7 @@ export function SignupForm() {
     function onSubmit(values: SignupValues) {
         setError(null);
         startTransition(async () => {
-            const result = await signup({ ...values, redirectTo: next || undefined });
+            const result = await signup({ ...values, redirectTo: next || undefined, campaignCode: campaignCode || undefined });
             if (result?.error) {
                 setError(result.error);
                 return;
@@ -76,10 +77,14 @@ export function SignupForm() {
     async function handleGoogleSignup() {
         setGoogleLoading(true);
         const supabase = createSupabaseBrowserClient();
+        const params = new URLSearchParams();
+        if (next) params.set("next", next);
+        if (campaignCode) params.set("campaign", campaignCode);
+        const redirectTo = `${window.location.origin}/auth/callback${params.size ? `?${params}` : ""}`;
         await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`,
+                redirectTo,
             },
         });
     }
