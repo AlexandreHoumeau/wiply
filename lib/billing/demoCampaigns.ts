@@ -1,5 +1,13 @@
 import { supabaseAdmin } from "@/lib/supabase/admin"
 
+interface DemoCampaignRow {
+    demo_days: number
+    active: boolean
+    expires_at: string | null
+    max_uses: number | null
+    uses_count: number
+}
+
 /**
  * Looks up a campaign code and returns the number of demo days it grants.
  * Returns null if the code is invalid, inactive, expired, or exhausted.
@@ -14,11 +22,15 @@ export async function getCampaignDemoDays(code: string | null | undefined): Prom
         .single()
 
     if (error || !data) return null
-    if (!data.active) return null
-    if (data.expires_at && new Date(data.expires_at) <= new Date()) return null
-    if (data.max_uses !== null && data.uses_count >= data.max_uses) return null
 
-    return data.demo_days
+    const row = data as unknown as DemoCampaignRow
+
+    if (!row.active) return null
+    // expires_at is exclusive: treat "now" as already expired
+    if (row.expires_at && new Date(row.expires_at) <= new Date()) return null
+    if (row.max_uses !== null && row.uses_count >= row.max_uses) return null
+
+    return row.demo_days
 }
 
 /**
