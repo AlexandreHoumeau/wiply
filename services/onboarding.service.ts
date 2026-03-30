@@ -1,6 +1,7 @@
 // services/onboarding.service.ts
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getCampaignDemoDays, incrementCampaignUses } from "@/lib/billing/demoCampaigns";
 
 function generateAgencySlug(name: string): string {
     return name
@@ -50,14 +51,28 @@ export async function bootstrapUser(invitationToken?: string | null) { // <-- On
 
   // --- CAS A : NOUVELLE AGENCE (OWNER) ---
   if (!targetAgencyId && meta?.agency_name) {
+    const campaignCode = meta?.campaign_code ?? null
+    const demoDays = await getCampaignDemoDays(campaignCode)
+    const demoEndsAt = demoDays
+      ? new Date(Date.now() + demoDays * 24 * 3600 * 1000).toISOString()
+      : null
+
     // Insert agency without owner_id first: owner_id FK references profiles.id which doesn't exist yet
     const { data: agency, error: agencyError } = await supabaseAdmin
       .from("agencies")
-      .insert({ name: meta.agency_name, slug: generateAgencySlug(meta.agency_name) })
+      .insert({
+        name: meta.agency_name,
+        slug: generateAgencySlug(meta.agency_name),
+        ...(demoEndsAt && { demo_ends_at: demoEndsAt }),
+      })
       .select()
       .single();
 
     if (agencyError) throw agencyError;
+
+    if (demoDays && campaignCode) {
+      incrementCampaignUses(campaignCode).catch(console.error)
+    }
 
     targetAgencyId = agency.id;
     userRole = "agency_admin";
