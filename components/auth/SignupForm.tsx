@@ -80,7 +80,7 @@ export function SignupForm() {
         const params = new URLSearchParams();
         if (next) params.set("next", next);
         if (campaignCode) params.set("campaign", campaignCode);
-        const redirectTo = `${window.location.origin}/auth/callback${params.size ? `?${params}` : ""}`;
+        const redirectTo = `${window.location.origin}/auth/callback${params.toString() ? `?${params}` : ""}`;
         await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
