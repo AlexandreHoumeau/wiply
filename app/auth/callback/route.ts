@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { bootstrapUser } from "@/services/onboarding.service";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
@@ -11,6 +12,7 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const errorCode = searchParams.get("error_code");
   const next = searchParams.get("next") || "/app";
+  const campaign = searchParams.get("campaign");
 
   // Supabase sends error params when the link is invalid or expired
   if (errorCode === "otp_expired" || searchParams.get("error") === "access_denied") {
@@ -34,7 +36,9 @@ export async function GET(request: Request) {
       } catch (e) {
         console.error("Bootstrap failed in token_hash callback:", e);
       }
-      return NextResponse.redirect(`${origin}${next}`);
+      const redirectUrl = new URL(`${origin}${next}`);
+      if (campaign) redirectUrl.searchParams.set("campaign", campaign);
+      return NextResponse.redirect(redirectUrl.toString());
     }
     return NextResponse.redirect(`${origin}/auth/login?error=link_expired`);
   }
@@ -45,6 +49,16 @@ export async function GET(request: Request) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (!error) {
+    // Persist campaign code into user_metadata so bootstrapUser can read it
+    if (campaign) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabaseAdmin.auth.admin.updateUserById(user.id, {
+          user_metadata: { ...user.user_metadata, campaign_code: campaign },
+        });
+      }
+    }
+
     // next ressemble à : /invite?token=b1a8b29e...
     const nextUrl = new URL(next, origin);
     const token = nextUrl.searchParams.get("token");
@@ -59,5 +73,7 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}${next}`);
+  const redirectUrl = new URL(`${origin}${next}`);
+  if (campaign) redirectUrl.searchParams.set("campaign", campaign);
+  return NextResponse.redirect(redirectUrl.toString());
 }

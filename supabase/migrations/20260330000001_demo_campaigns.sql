@@ -30,3 +30,7 @@ begin
   where code = campaign_code;
 end;
 $$;
+
+-- Restrict function access to service role only
+revoke all on function increment_campaign_uses(text) from public;
+grant execute on function increment_campaign_uses(text) to service_role;
