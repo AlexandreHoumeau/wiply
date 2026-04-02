@@ -5,7 +5,6 @@ import { OpportunityDialog } from "@/components/opportunities/OpportunityDialog"
 import { Button } from "@/components/ui/button";
 import { useLoadingBar } from "@/hooks/useLoadingBar";
 import { useOpportunities } from "@/hooks/useOpportunities";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import {
   ALL_CONTACT_VIA,
   ALL_STATUSES,
@@ -20,9 +19,21 @@ import { useState } from "react";
 import { getColumns } from "./columns";
 import { DataTable } from "./data-table";
 import { ConvertProjectDialog } from "@/components/projects/ConvertProjectDialog";
+import { useAgency } from "@/providers/agency-provider";
 
-export default function OpportunitiesPage() {
-  const { profile } = useUserProfile();
+type OpportunitiesPageProps = {
+  initialData: {
+    opportunities: OpportunityWithCompany[];
+    total: number;
+  };
+  initialStatusCounts: Record<OpportunityStatus, number>;
+};
+
+export default function OpportunitiesPage({
+  initialData,
+  initialStatusCounts,
+}: OpportunitiesPageProps) {
+  const profile = useAgency();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [convertingOpp, setConvertingOpp] = useState<OpportunityWithCompany | null>(null);
@@ -35,6 +46,8 @@ export default function OpportunitiesPage() {
     pageSize: 10,
     agencyId: profile?.agency_id || "",
     enabled: !!profile?.agency_id,
+    initialData,
+    initialStatusCounts,
   });
 
   const updateStatusMutation = useMutation({
@@ -64,8 +77,6 @@ export default function OpportunitiesPage() {
       updateOpportunityFavorite(id, isFavorite).then(() => queryClient.invalidateQueries({ queryKey: ["opportunities"] })),
     onConvert: (opp) => setConvertingOpp(opp),
   });
-
-  if (!profile?.agency_id) return null;
 
   return (
     <div className="max-w-[1400px] w-full mx-auto p-4 md:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">

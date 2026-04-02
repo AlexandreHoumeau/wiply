@@ -8,9 +8,20 @@ type UseOpportunitiesOptions = {
     pageSize?: number;
     agencyId: string;
     enabled?: boolean;
+    initialData?: {
+        opportunities: Awaited<ReturnType<typeof fetchOpportunities>>["opportunities"];
+        total: number;
+    };
+    initialStatusCounts?: Awaited<ReturnType<typeof fetchOpportunityStatusCounts>>;
 };
 
-export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: UseOpportunitiesOptions) {
+export function useOpportunities({
+    pageSize = 10,
+    agencyId,
+    enabled = true,
+    initialData,
+    initialStatusCounts,
+}: UseOpportunitiesOptions) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -45,6 +56,7 @@ export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: Us
                 isFavorite: starredOnly || undefined,
             }),
         enabled: enabled && !!agencyId,
+        initialData,
         staleTime: 30000, // Cache for 30 seconds
     });
 
@@ -53,6 +65,7 @@ export function useOpportunities({ pageSize = 10, agencyId, enabled = true }: Us
         queryKey: ["opportunities-status-counts", agencyId],
         queryFn: () => fetchOpportunityStatusCounts(agencyId),
         enabled: enabled && !!agencyId,
+        initialData: initialStatusCounts,
         staleTime: 60000, // Cache for 1 minute
     });
 

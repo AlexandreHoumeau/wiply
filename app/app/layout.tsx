@@ -1,9 +1,7 @@
-// PAS de "use client" ici
-export const dynamic = 'force-dynamic'
-
 import { redirect } from "next/navigation"
 import { getAuthenticatedUserContext } from "@/actions/profile.server"
 import { AgencyProvider } from "@/providers/agency-provider"
+import { AppProviders } from "@/providers/AppProviders"
 import { AppLayoutClient } from "../app-layout-client"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
@@ -32,9 +30,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AgencyProvider initialData={userContext}>
-      <AppLayoutClient>
-        {children}
-      </AppLayoutClient>
+      <AppProviders>
+        <AppLayoutClient>
+          {children}
+        </AppLayoutClient>
+      </AppProviders>
     </AgencyProvider>
   )
 }

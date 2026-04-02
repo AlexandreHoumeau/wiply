@@ -45,6 +45,27 @@ export async function fetchOpportunities({
     isFavorite,
 }: FetchOpportunitiesParams) {
     const supabase = await createClient();
+    const normalizedSearch = search?.trim();
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let matchingCompanyIds: string[] = [];
+
+    if (normalizedSearch) {
+        const companySearchTerm = `%${normalizedSearch}%`;
+        const { data: matchingCompanies, error: companySearchError } = await supabase
+            .from("companies")
+            .select("id")
+            .eq("agency_id", agencyId)
+            .or(`name.ilike.${companySearchTerm},email.ilike.${companySearchTerm}`);
+
+        if (companySearchError) {
+            console.error("Error fetching companies for opportunity search:", companySearchError);
+            throw companySearchError;
+        }
+
+        matchingCompanyIds = (matchingCompanies ?? []).map((company) => company.id);
+    }
 
     let query = supabase
         .from("opportunities")
@@ -52,11 +73,17 @@ export async function fetchOpportunities({
         .eq("agency_id", agencyId)
         .order("created_at", { ascending: false });
 
-    // Search filter - search in description field of opportunities
-    // For company fields, we'll need to filter on the companies table
-    if (search) {
-        // Search in the description field of opportunities table
-        query = query.ilike("description", `%${search}%`);
+    if (normalizedSearch) {
+        const opportunitySearchClauses = [
+            `name.ilike.%${normalizedSearch}%`,
+            `description.ilike.%${normalizedSearch}%`,
+        ];
+
+        if (matchingCompanyIds.length > 0) {
+            opportunitySearchClauses.push(`company_id.in.(${matchingCompanyIds.join(",")})`);
+        }
+
+        query = query.or(opportunitySearchClauses.join(","));
     }
 
     // Status filter
@@ -74,58 +101,7 @@ export async function fetchOpportunities({
         query = query.eq("is_favorite", true);
     }
 
-    // Pagination
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-
-    const { data: rangedData, count: rangedCount, error } = await query.range(from, to);
-    let data = rangedData;
-    let count = rangedCount;
-
-    // If we have a search term, also search in company name and email
-    // We need to filter client-side or use a different approach
-    if (search && data) {
-        // First, get all opportunities that match company criteria
-        const companyQuery = supabase
-            .from("opportunities")
-            .select("*, company:companies(*)", { count: "exact" })
-            .eq("agency_id", agencyId);
-
-        if (statuses && statuses.length > 0) {
-            companyQuery.in("status", statuses);
-        }
-
-        if (contactVia && contactVia.length > 0) {
-            companyQuery.in("contact_via", contactVia);
-        }
-
-        const { data: allData, error: allError } = await companyQuery;
-
-        if (!allError && allData) {
-            // Filter client-side for company name and email
-            const searchLower = search.toLowerCase();
-            const filtered = allData.filter((opp) => {
-                const companyName = opp.company?.name?.toLowerCase() || "";
-                const companyEmail = opp.company?.email?.toLowerCase() || "";
-                const description = opp.description?.toLowerCase() || "";
-
-                return (
-                    companyName.includes(searchLower) ||
-                    companyEmail.includes(searchLower) ||
-                    description.includes(searchLower)
-                );
-            });
-
-            // Sort by created_at
-            filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-            // Apply pagination manually
-            const paginatedData = filtered.slice(from, to + 1);
-
-            data = paginatedData as OpportunityWithCompany[];
-            count = filtered.length;
-        }
-    }
+    const { data, count, error } = await query.range(from, to);
 
     if (error) {
         console.error("Error fetching opportunities:", error);

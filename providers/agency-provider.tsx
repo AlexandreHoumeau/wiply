@@ -37,3 +37,5 @@ export const useAgency = () => {
     if (!context) throw new Error("useAgency must be used within AgencyProvider")
     return context
 }
+
+export const useOptionalAgency = () => useContext(AgencyContext)

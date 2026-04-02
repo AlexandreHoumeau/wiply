@@ -1,6 +1,4 @@
 import { CookieConsent } from "@/components/cookie-consent";
-import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
-import { UpgradeDialogProvider } from "@/providers/UpgradeDialogProvider";
 import type { Metadata } from "next";
 import { Inter, Passion_One } from "next/font/google";
 import { ThemeProvider } from "next-themes";
@@ -76,13 +74,9 @@ export default function RootLayout({
         className={`${inter.variable} ${passionOne.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ReactQueryProvider>
-            <UpgradeDialogProvider>
-              <TooltipProvider>
-                {children}
-              </TooltipProvider>
-            </UpgradeDialogProvider>
-          </ReactQueryProvider>
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
           <Toaster />
           <CookieConsent />
         </ThemeProvider>
