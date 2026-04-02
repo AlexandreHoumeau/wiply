@@ -4,14 +4,14 @@ import { useState, useTransition, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import posthog from "posthog-js";
 import {
-    AlertCircle, CheckCircle2, ChevronDown, Copy, Instagram,
+    AlertCircle, ChevronDown, Copy, Instagram,
     Link2, LinkedinIcon, Loader2, Mail, Phone, MapPin, Save, Wand2,
 } from "lucide-react";
 
-import { generateOpportunityMessage, updateAIGeneratedMessage, AIMessageRow } from "@/actions/ai-messages";
-import { getTrackingLinks } from "@/actions/tracking.server";
+import { generateOpportunityMessage, saveAIGeneratedMessage, updateAIGeneratedMessage, AIMessageRow } from "@/actions/ai-messages";
+import { createTrackingLink, getTrackingLinks } from "@/actions/tracking.server";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { OpportunityAIContext } from "@/lib/email_generator/utils";
 import { ContactVia, OpportunityStatus, mapOpportunityStatusLabel } from "@/lib/validators/oppotunities";
 import { cn } from "@/lib/utils";
+import { useAgency } from "@/providers/agency-provider";
 type LinkRecord = { id: string; is_active: boolean; [key: string]: unknown };
 
 // --- Pipeline order for stage pills ---
@@ -49,6 +50,11 @@ function formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString("fr-FR", {
         day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
     });
+}
+
+function truncateText(value: string, limit: number) {
+    if (value.length <= limit) return value;
+    return `${value.slice(0, limit).trim()}…`;
 }
 
 // --- Stage picker ---
@@ -202,6 +208,7 @@ export function AIMessageGenerator({
     allMessages: AIMessageRow[];
 }) {
     const { profile } = useUserProfile();
+    const { agency } = useAgency();
     const refForm = useRef<HTMLFormElement>(null);
     const [allMessages, setAllMessages] = useState<AIMessageRow[]>(initialMessages);
 
@@ -238,20 +245,35 @@ export function AIMessageGenerator({
     const [length, setLength] = useState(initialStageMessage?.length ?? "medium");
     const [customContext, setCustomContext] = useState(initialStageMessage?.custom_context || "");
     const [hasTrackingLink, setHasTrackingLink] = useState(false);
+    const [isCreatingTrackingLink, startTrackingLinkCreation] = useTransition();
 
     // Generation
     const [isPending, startTransition] = useTransition();
     const [generationError, setGenerationError] = useState<string | null>(null);
 
+    const loadTrackingLinkState = async () => {
+        const result = await getTrackingLinks(opportunity.id);
+        if (result.success && result.data) {
+            setHasTrackingLink(result.data.some((link: LinkRecord) => link.is_active));
+        }
+    };
+
     useEffect(() => {
+        let cancelled = false;
+
         getTrackingLinks(opportunity.id).then((result) => {
-            if (result.success && result.data) {
+            if (!cancelled && result.success && result.data) {
                 setHasTrackingLink(result.data.some((link: LinkRecord) => link.is_active));
             }
         });
+
+        return () => {
+            cancelled = true;
+        };
     }, [opportunity.id]);
 
-    const hasUnsavedChanges = isSaved && !!messageId && (editedSubject !== savedSubject || editedBody !== savedBody);
+    const hasUnsavedChanges = !!messageId && (editedSubject !== savedSubject || editedBody !== savedBody);
+    const canSave = !!editedBody && (!messageId || hasUnsavedChanges);
 
     // Stage pills: show stages with messages + current opportunity stage
     const { visibleStages, messageCounts } = useMemo(() => {
@@ -317,6 +339,7 @@ export function AIMessageGenerator({
             const formData = new FormData(refForm.current as HTMLFormElement);
             // Use selectedStage as the status context for generation
             formData.set("opportunity", JSON.stringify({ ...opportunity, status: selectedStage }));
+            formData.set("persist", "false");
 
             try {
                 const result = await generateOpportunityMessage(null, formData, profile?.agency_id);
@@ -329,28 +352,10 @@ export function AIMessageGenerator({
 
                 setEditedSubject(result.subject || "");
                 setEditedBody(result.body);
-                setSavedSubject(result.subject || "");
-                setSavedBody(result.body);
-                setMessageId(result.id);
-                setIsSaved(true);
-
-                if (result.id) {
-                    const newMsg: AIMessageRow = {
-                        id: result.id,
-                        opportunity_id: opportunity.id,
-                        agency_id: profile?.agency_id ?? null,
-                        opportunity_status: selectedStage,
-                        channel: selectedChannel,
-                        tone,
-                        length,
-                        custom_context: customContext || null,
-                        subject: result.subject,
-                        body: result.body,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                    };
-                    setAllMessages((prev) => [newMsg, ...prev]);
-                }
+                setSavedSubject("");
+                setSavedBody("");
+                setMessageId(null);
+                setIsSaved(false);
 
                 posthog.capture("ai_message_generated", {
                     opportunity_id: opportunity.id,
@@ -367,8 +372,37 @@ export function AIMessageGenerator({
         });
     };
 
-    const handleUpdate = async () => {
-        if (!messageId) return;
+    const handleSave = async () => {
+        if (!editedBody) return;
+
+        if (!messageId) {
+            const result = await saveAIGeneratedMessage({
+                opportunityId: opportunity.id,
+                agencyId: profile?.agency_id ?? undefined,
+                opportunityStatus: selectedStage,
+                channel: selectedChannel,
+                tone,
+                length,
+                customContext: customContext || undefined,
+                subject: editedSubject || undefined,
+                body: editedBody,
+            });
+
+            if (result.success && result.data) {
+                const saved = result.data as AIMessageRow;
+                setMessageId(saved.id);
+                setSavedSubject(saved.subject || "");
+                setSavedBody(saved.body);
+                setIsSaved(true);
+                setAllMessages((prev) => [saved, ...prev]);
+                toast.success("Message sauvegardé !");
+                return;
+            }
+
+            toast.error("Erreur lors de la sauvegarde");
+            return;
+        }
+
         const result = await updateAIGeneratedMessage(messageId, {
             subject: editedSubject || undefined,
             body: editedBody,
@@ -376,6 +410,7 @@ export function AIMessageGenerator({
         if (result.success) {
             setSavedSubject(editedSubject);
             setSavedBody(editedBody);
+            setIsSaved(true);
             setAllMessages((prev) =>
                 prev.map((m) => m.id === messageId ? { ...m, subject: editedSubject || null, body: editedBody } : m)
             );
@@ -390,6 +425,37 @@ export function AIMessageGenerator({
         navigator.clipboard.writeText(text);
         posthog.capture("ai_message_copied", { opportunity_id: opportunity.id, channel: selectedChannel });
         toast.success("Copié !");
+    };
+
+    const handleCreateTrackingLink = () => {
+        if (!profile?.agency_id) {
+            toast.error("Agence introuvable");
+            return;
+        }
+
+        const website = agency?.website;
+
+        if (!website) {
+            toast.error("Ajoutez d'abord le site web de l'agence pour générer un lien de tracking");
+            return;
+        }
+
+        startTrackingLinkCreation(async () => {
+            const result = await createTrackingLink({
+                opportunityId: opportunity.id,
+                agencyId: profile.agency_id,
+                originalUrl: website,
+                campaignName: `Email ${mapOpportunityStatusLabel[selectedStage]}`,
+            });
+
+            if (result.success) {
+                await loadTrackingLinkState();
+                toast.success("Lien de tracking généré");
+                return;
+            }
+
+            toast.error(result.error ?? "Erreur lors de la création du lien");
+        });
     };
 
     const toggleClass = (isSelected: boolean) =>
@@ -410,214 +476,252 @@ export function AIMessageGenerator({
 
     const hasBody    = !!editedBody;
     const stageLabel = mapOpportunityStatusLabel[selectedStage];
+    const descriptionPreview = opportunity.description?.trim() || "";
+    const shortDescriptionPreview = descriptionPreview ? truncateText(descriptionPreview, 180) : "";
+    const latestHistory = allMessages
+        .filter((m) => m.id !== messageId)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return (
-        <div className="flex flex-col gap-3 h-full">
-
-            {/* STAGE PICKER */}
-            <div className="bg-card rounded-xl border border-border shadow-sm px-4 py-3">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
-                    Message pour le statut
-                </p>
-                <StagePicker
-                    visibleStages={visibleStages}
-                    messageCounts={messageCounts}
-                    currentStatus={opportunity.status as OpportunityStatus}
-                    selectedStage={selectedStage}
-                    onSelect={handleSelectStage}
-                />
-            </div>
-
-            {/* CONFIG TOOLBAR */}
-            <Card className="border border-border shadow-sm shrink-0">
-                <CardContent className="py-3 px-4">
-                    <form ref={refForm} onSubmit={(e) => { e.preventDefault(); handleGenerate(); }}>
-                        <input type="hidden" name="opportunity" value={JSON.stringify(opportunity)} />
-                        <input type="hidden" name="channel" value={selectedChannel} />
-                        <input type="hidden" name="tone" value={tone} />
-                        <input type="hidden" name="length" value={length} />
-                        <input type="hidden" name="customContext" value={customContext} />
-
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex gap-1 flex-wrap">
-                                {channelOptions.map(({ value, label, icon: Icon }) => (
-                                    <button
-                                        key={value} type="button"
-                                        onClick={() => setSelectedChannel(value as ContactVia)}
-                                        className={`flex items-center gap-1.5 ${toggleClass(selectedChannel === value)}`}
-                                    >
-                                        <Icon className="h-3.5 w-3.5" />{label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="w-px h-5 bg-border shrink-0" />
-
-                            <div className="flex gap-1">
-                                {toneOptions.map(({ value, label }) => (
-                                    <button key={value} type="button" onClick={() => setTone(value)} className={toggleClass(tone === value)}>
-                                        {label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="w-px h-5 bg-border shrink-0" />
-
-                            <div className="flex gap-1">
-                                {lengthOptions.map(({ value, label }) => (
-                                    <button key={value} type="button" onClick={() => setLength(value)} className={toggleClass(length === value)}>
-                                        {label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="flex-1" />
-
-                            <Button type="submit" disabled={isPending} size="sm">
-                                {isPending
-                                    ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Génération...</>
-                                    : <><Wand2 className="mr-1.5 h-3.5 w-3.5" />{messageId ? "Régénérer" : "Générer"}</>
-                                }
-                            </Button>
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-2.5">
-                            <Textarea
-                                value={customContext}
-                                onChange={(e) => setCustomContext(e.target.value)}
-                                placeholder={`Contexte additionnel pour « ${stageLabel} » (optionnel)...`}
-                                className="flex-1 h-[34px] min-h-0 resize-none text-xs py-2"
-                            />
-                            {hasTrackingLink && (
-                                <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded-md px-2.5 py-2 whitespace-nowrap shrink-0">
-                                    <Link2 className="h-3 w-3 flex-shrink-0" />
-                                    Tracking inclus
-                                </div>
-                            )}
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
-
-            {/* Error */}
+        <div className="flex flex-col gap-4 h-full">
             {generationError && (
-                <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded-lg flex items-start gap-3 shrink-0">
-                    <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                        <p className="font-medium text-sm text-red-700 dark:text-red-400">Erreur</p>
-                        <p className="text-sm text-red-600 dark:text-red-400 mt-0.5">{generationError}</p>
+                <div className="rounded-2xl border border-red-200 bg-red-50/90 p-3 text-red-700 dark:border-red-800/40 dark:bg-red-950/30 dark:text-red-400">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <div>
+                            <p className="text-sm font-medium">Erreur de génération</p>
+                            <p className="mt-0.5 text-sm">{generationError}</p>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* GENERATED MESSAGE */}
-            <Card className="flex-1 flex flex-col min-h-0 border border-border shadow-sm">
-                <CardHeader className="border-b border-border pb-3 shrink-0">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 bg-green-100 dark:bg-green-950/40 rounded-lg flex items-center justify-center">
-                                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                            </div>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="space-y-4">
+                    <Card className="border-border/70 shadow-sm">
+                        <CardContent className="p-4">
+                            <form ref={refForm} onSubmit={(e) => { e.preventDefault(); handleGenerate(); }} className="space-y-4">
+                                <input type="hidden" name="opportunity" value={JSON.stringify(opportunity)} />
+                                <input type="hidden" name="channel" value={selectedChannel} />
+                                <input type="hidden" name="tone" value={tone} />
+                                <input type="hidden" name="length" value={length} />
+                                <input type="hidden" name="customContext" value={customContext} />
+
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-semibold text-foreground">Message</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {opportunity.company?.name ?? "Cette opportunité"} · {stageLabel}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {hasBody && !isPending && (
+                                                    <Button type="button" variant="outline" size="sm" onClick={copyToClipboard} className="rounded-xl">
+                                                        <Copy className="mr-1.5 h-3.5 w-3.5" />Copier
+                                                    </Button>
+                                                )}
+                                                <Button type="button" variant="outline" size="sm" onClick={handleGenerate} disabled={isPending} className="rounded-xl">
+                                                    <Wand2 className="mr-1.5 h-3.5 w-3.5" />Régénérer
+                                                </Button>
+                                                {canSave ? (
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        onClick={handleSave}
+                                                        className="rounded-xl bg-foreground text-background hover:bg-foreground/90"
+                                                    >
+                                                        <Save className="mr-1.5 h-3.5 w-3.5" />Enregistrer
+                                                    </Button>
+                                                ) : (
+                                                    <Badge className={cn(
+                                                        "rounded-xl px-3 py-1 text-[11px] font-medium",
+                                                        isSaved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-muted text-muted-foreground"
+                                                    )}>
+                                                        {isSaved ? "Sauvegardé" : "Non sauvegardé"}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <StagePicker
+                                            visibleStages={visibleStages}
+                                            messageCounts={messageCounts}
+                                            currentStatus={opportunity.status as OpportunityStatus}
+                                            selectedStage={selectedStage}
+                                            onSelect={handleSelectStage}
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
+                                        <div>
+                                        <Label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                            Canal
+                                        </Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {channelOptions.map(({ value, label, icon: Icon }) => (
+                                                <button
+                                                    key={value}
+                                                    type="button"
+                                                    onClick={() => setSelectedChannel(value as ContactVia)}
+                                                    className={cn(toggleClass(selectedChannel === value), "inline-flex items-center gap-2")}
+                                                >
+                                                    <Icon className="h-4 w-4" />
+                                                    <span>{label}</span>
+                                                </button>
+                                            ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <Label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                                Ton
+                                            </Label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {toneOptions.map(({ value, label }) => (
+                                                    <button key={value} type="button" onClick={() => setTone(value)} className={toggleClass(tone === value)}>
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <Label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                                Longueur
+                                            </Label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {lengthOptions.map(({ value, label }) => (
+                                                    <button key={value} type="button" onClick={() => setLength(value)} className={toggleClass(length === value)}>
+                                                        {label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {selectedChannel === "email" && (
+                                        <div className="space-y-2">
+                                            <Label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                                Objet
+                                            </Label>
+                                            <input
+                                                type="text"
+                                                value={editedSubject}
+                                                onChange={(e) => setEditedSubject(e.target.value)}
+                                                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <Label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                            Corps du message
+                                        </Label>
+                                        {isPending ? (
+                                            <div className="flex min-h-[560px] items-center justify-center rounded-2xl border border-dashed border-border/70 bg-muted/20">
+                                                <div className="space-y-3 text-center">
+                                                    <Loader2 className="mx-auto h-9 w-9 animate-spin text-muted-foreground" />
+                                                    <p className="text-sm text-muted-foreground">Le brouillon se construit…</p>
+                                                </div>
+                                            </div>
+                                        ) : !hasBody ? (
+                                            <div className="flex min-h-[560px] items-center justify-center rounded-2xl border border-dashed border-border/70 bg-muted/20 p-8">
+                                                <div className="max-w-sm space-y-3 text-center">
+                                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-background shadow-sm">
+                                                        <Wand2 className="h-8 w-8 text-muted-foreground" />
+                                                    </div>
+                                                    <p className="text-base font-medium text-foreground">Lancez une première version</p>
+                                                    <p className="text-sm leading-relaxed text-muted-foreground">
+                                                        Générez un brouillon pour « {stageLabel} », puis ajustez-le directement ici.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <Textarea
+                                                value={editedBody}
+                                                onChange={(e) => setEditedBody(e.target.value)}
+                                                className="min-h-[620px] resize-none rounded-2xl border border-border bg-background px-4 py-4 text-[15px] leading-7 text-foreground"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="space-y-4">
+                    <Card className="border-border/70 shadow-sm">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-semibold">Contexte</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <div>
-                                <CardTitle className="text-base font-semibold text-foreground">
-                                    Message — {stageLabel}
-                                </CardTitle>
-                                <CardDescription className="text-xs text-muted-foreground">
-                                    {isPending ? "Génération en cours..." : hasBody ? "Modifiez et envoyez" : "En attente de génération"}
-                                </CardDescription>
-                            </div>
-                        </div>
-                        {hasBody && !isPending && (
-                            <Button variant="outline" size="sm" onClick={copyToClipboard} className="text-muted-foreground">
-                                <Copy className="mr-1.5 h-3.5 w-3.5" />Copier
-                            </Button>
-                        )}
-                    </div>
-                </CardHeader>
-
-                <CardContent className="flex-1 flex flex-col min-h-0 pt-4">
-                    {isPending ? (
-                        <div className="flex-1 flex items-center justify-center p-8">
-                            <div className="space-y-3 text-center">
-                                <Loader2 className="h-8 w-8 text-muted-foreground animate-spin mx-auto" />
-                                <p className="text-muted-foreground text-sm">Génération du message...</p>
-                            </div>
-                        </div>
-                    ) : !hasBody ? (
-                        <div className="flex-1 flex items-center justify-center p-8">
-                            <div className="space-y-3 text-center">
-                                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
-                                    <Wand2 className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                                <p className="text-muted-foreground text-sm">
-                                    Aucun message pour « {stageLabel} » — cliquez sur Générer
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        <>
-                            {selectedChannel === "email" && (
-                                <div className="space-y-1.5 mb-3 shrink-0">
-                                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                        Sujet
-                                    </Label>
-                                    <input
-                                        type="text"
-                                        value={editedSubject}
-                                        onChange={(e) => setEditedSubject(e.target.value)}
-                                        className="w-full px-3 py-2 border border-border rounded-lg text-sm font-medium bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex-1 flex flex-col min-h-0 space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide shrink-0">
-                                    Message
+                                <Label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                    Notes pour l’IA
                                 </Label>
                                 <Textarea
-                                    value={editedBody}
-                                    onChange={(e) => setEditedBody(e.target.value)}
-                                    className="flex-1 min-h-[200px] resize-none text-sm leading-relaxed"
+                                    value={customContext}
+                                    onChange={(e) => setCustomContext(e.target.value)}
+                                    placeholder={`Ajoutez un angle, une contrainte ou un détail pour « ${stageLabel} »...`}
+                                    className="min-h-[124px] resize-none rounded-xl border-border/70 text-sm"
                                 />
                             </div>
 
-                            <div className="pt-3 border-t border-border mt-3 flex items-center gap-2 shrink-0 flex-wrap">
-                                <Button type="button" variant="outline" size="sm" onClick={handleGenerate} disabled={isPending}>
-                                    <Wand2 className="h-4 w-4 mr-1.5" />Régénérer
-                                </Button>
-                                <Button type="button" variant="outline" size="sm" onClick={copyToClipboard}>
-                                    <Copy className="h-4 w-4 mr-1.5" />Copier
-                                </Button>
-
-                                {hasUnsavedChanges && messageId ? (
-                                    <Button
-                                        type="button" variant="outline" size="sm" onClick={handleUpdate}
-                                        className="text-orange-600 border-orange-200 bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/30 dark:border-orange-800/40 dark:text-orange-400"
-                                    >
-                                        <Save className="h-4 w-4 mr-1.5" />Enregistrer
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        type="button" variant="outline" size="sm" disabled={!isSaved}
-                                        className={isSaved ? "text-green-600 border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800/40 dark:text-green-400" : ""}
-                                    >
-                                        <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                                        {isSaved ? "Sauvegardé" : "Non sauvegardé"}
-                                    </Button>
-                                )}
+                            <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                    Description
+                                </p>
+                                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                                    {shortDescriptionPreview
+                                        ? shortDescriptionPreview
+                                        : "Ajoutez une description d’opportunité pour guider l’observation centrale du message."}
+                                </p>
                             </div>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
 
-            {/* HISTORY — all messages except the currently loaded one, newest first */}
-            <MessageHistory
-                messages={allMessages
-                    .filter((m) => m.id !== messageId)
-                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
-                onLoad={handleLoadMessage}
-            />
+                            {hasTrackingLink && (
+                                <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/30 dark:text-emerald-400">
+                                    <Link2 className="h-4 w-4 shrink-0" />
+                                    Lien de tracking prêt
+                                </div>
+                            )}
+
+                            {!hasTrackingLink && (
+                                <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 p-3">
+                                    <p className="text-sm font-medium text-foreground">
+                                        Ajouter un lien de tracking
+                                    </p>
+                                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                                        Générez un lien actif pour l'inclure automatiquement dans l'email.
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-3 rounded-xl"
+                                        onClick={handleCreateTrackingLink}
+                                        disabled={isCreatingTrackingLink}
+                                    >
+                                        {isCreatingTrackingLink ? (
+                                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                            <Link2 className="mr-1.5 h-3.5 w-3.5" />
+                                        )}
+                                        Générer un lien de tracking
+                                    </Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <MessageHistory
+                        messages={latestHistory}
+                        onLoad={handleLoadMessage}
+                    />
+                </div>
+            </div>
+
         </div>
     );
 }
