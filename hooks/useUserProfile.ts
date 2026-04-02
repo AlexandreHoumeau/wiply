@@ -3,11 +3,15 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useOptionalAgency } from "@/providers/agency-provider";
 
 export function useUserProfile() {
+  const agencyContext = useOptionalAgency();
+
   const { data: profile, isLoading: loading } = useQuery({
     queryKey: ['user-profile'],
     staleTime: 5 * 60 * 1000,
+    enabled: !agencyContext,
     queryFn: async () => {
       const supabase = createSupabaseBrowserClient();
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -29,5 +33,5 @@ export function useUserProfile() {
     },
   });
 
-  return { profile: profile ?? null, loading };
+  return { profile: agencyContext ?? profile ?? null, loading: agencyContext ? false : loading };
 }
