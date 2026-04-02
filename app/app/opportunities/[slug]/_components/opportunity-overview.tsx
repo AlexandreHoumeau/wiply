@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useOptimistic, useState } from "react";
 import { toast } from "sonner";
 import {
     Wand2,
@@ -42,6 +42,13 @@ import {
     CTAAction,
 } from "@/lib/email_generator/opportunity-recommendation";
 import { updateOpportunityStatus } from "@/actions/opportunity.client";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 // --- Status pipeline stages ---
 const PIPELINE_STAGES: { id: OpportunityStatus; label: string }[] = [
@@ -52,6 +59,17 @@ const PIPELINE_STAGES: { id: OpportunityStatus; label: string }[] = [
     { id: "proposal_sent", label: "Proposition" },
     { id: "negotiation", label: "Négociation" },
     { id: "won", label: "Gagné" },
+];
+
+const STATUS_OPTIONS: OpportunityStatus[] = [
+    "inbound",
+    "to_do",
+    "first_contact",
+    "second_contact",
+    "proposal_sent",
+    "negotiation",
+    "won",
+    "lost",
 ];
 
 // --- Recommendation icon map ---
@@ -243,6 +261,84 @@ function StatusPipeline({ status }: { status: OpportunityStatus }) {
                 </div>
             )}
         </div>
+    );
+}
+
+function OverviewDescription({
+    description,
+    status,
+    opportunityId,
+    onStatusUpdated,
+}: {
+    description: string | null | undefined;
+    status: OpportunityStatus;
+    opportunityId: string;
+    onStatusUpdated: (nextStatus?: OpportunityStatus) => void;
+}) {
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    const handleStatusChange = async (nextStatus: string) => {
+        if (nextStatus === status) return;
+
+        setIsUpdatingStatus(true);
+        try {
+            await updateOpportunityStatus(opportunityId, nextStatus as OpportunityStatus);
+            toast.success(`Statut mis à jour : ${mapOpportunityStatusLabel[nextStatus as OpportunityStatus]}`);
+            onStatusUpdated(nextStatus as OpportunityStatus);
+        } catch {
+            toast.error("Impossible de mettre à jour le statut");
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+
+    return (
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Contexte de l'opportunité
+                    </p>
+                    <h2 className="text-lg font-semibold text-foreground">Description</h2>
+                </div>
+
+                <div className="w-full sm:w-60">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Statut
+                    </p>
+                    <Select value={status} onValueChange={handleStatusChange} disabled={isUpdatingStatus}>
+                        <SelectTrigger className="h-10 rounded-xl">
+                            <SelectValue placeholder="Choisir un statut" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {STATUS_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                    {mapOpportunityStatusLabel[option]}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {isUpdatingStatus && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Mise à jour du statut…
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-muted/40 p-4">
+                {description?.trim() ? (
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">
+                        {description}
+                    </p>
+                ) : (
+                    <p className="text-sm italic text-muted-foreground">
+                        Aucune description renseignée pour cette opportunité.
+                    </p>
+                )}
+            </div>
+        </section>
     );
 }
 
@@ -484,7 +580,7 @@ export default function OpportunityOverview({
     aiMessages: AIMessage[];
 }) {
     const router = useRouter();
-    const status = opportunity.status as OpportunityStatus;
+    const [currentStatus, setCurrentStatus] = useOptimistic(opportunity.status as OpportunityStatus);
     const slug = opportunity.slug;
 
     const hasTrackingLink = trackingLinks.length > 0;
@@ -506,7 +602,7 @@ export default function OpportunityOverview({
     const daysSinceLastActivity = getDaysSince(lastActivityDate);
 
     const recommendation = getOpportunityRecommendation({
-        status,
+        status: currentStatus,
         aiMessageCount,
         totalClicks: clickedLinksCount,
         daysSinceLastActivity,
@@ -516,7 +612,18 @@ export default function OpportunityOverview({
 
     return (
         <div className="w-full max-w-3xl mx-auto space-y-4">
-            <StatusPipeline status={status} />
+            <OverviewDescription
+                description={opportunity.description}
+                status={currentStatus}
+                opportunityId={opportunity.id}
+                onStatusUpdated={(nextStatus) => {
+                    if (nextStatus) {
+                        setCurrentStatus(nextStatus);
+                    }
+                    router.refresh();
+                }}
+            />
+            <StatusPipeline status={currentStatus} />
             <RecommendationCard
                 recommendation={recommendation}
                 slug={slug}

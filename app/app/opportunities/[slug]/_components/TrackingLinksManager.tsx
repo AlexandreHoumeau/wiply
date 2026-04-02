@@ -37,6 +37,7 @@ export function TrackingLinksManager({ opportunityId, agencyId }: { opportunityI
     const [campaignName, setCampaignName] = useState("");
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
+    const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
 
     const loadLinks = async () => {
         setIsLoading(true);
@@ -189,7 +190,8 @@ export function TrackingLinksManager({ opportunityId, agencyId }: { opportunityI
             {/* --- LISTE DES LIENS --- */}
             <div className="space-y-3">
                 {links.map((link) => {
-                    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/t/${link.short_code}`;
+                    const baseUrl = publicSiteUrl || (typeof window !== "undefined" ? window.location.origin : "");
+                    const url = `${baseUrl}/t/${link.short_code}`;
                     const isActive = link.is_active;
 
                     return (

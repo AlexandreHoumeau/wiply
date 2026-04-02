@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getDashboardData, getDashboardEngagement } from "@/actions/dashboard.server";
+import { buildDashboardActivityOverview } from "@/lib/dashboard/activity-overview";
+import {
+  getDashboardData,
+  getDashboardEngagement,
+} from "@/actions/dashboard.server";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 
@@ -276,5 +280,48 @@ describe("getDashboardEngagement", () => {
     const result = await getDashboardEngagement("agency-1");
     expect(result.relances[0].id).toBe("opp-new");
     expect(result.relances[1].id).toBe("opp-old");
+  });
+});
+
+describe("buildDashboardActivityOverview", () => {
+  const now = new Date("2026-04-01T10:00:00Z");
+
+  it("regroupe les actions par jour et calcule le resume du jour", () => {
+    const result = buildDashboardActivityOverview(
+      [
+        { key: "task_comment", created_at: "2026-04-01T08:00:00Z" },
+        { key: "task_comment", created_at: "2026-04-01T09:00:00Z" },
+        { key: "status_changed", created_at: "2026-04-01T11:00:00Z" },
+        { key: "note_added", created_at: "2026-03-31T14:00:00Z" },
+        { key: "task_created", created_at: "2026-03-30T14:00:00Z" },
+      ],
+      now
+    );
+
+    expect(result.today.total).toBe(3);
+    expect(result.today.metrics[0]).toMatchObject({
+      key: "task_comment",
+      count: 2,
+    });
+    expect(result.today.summary).toContain("3 actions");
+    expect(result.recentDays[0]).toMatchObject({
+      shortLabel: "Hier",
+      total: 1,
+    });
+    expect(result.totalLast7Days).toBe(5);
+    expect(result.activeDays).toBe(3);
+    expect(result.topActivityLabel).toBe("commentaire");
+  });
+
+  it("inclut les jours vides dans la fenetre et reste vide sans activite", () => {
+    const result = buildDashboardActivityOverview([], now);
+
+    expect(result.today.total).toBe(0);
+    expect(result.today.metrics).toHaveLength(0);
+    expect(result.recentDays).toHaveLength(6);
+    expect(result.recentDays.every((day) => day.total === 0)).toBe(true);
+    expect(result.totalLast7Days).toBe(0);
+    expect(result.activeDays).toBe(0);
+    expect(result.topActivityLabel).toBeNull();
   });
 });

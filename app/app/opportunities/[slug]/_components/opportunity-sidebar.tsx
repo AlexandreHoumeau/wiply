@@ -4,7 +4,6 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { OpportunityWithCompany } from "@/lib/validators/oppotunities"
-import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Loader2, Pencil, Wand2 } from "lucide-react"
 import OpportunityMetadata from "./opportunity-metadata"
@@ -104,16 +103,6 @@ export default function OpportunitySidebarInfo(opportunity: OpportunityWithCompa
                     )}
                     {isAnalyzing ? "Analyse en cours…" : "Analyser le site web"}
                 </Button>
-            )}
-
-            {opportunity.description && (
-                <>
-                    <Separator />
-                    <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">Description</h3>
-                        <p className="text-sm leading-relaxed">{opportunity.description}</p>
-                    </div>
-                </>
             )}
 
             {profile && (

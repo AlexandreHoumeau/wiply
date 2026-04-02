@@ -1,6 +1,15 @@
 "use server";
 
 import { PLANS, type PlanId } from "@/lib/config/plans";
+import {
+  addDays,
+  buildDashboardActivityOverview,
+  isDashboardActivityType,
+} from "@/lib/dashboard/activity-overview";
+import type {
+  DashboardActivityEventInput,
+  DashboardActivityOverview,
+} from "@/lib/dashboard/activity-overview";
 import { createClient } from "@/lib/supabase/server";
 import { OpportunityStatus } from "@/lib/validators/oppotunities";
 
@@ -73,6 +82,12 @@ const PIPELINE_STATUSES: OpportunityStatus[] = [
   "proposal_sent",
   "negotiation",
 ];
+
+function getStartOfDay(date: Date): Date {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
 
 export async function getDashboardData(agencyId: string): Promise<DashboardData> {
   const supabase = await createClient();
@@ -402,4 +417,57 @@ export async function getDashboardRecentProjects(agencyId: string): Promise<Rece
     .limit(5);
 
   return (data ?? []) as unknown as RecentProject[];
+}
+
+export async function getDashboardActivityOverview(): Promise<DashboardActivityOverview> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const empty = buildDashboardActivityOverview([]);
+  if (!user) return empty;
+
+  const since = addDays(getStartOfDay(new Date()), -6).toISOString();
+
+  const [
+    { data: opportunityEvents },
+    { data: taskComments },
+    { data: createdTasks },
+  ] = await Promise.all([
+    supabase
+      .from("opportunity_events")
+      .select("event_type, created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", since),
+    supabase
+      .from("task_comments")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", since),
+    supabase
+      .from("tasks")
+      .select("created_at")
+      .eq("created_by", user.id)
+      .gte("created_at", since),
+  ]);
+
+  const events: DashboardActivityEventInput[] = [
+    ...((opportunityEvents ?? [])
+      .filter((event) => isDashboardActivityType(event.event_type))
+      .map((event) => ({
+        key: event.event_type,
+        created_at: event.created_at,
+      }))),
+    ...((taskComments ?? []).map((comment) => ({
+      key: "task_comment" as const,
+      created_at: comment.created_at,
+    }))),
+    ...((createdTasks ?? []).map((task) => ({
+      key: "task_created" as const,
+      created_at: task.created_at,
+    }))),
+  ];
+
+  return buildDashboardActivityOverview(events);
 }
