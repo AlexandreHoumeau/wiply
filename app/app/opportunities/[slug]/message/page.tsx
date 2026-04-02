@@ -22,7 +22,7 @@ export default async function MessagePage({
     const { data: messages } = await getAIGeneratedMessages(opportunity.id);
 
     return (
-        <div className="w-full max-w-4xl mx-auto">
+        <div className="w-full max-w-[1600px]">
             <AIMessageGenerator opportunity={opportunity} allMessages={messages ?? []} />
         </div>
     );

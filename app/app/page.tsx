@@ -4,8 +4,10 @@ import {
   getDashboardRecentProjects,
   getDashboardEngagement,
   getDashboardActionItems,
+  getDashboardActivityOverview,
   getDashboardSnapshot,
 } from "@/actions/dashboard.server";
+import { ActivityOverview } from "@/components/dashboard/ActivityOverview";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { PipelineBreakdown } from "@/components/dashboard/PipelineBreakdown";
 import { ActiveProjectsList } from "@/components/dashboard/ActiveProjectsList";
@@ -28,12 +30,13 @@ export default async function DashboardPage() {
 
   const agencyId = userContext.agency.id;
 
-  const [data, recentProjects, engagement, actionItems, snapshot] = await Promise.all([
+  const [data, recentProjects, engagement, actionItems, snapshot, activityOverview] = await Promise.all([
     getDashboardData(agencyId),
     getDashboardRecentProjects(agencyId),
     getDashboardEngagement(agencyId),
     getDashboardActionItems(agencyId),
     getDashboardSnapshot(agencyId),
+    getDashboardActivityOverview(),
   ]);
 
   const {
@@ -127,6 +130,8 @@ export default async function DashboardPage() {
 
       {/* Relances suggérées */}
       <RelanceSuggestions relances={relances} />
+
+      <ActivityOverview overview={activityOverview} />
 
       <DashboardSnapshot snapshot={snapshot} />
 

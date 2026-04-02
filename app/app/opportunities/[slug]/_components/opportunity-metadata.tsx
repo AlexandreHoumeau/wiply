@@ -1,18 +1,82 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { mapContactViaLabel, mapOpportunityStatusLabel, OpportunityWithCompany } from "@/lib/validators/oppotunities";
+import { Button } from "@/components/ui/button";
+import {
+  mapContactViaLabel,
+  mapOpportunityStatusLabel,
+  OpportunityStatus,
+  OpportunityWithCompany,
+} from "@/lib/validators/oppotunities";
 import { CONTACT_COLORS, STATUS_COLORS } from "@/utils/general";
+import { toast } from "sonner";
+import { updateOpportunityStatus } from "@/actions/opportunity.client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Briefcase,
   Building2,
+  Check,
+  Copy,
   ExternalLink,
   Globe,
+  Loader2,
   Mail,
   MapPin,
   Phone,
   Tag,
 } from "lucide-react";
 
+const STATUS_OPTIONS: OpportunityStatus[] = [
+  "inbound",
+  "to_do",
+  "first_contact",
+  "second_contact",
+  "proposal_sent",
+  "negotiation",
+  "won",
+  "lost",
+];
+
 export default function OpportunityMetadata(opportunity: OpportunityWithCompany) {
+  const [emailCopied, setEmailCopied] = useState(false);
+  const [status, setStatus] = useState(opportunity.status as OpportunityStatus);
+  const [isUpdatingStatus, startStatusUpdate] = useTransition();
+  const router = useRouter();
+
+  const handleCopyEmail = async (email: string) => {
+    await navigator.clipboard.writeText(email);
+    setEmailCopied(true);
+    toast.success("Email copié");
+    setTimeout(() => setEmailCopied(false), 1500);
+  };
+
+  const handleStatusChange = (nextStatus: string) => {
+    if (nextStatus === status) return;
+
+    const previousStatus = status;
+    const castStatus = nextStatus as OpportunityStatus;
+    setStatus(castStatus);
+
+    startStatusUpdate(async () => {
+      try {
+        await updateOpportunityStatus(opportunity.id, castStatus);
+        toast.success(`Statut mis à jour : ${mapOpportunityStatusLabel[castStatus]}`);
+        router.refresh();
+      } catch {
+        setStatus(previousStatus);
+        toast.error("Impossible de mettre à jour le statut");
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Company Name */}
@@ -43,12 +107,21 @@ export default function OpportunityMetadata(opportunity: OpportunityWithCompany)
               <Mail className="h-3.5 w-3.5" />
               <span>Email</span>
             </div>
-            <a
-              href={`mailto:${opportunity.company.email}`}
-              className="text-sm text-primary hover:underline flex items-center gap-1"
-            >
-              {opportunity.company.email}
-            </a>
+            <div className="flex items-center gap-2">
+              <p className="min-w-0 flex-1 break-all text-sm text-foreground/85">
+                {opportunity.company.email}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => handleCopyEmail(opportunity.company!.email!)}
+                aria-label="Copier l'adresse email"
+              >
+                {emailCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -108,9 +181,29 @@ export default function OpportunityMetadata(opportunity: OpportunityWithCompany)
             <Tag className="h-3.5 w-3.5" />
             <span>Statut</span>
           </div>
-          <Badge className={STATUS_COLORS[opportunity.status]}>
-            {mapOpportunityStatusLabel[opportunity.status]}
-          </Badge>
+          <div className="space-y-2">
+            <Select value={status} onValueChange={handleStatusChange} disabled={isUpdatingStatus}>
+              <SelectTrigger className="h-9 rounded-xl text-left">
+                <SelectValue placeholder="Choisir un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {mapOpportunityStatusLabel[option]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Badge className={STATUS_COLORS[status]}>
+              {mapOpportunityStatusLabel[status]}
+            </Badge>
+            {isUpdatingStatus && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Mise à jour du statut…
+              </div>
+            )}
+          </div>
         </div>
 
         {

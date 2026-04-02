@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { toast } from "sonner";
-import { generateOpportunityMessage, getAIGeneratedMessages, updateAIGeneratedMessage } from "@/actions/ai-messages";
+import { generateOpportunityMessage, getAIGeneratedMessages, saveAIGeneratedMessage, updateAIGeneratedMessage } from "@/actions/ai-messages";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { OpportunityAIContext } from "@/lib/email_generator/utils";
 import { ContactVia } from "@/lib/validators/oppotunities";
@@ -43,7 +43,6 @@ export function useAIMessage(opportunity: OpportunityAIContext) {
     }, [opportunity.id]);
 
     const hasUnsavedChanges = Boolean(
-        isSaved &&
         messageId &&
         (editedSubject !== (state.subject || "") || editedBody !== (state.body || ""))
     );
@@ -58,6 +57,7 @@ export function useAIMessage(opportunity: OpportunityAIContext) {
             formData.append('tone', tone);
             formData.append('length', length);
             formData.append('customContext', customContext);
+            formData.append('persist', 'false');
             try {
                 const result = await generateOpportunityMessage(null, formData, profile?.agency_id);
                 if (result.error || !result.body) {
@@ -67,7 +67,8 @@ export function useAIMessage(opportunity: OpportunityAIContext) {
                 setState({ subject: result.subject || null, body: result.body, error: null });
                 setEditedSubject(result.subject || "");
                 setEditedBody(result.body || "");
-                setIsSaved(true); // Trigger auto-save simulation
+                setMessageId(null);
+                setIsSaved(false);
             } catch {
                 setState({ subject: null, body: null, error: "Erreur génération" });
             }
@@ -75,10 +76,35 @@ export function useAIMessage(opportunity: OpportunityAIContext) {
     };
 
     const handleUpdate = async () => {
-        if (!messageId) return;
+        if (!messageId) {
+            const result = await saveAIGeneratedMessage({
+                opportunityId: opportunity.id,
+                agencyId: profile?.agency_id ?? undefined,
+                opportunityStatus: opportunity.status,
+                channel: selectedChannel,
+                tone,
+                length,
+                customContext: customContext || undefined,
+                subject: editedSubject || undefined,
+                body: editedBody,
+            });
+
+            if (result.success && result.data) {
+                const msg = result.data;
+                setState({ subject: msg.subject, body: msg.body, error: null });
+                setEditedSubject(msg.subject || "");
+                setEditedBody(msg.body);
+                setMessageId(msg.id);
+                setIsSaved(true);
+                toast.success("Sauvegardé");
+            }
+            return;
+        }
+
         const result = await updateAIGeneratedMessage(messageId, { subject: editedSubject, body: editedBody });
         if (result.success) {
             setState(prev => ({ ...prev, subject: editedSubject, body: editedBody }));
+            setIsSaved(true);
             toast.success("Mis à jour");
         }
     };

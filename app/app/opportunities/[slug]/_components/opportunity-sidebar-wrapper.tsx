@@ -3,7 +3,7 @@ import OpportunitySidebarInfo from "./opportunity-sidebar";
 
 export default function OpportunitySidebarWrapper(opportunity: OpportunityWithCompany) {
     return (
-        <aside className="hidden lg:flex flex-col w-72 shrink-0 h-full overflow-y-auto border-l bg-background/80 backdrop-blur-md p-6 shadow-sm">
+        <aside className="hidden lg:flex w-72 shrink-0 self-stretch border-l bg-background/80 p-6 shadow-sm backdrop-blur-md">
             <OpportunitySidebarInfo {...opportunity} />
         </aside>
     );
