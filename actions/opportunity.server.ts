@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { generateSlug, getUniqueSlug } from "@/lib/utils";
+import { getOpportunityImportDuplicateKeys } from "@/lib/opportunities/csv";
 import { OpportunityWithCompany } from "@/lib/validators/oppotunities";
-import { OpportunityStatus, ContactVia } from "@/lib/validators/oppotunities";
+import { OpportunityFormValues, OpportunityStatus, ContactVia, opportunitySchema } from "@/lib/validators/oppotunities";
 
 export type FetchOpportunitiesParams = {
     page: number;
@@ -208,4 +210,130 @@ export async function updateOpportunityStatus(
         },
     });
     await posthog?.shutdown();
+}
+
+export async function importOpportunitiesFromCsv(rows: OpportunityFormValues[]): Promise<{
+    success: boolean;
+    importedCount: number;
+    skippedCount: number;
+    error?: string;
+}> {
+    try {
+        const duplicateKeys = getOpportunityImportDuplicateKeys(rows);
+        if (duplicateKeys.size > 0) {
+            return {
+                success: false,
+                importedCount: 0,
+                skippedCount: rows.length,
+                error: "Des doublons sont présents dans la sélection d'import",
+            };
+        }
+
+        const supabase = await createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+            return {
+                success: false,
+                importedCount: 0,
+                skippedCount: rows.length,
+                error: "Non authentifié",
+            };
+        }
+
+        const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("agency_id")
+            .eq("id", user.id)
+            .single();
+
+        if (profileError || !profile?.agency_id) {
+            return {
+                success: false,
+                importedCount: 0,
+                skippedCount: rows.length,
+                error: "Agence introuvable",
+            };
+        }
+
+        let importedCount = 0;
+        let skippedCount = 0;
+
+        for (const row of rows) {
+            const parsed = opportunitySchema.safeParse(row);
+
+            if (!parsed.success) {
+                skippedCount += 1;
+                continue;
+            }
+
+            const values = parsed.data;
+            const slug = await getUniqueSlug(supabase, generateSlug(values.name));
+
+            const { data: company, error: companyError } = await supabase
+                .from("companies")
+                .insert({
+                    agency_id: profile.agency_id,
+                    name: values.company_name,
+                    address: values.company_address || null,
+                    email: values.company_email || null,
+                    phone_number: values.company_phone || null,
+                    website: values.company_website || null,
+                    business_sector: values.company_sector || null,
+                    links: values.company_links ?? [],
+                })
+                .select("id")
+                .single();
+
+            if (companyError || !company) {
+                console.error("Error importing company from CSV:", companyError);
+                skippedCount += 1;
+                continue;
+            }
+
+            const { data: opportunity, error: opportunityError } = await supabase
+                .from("opportunities")
+                .insert({
+                    agency_id: profile.agency_id,
+                    company_id: company.id,
+                    name: values.name,
+                    description: values.description || null,
+                    status: values.status,
+                    contact_via: values.contact_via,
+                    slug,
+                })
+                .select("id")
+                .single();
+
+            if (opportunityError || !opportunity) {
+                console.error("Error importing opportunity from CSV:", opportunityError);
+                await supabase.from("companies").delete().eq("id", company.id);
+                skippedCount += 1;
+                continue;
+            }
+
+            await supabase.from("opportunity_events").insert({
+                opportunity_id: opportunity.id,
+                user_id: user.id,
+                event_type: "created",
+                metadata: { source: "csv_import" },
+            });
+
+            importedCount += 1;
+        }
+
+        return {
+            success: true,
+            importedCount,
+            skippedCount,
+        };
+    } catch (error) {
+        console.error("Error importing opportunities from CSV:", error);
+        return {
+            success: false,
+            importedCount: 0,
+            skippedCount: rows.length,
+            error: "Une erreur est survenue pendant l'import",
+        };
+    }
 }

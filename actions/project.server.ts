@@ -381,6 +381,22 @@ export async function createTask(
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
+    let resolvedType = data.type ?? "feature";
+
+    if (data.parent_id) {
+      const { data: parentTask, error: parentError } = await supabase
+        .from("tasks")
+        .select("type")
+        .eq("id", data.parent_id)
+        .eq("project_id", projectId)
+        .maybeSingle();
+
+      if (parentError) throw parentError;
+
+      if (parentTask?.type) {
+        resolvedType = parentTask.type;
+      }
+    }
 
     // Compute next sequential task number for this project
     const { data: maxRow } = await supabase
@@ -406,7 +422,7 @@ export async function createTask(
         title: data.title,
         description: data.description,
         status: data.status ?? "todo",
-        type: data.type ?? "feature",
+        type: resolvedType,
         priority: data.priority ?? "medium",
         assignee_id: data.assignee_id ?? null,
         due_date: data.due_date ?? null,

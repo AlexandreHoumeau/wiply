@@ -128,6 +128,99 @@ export async function analyzeCompanyWebsiteAction(
     return { success: true, analysis }
 }
 
+export async function enrichOpportunityImportRowAction(
+    payload: {
+        agencyId: string
+        website?: string
+        email?: string
+        companyName?: string
+        title?: string
+    }
+): Promise<
+    | { success: true; suggestions: { company_name?: string; name?: string; description?: string } }
+    | { success: false; error: string; needsUpgrade?: boolean }
+> {
+    const aiCheck = await checkAiEnabled(payload.agencyId)
+    if (!aiCheck.allowed) return { success: false, error: aiCheck.reason!, needsUpgrade: true }
+
+    const apiKey = process.env.MISTRAL_API_KEY
+    if (!apiKey) return { success: false, error: "Clé API Mistral manquante" }
+
+    const hasWebsite = !!payload.website?.trim()
+    const hasEmail = !!payload.email?.trim()
+    if (!hasWebsite && !hasEmail) {
+        return { success: false, error: "Un site web ou un email est nécessaire pour l'enrichissement IA." }
+    }
+
+    let pageText = ""
+    if (hasWebsite) {
+        try {
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 10000)
+            const res = await fetch(payload.website!, {
+                signal: controller.signal,
+                headers: { "User-Agent": "Mozilla/5.0 (compatible; Wiply-Bot/1.0)" },
+            })
+            clearTimeout(timeout)
+            const html = await res.text()
+            pageText = html
+                .replace(/<script[\s\S]*?<\/script>/gi, "")
+                .replace(/<style[\s\S]*?<\/style>/gi, "")
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 5000)
+        } catch {
+            pageText = ""
+        }
+    }
+
+    const mistral = new Mistral({ apiKey })
+    const response = await mistral.chat.complete({
+        model: "mistral-small-latest",
+        messages: [
+            {
+                role: "system",
+                content:
+                    "Tu aides une agence web à enrichir une fiche opportunité CRM. Réponds uniquement en JSON avec les clés company_name, name, description. company_name doit être court et crédible. name doit être une proposition de titre d'opportunité en français, concise, orientée prestation web. description doit être une phrase courte ou vide si tu n'es pas sûr. N'invente pas de téléphone ou d'email.",
+            },
+            {
+                role: "user",
+                content: JSON.stringify({
+                    website: payload.website || "",
+                    email: payload.email || "",
+                    current_company_name: payload.companyName || "",
+                    current_title: payload.title || "",
+                    website_text_excerpt: pageText,
+                }),
+            },
+        ],
+        temperature: 0.3,
+        responseFormat: { type: "json_object" },
+    })
+
+    const content = response.choices?.[0]?.message?.content
+    const raw = Array.isArray(content)
+        ? content.map((c) => ("text" in c ? c.text : "")).join("")
+        : content || ""
+
+    if (!raw) return { success: false, error: "Aucune suggestion IA n'a été retournée." }
+
+    try {
+        const parsed = JSON.parse(raw) as { company_name?: string; name?: string; description?: string }
+        return {
+            success: true,
+            suggestions: {
+                company_name: parsed.company_name?.trim() || undefined,
+                name: parsed.name?.trim() || undefined,
+                description: parsed.description?.trim() || undefined,
+            },
+        }
+    } catch {
+        return { success: false, error: "Réponse IA invalide." }
+    }
+}
+
 /**
  * Récupère la config actuelle (utilisé par le Server Component)
  */

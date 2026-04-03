@@ -27,6 +27,51 @@ interface KanbanBoardProps {
     onNewTask: (status: string) => void;
 }
 
+function getOrderedColumnTasks(tasks: ProjectTask[], status: string) {
+    const columnTasks = tasks
+        .filter((task) => task.status === status)
+        .sort((a, b) => (a.position || 0) - (b.position || 0));
+
+    const childrenByParent = new Map<string, ProjectTask[]>();
+
+    for (const task of columnTasks) {
+        if (!task.parent_id) continue;
+        const siblings = childrenByParent.get(task.parent_id) ?? [];
+        siblings.push(task);
+        childrenByParent.set(task.parent_id, siblings);
+    }
+
+    const pushed = new Set<string>();
+    const ordered: ProjectTask[] = [];
+
+    const pushWithChildren = (task: ProjectTask) => {
+        if (pushed.has(task.id)) return;
+        pushed.add(task.id);
+        ordered.push(task);
+
+        const directChildren = childrenByParent.get(task.id) ?? [];
+        for (const child of directChildren) {
+            pushWithChildren(child);
+        }
+    };
+
+    for (const task of columnTasks) {
+        const parentInSameColumn = task.parent_id
+            ? columnTasks.some((candidate) => candidate.id === task.parent_id)
+            : false;
+
+        if (!parentInSameColumn) {
+            pushWithChildren(task);
+        }
+    }
+
+    for (const task of columnTasks) {
+        pushWithChildren(task);
+    }
+
+    return ordered;
+}
+
 export function KanbanBoard({ _projectId, tasks: initialTasks, allTasks, onOpenTask, onNewTask }: KanbanBoardProps) {
     const [isMounted, setIsMounted] = useState(false);
     const [tasks, setTasks] = useState(initialTasks);
@@ -48,10 +93,33 @@ export function KanbanBoard({ _projectId, tasks: initialTasks, allTasks, onOpenT
         const [draggedTask] = updatedTasks.splice(draggedTaskIndex, 1);
 
         draggedTask.status = destination.droppableId;
-        updatedTasks.splice(destination.index, 0, draggedTask);
+        updatedTasks.push(draggedTask);
 
-        const tasksInDestColumn = updatedTasks.filter(t => t.status === destination.droppableId);
-        tasksInDestColumn.forEach((t, idx) => { t.position = idx; });
+        const sourceOrderedIds = getOrderedColumnTasks(tasks, source.droppableId)
+            .map((task) => task.id)
+            .filter((id) => id !== draggableId);
+        const destinationBaseIds = source.droppableId === destination.droppableId
+            ? sourceOrderedIds
+            : getOrderedColumnTasks(updatedTasks, destination.droppableId).map((task) => task.id);
+        const destinationOrderedIds = Array.from(destinationBaseIds);
+
+        destinationOrderedIds.splice(destination.index, 0, draggableId);
+
+        const nextPositionById = new Map<string, number>();
+        sourceOrderedIds.forEach((id, index) => {
+            if (source.droppableId !== destination.droppableId) {
+                nextPositionById.set(id, index);
+            }
+        });
+        destinationOrderedIds.forEach((id, index) => {
+            nextPositionById.set(id, index);
+        });
+
+        updatedTasks.forEach((task) => {
+            if (task.status === source.droppableId || task.status === destination.droppableId) {
+                task.position = nextPositionById.get(task.id) ?? task.position ?? 0;
+            }
+        });
 
         setTasks(updatedTasks);
 
@@ -67,9 +135,7 @@ export function KanbanBoard({ _projectId, tasks: initialTasks, allTasks, onOpenT
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex h-full overflow-x-auto p-6 gap-6 bg-muted/30">
                 {COLUMNS.map((column) => {
-                    const columnTasks = tasks
-                        .filter(task => task.status === column.id)
-                        .sort((a, b) => (a.position || 0) - (b.position || 0));
+                    const columnTasks = getOrderedColumnTasks(tasks, column.id);
 
                     return (
                         <div key={column.id} className="flex flex-col min-w-[320px] w-[320px] bg-muted/50 rounded-2xl border border-border/60 flex-shrink-0">
@@ -100,6 +166,10 @@ export function KanbanBoard({ _projectId, tasks: initialTasks, allTasks, onOpenT
                                     >
                                         {columnTasks.map((task, index) => {
                                             const subTaskCount = allTasks.filter(t => t.parent_id === task.id).length;
+                                            const parentTask = task.parent_id
+                                                ? allTasks.find((candidate) => candidate.id === task.parent_id) ?? null
+                                                : null;
+
                                             return (
                                                 <TaskCard
                                                     key={task.id}
@@ -107,6 +177,10 @@ export function KanbanBoard({ _projectId, tasks: initialTasks, allTasks, onOpenT
                                                     index={index}
                                                     taskPrefix={taskPrefix}
                                                     subTaskCount={subTaskCount}
+                                                    parentTask={parentTask}
+                                                    isChildTask={!!task.parent_id}
+                                                    previousTask={index > 0 ? columnTasks[index - 1] : null}
+                                                    nextTask={index < columnTasks.length - 1 ? columnTasks[index + 1] : null}
                                                     onClick={() => onOpenTask(task)}
                                                 />
                                             );
@@ -127,8 +201,17 @@ export function KanbanBoard({ _projectId, tasks: initialTasks, allTasks, onOpenT
     );
 }
 
-function TaskCard({ task, index, taskPrefix, subTaskCount, onClick }: {
-    task: ProjectTask; index: number; taskPrefix: string; subTaskCount: number; onClick: () => void;
+function TaskCard({ task, index, taskPrefix, subTaskCount, parentTask, isChildTask, previousTask, nextTask, onClick, className }: {
+    task: ProjectTask;
+    index: number;
+    taskPrefix: string;
+    subTaskCount: number;
+    parentTask: ProjectTask | null;
+    isChildTask: boolean;
+    previousTask: ProjectTask | null;
+    nextTask: ProjectTask | null;
+    onClick: () => void;
+    className?: string;
 }) {
     const TYPE_STYLES: Record<string, { icon: LucideIcon; label: string; color: string }> = {
         feature: { icon: AlignLeft,      label: "Feature",  color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40" },
@@ -149,7 +232,10 @@ function TaskCard({ task, index, taskPrefix, subTaskCount, onClick }: {
     const commentCount = task.task_comments?.[0]?.count ?? 0;
     const isOverdue = task.due_date && dayjs(task.due_date).isBefore(dayjs(), "day") && task.status !== "done";
     const taskSlug = task.task_number ? `${taskPrefix}-${task.task_number}` : task.id.split("-")[0].substring(0, 4).toUpperCase();
+    const parentSlug = parentTask?.task_number ? `${taskPrefix}-${parentTask.task_number}` : null;
     const descPreview = task.description?.replace(/<[^>]*>/g, " ").trim();
+    const attachesToParent = previousTask?.id === task.parent_id;
+    const hasAttachedChildBelow = nextTask?.parent_id === task.id;
 
     return (
         <Draggable draggableId={task.id} index={index}>
@@ -160,36 +246,52 @@ function TaskCard({ task, index, taskPrefix, subTaskCount, onClick }: {
                     {...provided.dragHandleProps}
                     onClick={onClick}
                     className={cn(
-                        "p-4 rounded-xl border bg-card group hover:border-primary/30 transition-all select-none",
-                        snapshot.isDragging ? "shadow-xl scale-[1.02] rotate-1 z-50" : "shadow-sm"
+                        "border bg-card group hover:border-primary/30 transition-all select-none relative overflow-hidden",
+                        isChildTask
+                            ? "px-3 py-2.5 rounded-lg"
+                            : "p-4 rounded-xl",
+                        attachesToParent && "-mt-px rounded-t-none border-t-0 shadow-none",
+                        hasAttachedChildBelow && "rounded-b-none",
+                        snapshot.isDragging ? "shadow-xl scale-[1.02] rotate-1 z-50" : (isChildTask ? "shadow-none" : "shadow-sm"),
+                        className
                     )}
                 >
-                    <div className="flex justify-between items-center mb-3">
+                    <div className={cn("flex justify-between items-center", isChildTask ? "mb-1.5" : "mb-3")}>
                         <div className="flex items-center gap-1.5">
-                            {task.parent_id && (
+                            {isChildTask && (
                                 <GitBranch className="w-3 h-3 text-muted-foreground/40 rotate-180" />
                             )}
                             <span className="font-mono text-[10px] font-bold text-muted-foreground/50 uppercase tracking-wider">
                                 {taskSlug}
                             </span>
+                            {isChildTask && parentSlug && (
+                                <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                                    {parentSlug}
+                                </span>
+                            )}
                         </div>
-                        <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold", typeConfig.color)}>
-                            <typeConfig.icon className="w-2.5 h-2.5" />
-                            {typeConfig.label}
-                        </div>
+                        {!isChildTask && (
+                            <div className={cn("flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold", typeConfig.color)}>
+                                <typeConfig.icon className="w-2.5 h-2.5" />
+                                {typeConfig.label}
+                            </div>
+                        )}
                     </div>
 
-                    <p className="font-sans text-[15px] font-semibold text-foreground leading-snug mb-1.5">
+                    <p className={cn(
+                        "font-sans font-semibold text-foreground leading-snug",
+                        isChildTask ? "text-[13px] mb-1" : "text-[15px] mb-1.5"
+                    )}>
                         {task.title}
                     </p>
 
-                    {descPreview && (
+                    {!isChildTask && descPreview && (
                         <p className="font-sans text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">
                             {descPreview}
                         </p>
                     )}
 
-                    {task.due_date && (
+                    {!isChildTask && task.due_date && (
                         <div className={cn(
                             "flex items-center gap-1 mb-3 w-fit px-2 py-0.5 rounded-full text-[10px] font-semibold",
                             isOverdue ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400" : "bg-muted text-muted-foreground"
@@ -200,17 +302,27 @@ function TaskCard({ task, index, taskPrefix, subTaskCount, onClick }: {
                         </div>
                     )}
 
-                    <div className={cn("flex items-center justify-between pt-3 border-t border-border/30", descPreview || task.due_date ? "" : "mt-3")}>
-                        <priorityConfig.icon className={cn("w-3.5 h-3.5", priorityConfig.color)} />
+                    <div className={cn(
+                        "flex items-center justify-between",
+                        isChildTask
+                            ? "pt-1"
+                            : cn("pt-3 border-t border-border/30", descPreview || task.due_date ? "" : "mt-3")
+                    )}>
+                        <div className="flex items-center gap-2">
+                            <priorityConfig.icon className={cn("w-3.5 h-3.5", priorityConfig.color)} />
+                            {isChildTask && (
+                                <typeConfig.icon className="w-3 h-3 text-muted-foreground/50" />
+                            )}
+                        </div>
 
                         <div className="flex items-center gap-2">
-                            {subTaskCount > 0 && (
+                            {!isChildTask && subTaskCount > 0 && (
                                 <div className="flex items-center gap-1 text-muted-foreground">
                                     <GitBranch className="w-3 h-3" />
                                     <span className="text-[10px] font-medium">{subTaskCount}</span>
                                 </div>
                             )}
-                            {commentCount > 0 && (
+                            {commentCount > 0 && !isChildTask && (
                                 <div className="flex items-center gap-1 text-muted-foreground">
                                     <MessageSquare className="w-3 h-3" />
                                     <span className="text-[10px] font-medium">{commentCount}</span>

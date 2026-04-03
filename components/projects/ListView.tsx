@@ -161,27 +161,40 @@ export function ListView({ projectId: _projectId, tasks, allTasks, onOpenTask }:
                             const TypeIcon = typeConf.icon;
                             const PriorityIcon = priorityConf.icon;
                             const StatusIcon = statusConf.icon;
+                            const parentTask = task.parent_id
+                                ? tasks.find((candidate) => candidate.id === task.parent_id) ?? null
+                                : null;
                             const initials = task.assignee
                                 ? getInitials(task.assignee.first_name ?? "", task.assignee.last_name ?? "", task.assignee.email ?? "")
                                 : null;
                             const taskSlug = task.task_number ? `${taskPrefix}-${task.task_number}` : task.id.split("-")[0].substring(0, 4).toUpperCase();
+                            const parentSlug = parentTask?.task_number ? `${taskPrefix}-${parentTask.task_number}` : null;
                             const subTaskCount = allTasks.filter(t => t.parent_id === task.id).length;
+                            const isChildTask = !!task.parent_id;
 
                             return (
                                 <tr
                                     key={task.id}
                                     onClick={() => onOpenTask(task)}
-                                    className="bg-background hover:bg-muted/40 cursor-pointer transition-colors group"
+                                    className={cn(
+                                        "bg-background hover:bg-muted/40 cursor-pointer transition-colors group",
+                                        isChildTask && "bg-muted/20 hover:bg-muted/40"
+                                    )}
                                 >
                                     {/* ID */}
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-1">
-                                            {task.parent_id && (
-                                                <GitBranch className="w-3 h-3 text-muted-foreground/30 rotate-180 shrink-0" />
+                                            {isChildTask && (
+                                                <GitBranch className="w-3 h-3 text-muted-foreground/40 rotate-180 shrink-0" />
                                             )}
                                             <span className="font-mono text-[10px] font-bold text-muted-foreground/40 group-hover:text-muted-foreground">
                                                 {taskSlug}
                                             </span>
+                                            {isChildTask && parentSlug && (
+                                                <span className="font-mono text-[10px] font-semibold text-muted-foreground/50 shrink-0">
+                                                    {parentSlug}
+                                                </span>
+                                            )}
                                         </div>
                                     </td>
 
@@ -204,6 +217,12 @@ export function ListView({ projectId: _projectId, tasks, allTasks, onOpenTask }:
                                                 </span>
                                             )}
                                         </div>
+                                        {isChildTask && parentTask && (
+                                            <p className="mt-1 flex items-center gap-1.5 truncate text-[11px] font-medium text-muted-foreground">
+                                                <GitBranch className="w-3 h-3 shrink-0 rotate-180" />
+                                                <span className="truncate">{parentTask.title}</span>
+                                            </p>
+                                        )}
                                         {task.description && (
                                             <p className="text-xs text-muted-foreground truncate mt-0.5">
                                                 {task.description.replace(/<[^>]*>/g, " ").trim()}

@@ -184,7 +184,7 @@ function TaskSlideOverInner({
         if (!newSubTitle.trim() || !profile?.agency_id || !task?.id) return;
         setIsCreatingSubTask(true);
         const result = await createTask(
-            { title: newSubTitle.trim(), status: "todo", type: "feature", priority: "medium", parent_id: task.id },
+            { title: newSubTitle.trim(), status: "todo", type: task.type ?? undefined, priority: "medium", parent_id: task.id },
             profile.agency_id, projectId
         );
         setIsCreatingSubTask(false);

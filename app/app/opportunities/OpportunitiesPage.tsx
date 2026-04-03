@@ -1,6 +1,7 @@
 "use client";
 import { deleteOpportunities, updateOpportunityFavorite } from "@/actions/opportunity.client";
 import { updateOpportunityStatus } from "@/actions/opportunity.server";
+import { OpportunityCsvImportDialog } from "@/components/opportunities/OpportunityCsvImportDialog";
 import { OpportunityDialog } from "@/components/opportunities/OpportunityDialog";
 import { Button } from "@/components/ui/button";
 import { useLoadingBar } from "@/hooks/useLoadingBar";
@@ -14,7 +15,7 @@ import {
 } from "@/lib/validators/oppotunities";
 import { STATUS_COLORS } from "@/utils/general";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Briefcase, Plus } from "lucide-react";
+import { Briefcase, Plus, Upload } from "lucide-react";
 import { useState } from "react";
 import { getColumns } from "./columns";
 import { DataTable } from "./data-table";
@@ -36,6 +37,7 @@ export default function OpportunitiesPage({
   const profile = useAgency();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [convertingOpp, setConvertingOpp] = useState<OpportunityWithCompany | null>(null);
   const [editing, setEditing] = useState<OpportunityWithCompany | null>(null);
 
@@ -93,13 +95,23 @@ export default function OpportunitiesPage({
           <p className="text-muted-foreground text-sm font-medium">Gérez vos prospects et maximisez vos conversions.</p>
         </div>
 
-        <Button
-          onClick={() => { setEditing(null); setDialogOpen(true); }}
-          className="px-5 transition-all active:scale-95 shrink-0"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          <span className="font-bold text-sm">Nouvelle opportunité</span>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setCsvDialogOpen(true)}
+            className="px-5 transition-all active:scale-95 shrink-0"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            <span className="font-bold text-sm">Importer un CSV</span>
+          </Button>
+          <Button
+            onClick={() => { setEditing(null); setDialogOpen(true); }}
+            className="px-5 transition-all active:scale-95 shrink-0"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            <span className="font-bold text-sm">Nouvelle opportunité</span>
+          </Button>
+        </div>
       </div>
 
       {/* STATUS METRICS */}
@@ -152,6 +164,15 @@ export default function OpportunitiesPage({
         queryClient.invalidateQueries({ queryKey: ["opportunities-status-counts"] });
         setDialogOpen(false);
       }}
+      />
+      <OpportunityCsvImportDialog
+        agencyId={profile?.agency_id || ""}
+        open={csvDialogOpen}
+        onOpenChange={setCsvDialogOpen}
+        onImported={() => {
+          queryClient.invalidateQueries({ queryKey: ["opportunities"] });
+          queryClient.invalidateQueries({ queryKey: ["opportunities-status-counts"] });
+        }}
       />
       <ConvertProjectDialog
         opportunity={convertingOpp}

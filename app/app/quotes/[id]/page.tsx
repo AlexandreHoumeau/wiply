@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { QuoteEditorPageSkeleton } from "@/app/app/_components/page-skeletons"
 import QuoteEditorWrapper from "./components/QuoteEditorWrapper"
 
 export default async function QuoteDetailPage({
@@ -8,7 +9,7 @@ export default async function QuoteDetailPage({
 }) {
   const { id } = await params
   return (
-    <Suspense fallback={<div className="p-8 text-muted-foreground">Chargement...</div>}>
+    <Suspense fallback={<QuoteEditorPageSkeleton />}>
       <QuoteEditorWrapper id={id} />
     </Suspense>
   )
